@@ -118,6 +118,7 @@ namespace eBRestarter.Views.UserControls
         private Browser chromeBrowser = new Chrome();
         private Browser edgeBrowser = new Edge();
         private Browser firefoxBrowser = new Firefox();
+        private Browser braveBrowser = new Brave();
 
         private readonly HttpClient client;
         private HttpResponseMessage? response;
@@ -250,6 +251,10 @@ namespace eBRestarter.Views.UserControls
                         case "Edge":
                             windows.OpenLinkWithStandardbrowser(IWebLinks.EDGE_SEARCH_REQUEST);
                             break;
+
+                        case "Brave":
+                            windows.OpenLinkWithStandardbrowser(IWebLinks.BAVE_SEARCH_REQUEST);
+                            break;
                     }
                 }
                 else
@@ -335,6 +340,10 @@ namespace eBRestarter.Views.UserControls
             {
                 EBesucherAddOnMessage(HeaderTitleBrowser);
             }
+            else if (HeaderTitleBrowser is "Brave")
+            {
+                EBesucherAddOnMessage(HeaderTitleBrowser);
+            }
         }
 
 
@@ -392,6 +401,20 @@ namespace eBRestarter.Views.UserControls
                 SaveChoosenBrowser();
 
             }
+            else if (headerTitleBrowser is "Brave" && braveBrowser.ExtensionsExist is false)
+            {
+                MessageBoxResult MessageBoxResult = MessageBox.Show(MessageEVisitorAddOn(headerTitleBrowser), MessageEVisitorAddOnTitle(headerTitleBrowser), MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                if (MessageBoxResult == MessageBoxResult.Yes)
+                {
+                    braveBrowser = new Brave(IWebLinks.FIREFOX_EBESUCHER_ADD_ON_LINK);
+
+                    braveBrowser.StartBrowser();
+                }
+
+                SaveChoosenBrowser();
+
+            }
             else if (headerTitleBrowser is "Chrome" && chromeBrowser.ExtensionsExist is true)
             {
 
@@ -405,6 +428,11 @@ namespace eBRestarter.Views.UserControls
 
             }
             else if (headerTitleBrowser is "Firefox" && firefoxBrowser.ExtensionsExist is true)
+            {
+
+                SaveChoosenBrowser();
+            }
+            else if (headerTitleBrowser is "Brave" && braveBrowser.ExtensionsExist is true)
             {
 
                 SaveChoosenBrowser();
