@@ -1,6 +1,7 @@
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ViewModels;
 using eBRestarter.Desktop.WinUI3.Views.Pages;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -16,6 +17,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 
 
 namespace eBRestarter.Desktop.WinUI3
@@ -23,8 +25,7 @@ namespace eBRestarter.Desktop.WinUI3
     public sealed partial class EBRestarter : Window
     {
         private readonly INavigationService _navigationService;
-        private readonly NavigationTransitionInfo _defaultTransition
-    = new DrillInNavigationTransitionInfo();
+        private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
         private static readonly Dictionary<string, Type> _routes = new()
         {
@@ -38,7 +39,7 @@ namespace eBRestarter.Desktop.WinUI3
         public EBRestarter(INavigationService navigationService, MainViewModel mainViewModel)
         {
             InitializeComponent();
-
+            ConfigureTitleBar();
             _navigationService = navigationService;
 
             _navigationService.AttachFrame(NavigationFrame);
@@ -49,11 +50,31 @@ namespace eBRestarter.Desktop.WinUI3
             _navigationService.Navigate(typeof(P_CommonOverview), new DrillInNavigationTransitionInfo());
         }
 
+        private void ConfigureTitleBar()
+        {
+            var appWindow = this.AppWindow;
+            var titleBar = appWindow.TitleBar;
+
+            titleBar.ExtendsContentIntoTitleBar = true;
+
+            var bg = Color.FromArgb(255, 32, 37, 54);
+
+            titleBar.BackgroundColor = bg;
+            titleBar.InactiveBackgroundColor = bg;
+            titleBar.ButtonBackgroundColor = bg;
+            titleBar.ButtonInactiveBackgroundColor = bg;
+            titleBar.ButtonForegroundColor = Colors.White;
+            titleBar.ButtonInactiveForegroundColor = Colors.Gray;
+
+            this.ExtendsContentIntoTitleBar = true;
+            this.SetTitleBar(null);
+        }
+
         private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
             if (args.SelectedItemContainer is NavigationViewItem nvi
-        && nvi.Tag is string tag
-        && _routes.TryGetValue(tag, out var pageType))
+                && nvi.Tag is string tag
+                && _routes.TryGetValue(tag, out var pageType))
             {
                 _navigationService.Navigate(
                     pageType,
