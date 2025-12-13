@@ -40,6 +40,9 @@ namespace eBRestarter.Desktop.WinUI3
         {
             InitializeComponent();
             ConfigureTitleBar();
+
+            NavigationFrame.CacheSize = 10;
+
             _navigationService = navigationService;
 
             _navigationService.AttachFrame(NavigationFrame);
@@ -108,7 +111,7 @@ namespace eBRestarter.Desktop.WinUI3
                 && nvi.Tag is string tag
                 && _routes.TryGetValue(tag, out var pageType))
             {
-                _navigationService.Navigate(pageType, new DrillInNavigationTransitionInfo());
+                _navigationService.Navigate(pageType, _defaultTransition);
             }
         }
     }
