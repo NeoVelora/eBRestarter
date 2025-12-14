@@ -23,6 +23,7 @@ using Windows.Devices.Display.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Services.Maps;
+using Windows.Globalization;
 
 
 namespace eBRestarter.Desktop.WinUI3
@@ -40,6 +41,9 @@ namespace eBRestarter.Desktop.WinUI3
             InitializeComponent();
 
             AppHost = CreateHostBuilder().Build();
+
+
+            ApplicationLanguages.PrimaryLanguageOverride = "en-US";
         }
 
         private static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder()
