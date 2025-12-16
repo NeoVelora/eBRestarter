@@ -1,3 +1,4 @@
+using eBRestarter.Desktop.WinUI3.Helpers;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ViewModels;
 using eBRestarter.Desktop.WinUI3.Views.Pages;
@@ -27,50 +28,23 @@ namespace eBRestarter.Desktop.WinUI3
         private readonly INavigationService _navigationService;
         private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
-        private static readonly Dictionary<string, Type> _routes = new()
-        {
-            ["CommonOverview"] = typeof(P_CommonOverview),
-            ["RestarterProperties"] = typeof(P_RestarterProperties),
-            ["Options"] = typeof(P_Options),
-            ["Infocenter"] = typeof(P_Infocenter),
-            ["Settings"] = typeof(P_Settings)
-        };
 
         public EBRestarter(INavigationService navigationService, MainViewModel mainViewModel)
         {
             InitializeComponent();
-            ConfigureTitleBar();
+
+            this.ConfigureTitleBarColors();
 
             NavigationFrame.CacheSize = 10;
-
             _navigationService = navigationService;
 
             _navigationService.AttachFrame(NavigationFrame);
 
-
             (this.Content as FrameworkElement)!.DataContext = mainViewModel;
 
-            _navigationService.Navigate(typeof(P_CommonOverview), new DrillInNavigationTransitionInfo());
-        }
+            _navigationService.NavigateTo("CommonOverview", transitionInfo: new DrillInNavigationTransitionInfo());
 
-        private void ConfigureTitleBar()
-        {
-            var appWindow = this.AppWindow;
-            var titleBar = appWindow.TitleBar;
 
-            titleBar.ExtendsContentIntoTitleBar = true;
-
-            var bg = Color.FromArgb(255, 32, 37, 54);
-
-            titleBar.BackgroundColor = bg;
-            titleBar.InactiveBackgroundColor = bg;
-            titleBar.ButtonBackgroundColor = bg;
-            titleBar.ButtonInactiveBackgroundColor = bg;
-            titleBar.ButtonForegroundColor = Colors.White;
-            titleBar.ButtonInactiveForegroundColor = Colors.Gray;
-
-            this.ExtendsContentIntoTitleBar = true;
-            this.SetTitleBar(null);
         }
 
         private void AppTitleBar_BackRequested(TitleBar sender, object args)
@@ -86,20 +60,6 @@ namespace eBRestarter.Desktop.WinUI3
             NavView.IsPaneOpen = !NavView.IsPaneOpen;
         }
 
-        private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-        {
-            if (args.SelectedItemContainer is NavigationViewItem nvi
-                && nvi.Tag is string tag
-                && _routes.TryGetValue(tag, out var pageType))
-            {
-                _navigationService.Navigate(
-                    pageType,
-                    parameter: null,
-                    infoOverride: _defaultTransition
-                );
-            }
-        }
-
         private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
             if (args.IsSettingsInvoked)
@@ -108,12 +68,17 @@ namespace eBRestarter.Desktop.WinUI3
             }
 
             if (args.InvokedItemContainer is NavigationViewItem nvi
-                && nvi.Tag is string tag
-                && _routes.TryGetValue(tag, out var pageType))
+                && nvi.Tag is string tag)
             {
-                _navigationService.Navigate(pageType, _defaultTransition);
+                _navigationService.NavigateTo(
+                    tag,
+                    parameter: null,
+                    transitionInfo: _defaultTransition
+                );
             }
         }
+
+
     }
 }
 
