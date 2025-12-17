@@ -32,9 +32,7 @@ namespace eBRestarter.Desktop.WinUI3
     public partial class App : Application
     {
         public static Window? MainWindoweBRestarter { get; private set; }
-
         public static IHost? AppHost { get; private set; }
-
         public static Microsoft.UI.Dispatching.DispatcherQueue? AppDispatcherQueue { get; private set; }
 
         public App()
@@ -42,7 +40,6 @@ namespace eBRestarter.Desktop.WinUI3
             InitializeComponent();
 
             AppHost = CreateHostBuilder().Build();
-
 
             ApplicationLanguages.PrimaryLanguageOverride = "en-US";
         }
@@ -55,11 +52,9 @@ namespace eBRestarter.Desktop.WinUI3
                      cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                  })
                  .ConfigureServices((ctx, services) =>
-                 {
-
-
-                     ServiceRegistration.ConfigureServices(services);
-
+                 {        
+                     services.AddNavigationService();
+                     services.AddViewModels();
                  });
 
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)

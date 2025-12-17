@@ -11,51 +11,29 @@ namespace eBRestarter.Desktop.WinUI3.Services
 {
     public sealed class NavigationService : INavigationService
     {
-        private readonly Dictionary<string, Type> _pages = new();
+        private readonly Dictionary<string, Type> _pages = [];
 
-        private Frame? _frame;
+        private INavigationFrame? _frameAdapter;
 
-        public void AttachFrame(Frame frame) => _frame = frame;
-
-        public bool CanGoBack => _frame?.CanGoBack ?? false;
-
-        public bool Navigate<TPage>(object? parameter = null, NavigationTransitionInfo? infoOverride = null) where TPage : Page
+        public void AttachFrame(Frame frame)
         {
-            infoOverride = new DrillInNavigationTransitionInfo();
-
-            if (_frame is null) return false;
-
-            if (infoOverride is null)
-            {
-                return _frame.Navigate(typeof(TPage), parameter);
-            }
-
-            return _frame.Navigate(typeof(TPage), parameter, infoOverride);
+            _frameAdapter = new WinUIFrameAdapter(frame);
         }
 
-        public bool Navigate( Type pageType, object? parameter = null, NavigationTransitionInfo? infoOverride = null)
+        internal void SetFrameAdapter(INavigationFrame frameAdapter)
         {
-            infoOverride = new DrillInNavigationTransitionInfo();
-
-            if (_frame is null) return false;
-
-            if (infoOverride is null)
-            {
-                return _frame.Navigate(pageType, parameter);
-            }
-
-            return _frame.Navigate(pageType, parameter, infoOverride);
+            _frameAdapter = frameAdapter;
         }
 
         public bool NavigateTo(string key, object parameter = null, NavigationTransitionInfo transitionInfo = null)
         {
-            if (_frame == null) return false;
+            if (_frameAdapter == null) return false;
 
             if (_pages.TryGetValue(key, out var pageType))
             {
-                if (_frame.Content?.GetType() == pageType) return false;
+                if (_frameAdapter.Content?.GetType() == pageType) return false;
 
-                return _frame.Navigate(pageType, parameter, transitionInfo);
+                return _frameAdapter.Navigate(pageType, parameter, transitionInfo);
             }
 
             return false;
@@ -68,15 +46,7 @@ namespace eBRestarter.Desktop.WinUI3.Services
                 _pages.Add(key, pageType);
             }
         }
-
-        public bool GoBack()
-        {
-            if (CanGoBack)
-            {
-                _frame.GoBack();
-                return true;
-            }
-            return false;
-        }
     }
 }
+
+

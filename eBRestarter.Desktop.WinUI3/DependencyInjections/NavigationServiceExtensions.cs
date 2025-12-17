@@ -11,12 +11,10 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 {
-    public static class ServiceRegistration
+    public static class NavigationServiceExtensions
     {
-        public static void ConfigureServices(IServiceCollection services)
+        public static IServiceCollection AddNavigationService(this IServiceCollection services)
         {
-            services.AddSingleton<MainViewModel>();
-            services.AddSingleton<EBRestarter>();
 
             services.AddSingleton<INavigationService>(provider =>
             {
@@ -30,6 +28,8 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 
                 return navService;
             });
+
+            return services;
         }
     }
 }

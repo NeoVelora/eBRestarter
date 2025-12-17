@@ -26,8 +26,8 @@ namespace eBRestarter.Desktop.WinUI3
     public sealed partial class EBRestarter : Window
     {
         private readonly INavigationService _navigationService;
-        private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
+        private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
         public EBRestarter(INavigationService navigationService, MainViewModel mainViewModel)
         {
@@ -36,6 +36,7 @@ namespace eBRestarter.Desktop.WinUI3
             this.ConfigureTitleBarColors();
 
             NavigationFrame.CacheSize = 10;
+
             _navigationService = navigationService;
 
             _navigationService.AttachFrame(NavigationFrame);
@@ -43,8 +44,6 @@ namespace eBRestarter.Desktop.WinUI3
             (this.Content as FrameworkElement)!.DataContext = mainViewModel;
 
             _navigationService.NavigateTo("CommonOverview", transitionInfo: new DrillInNavigationTransitionInfo());
-
-
         }
 
         private void AppTitleBar_BackRequested(TitleBar sender, object args)
@@ -64,6 +63,7 @@ namespace eBRestarter.Desktop.WinUI3
         {
             if (args.IsSettingsInvoked)
             {
+                _navigationService.NavigateTo("Settings", transitionInfo: _defaultTransition);
                 return;
             }
 
@@ -77,8 +77,6 @@ namespace eBRestarter.Desktop.WinUI3
                 );
             }
         }
-
-
     }
 }
 
