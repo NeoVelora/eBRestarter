@@ -23,15 +23,15 @@ namespace eBRestarter.Desktop.WinUI3.Views.Pages
 {
     public sealed partial class P_RestarterProperties : Page
     {
-        public ViewModelRestarterProperties ViewModel { get; }
+        public ViewModelRestarterProperties ViewModelRestarterProperties { get; }
 
         public P_RestarterProperties()
         {
             this.InitializeComponent();
 
-            ViewModel = App.AppHost.Services.GetRequiredService<ViewModelRestarterProperties>();
+            ViewModelRestarterProperties = App.AppHost.Services.GetRequiredService<ViewModelRestarterProperties>();
 
-            this.DataContext = ViewModel;
+            this.DataContext = ViewModelRestarterProperties;
         }
     }
 }
