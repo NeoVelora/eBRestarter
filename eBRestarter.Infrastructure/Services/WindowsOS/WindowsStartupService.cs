@@ -1,4 +1,5 @@
 using eBRestarter.Application.Services.Ports.Interfaces;
+using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Serilog;
@@ -7,9 +8,9 @@ using System.Runtime.Versioning;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS
 {
-    [SupportedOSPlatform("windows")]
     public class WindowsStartupService : IStartupManagerService
     {
+
         private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
         private const string RegistryPathEdgePolicies = @"SOFTWARE\Policies\Microsoft\Edge";
@@ -18,26 +19,33 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
 
         private readonly ILogger<WindowsStartupService> _logger;
 
-        public WindowsStartupService(ILogger<WindowsStartupService> logger)
+        private readonly IRegistryService _registry;
+
+        private readonly IProcessInfoService _processInfo;
+
+        public WindowsStartupService(
+            ILogger<WindowsStartupService> logger,
+            IRegistryService registry,
+            IProcessInfoService processInfo)
         {
             _logger = logger;
+            _registry = registry;
+            _processInfo = processInfo;
         }
 
         public void EnableAutoStart()
         {
             try
             {
-                using var rkApp = Registry.CurrentUser.OpenSubKey(RegistryPathRun, true);
+                string exePath = _processInfo.GetCurrentExecutablePath();
 
-                if (rkApp != null)
-                {
-                    rkApp.SetValue("eV Restarter", Process.GetCurrentProcess().MainModule!.FileName);
-                    _logger.LogInformation("Autostart entry for 'eV Restarter' created.");
-                }
+                _registry.SetCurrentUserValue(RegistryPathRun, "eBRestarter", exePath);
+
+                _logger.LogInformation("Autostart-Eintrag für 'eBRestarter' erfolgreich erstellt.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to set Autostart in registry.");
+                _logger.LogError(ex, "Fehler beim Setzen des Autostarts in der Registry.");
             }
         }
 
@@ -45,42 +53,25 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
         {
             try
             {
-                using var rkApp = Registry.CurrentUser.OpenSubKey(RegistryPathRun, true);
+                _registry.DeleteCurrentUserValue(RegistryPathRun, "eBRestarter");
 
-                rkApp?.DeleteValue("eV Restarter", false);
-                _logger.LogInformation("Autostart entry for 'eV Restarter' removed.");
+                _logger.LogInformation("Autostart-Eintrag für 'eBRestarter' entfernt.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to remove Autostart from registry.");
+                _logger.LogError(ex, "Fehler beim Entfernen des Autostarts aus der Registry.");
             }
         }
 
         public Dictionary<string, object> GetStartupEntries()
         {
-            var valuesBynames = new Dictionary<string, object>();
-
             try
             {
-                using var rootKey = Registry.CurrentUser.OpenSubKey(RegistryPathRun);
-
-                if (rootKey != null)
-                {
-                    string[] valueNames = rootKey.GetValueNames();
-
-                    foreach (string currSubKey in valueNames)
-                    {
-                        object value = rootKey.GetValue(currSubKey)!;
-                        valuesBynames.Add(currSubKey, value);
-                    }
-                }
-
-                return valuesBynames;
+                return _registry.GetCurrentUserValues(RegistryPathRun);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to retrieve startup entries.");
-
+                _logger.LogError(ex, "Fehlerbeim Abrufen der Autostart-Einträge.");
                 return new Dictionary<string, object>();
             }
         }
@@ -91,19 +82,17 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             {
                 int dwordValue = enable ? 1 : 0;
 
-                using RegistryKey key = Registry.LocalMachine.CreateSubKey(RegistryPathEdgePolicies);
+                _registry.SetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled", dwordValue, RegistryValueKind.DWord);
 
-                key.SetValue("StartupBoostEnabled", dwordValue, RegistryValueKind.DWord);
-
-                _logger.LogInformation("Edge Startup Boost set to {State} ({Value}).", enable, dwordValue);
+                _logger.LogInformation("Edge Startup Boost auf {State} gesetzt (Wert: {Value}).", enable, dwordValue);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Permission denied modifying Edge Policies. Run application as Administrator.");
+                _logger.LogError(ex, "Zugriff verweigert beim Ändern der Edge-Policies. Bitte als Administrator ausführen.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error setting Edge Startup Boost.");
+                _logger.LogError(ex, "Allgemeiner Fehler beim Setzen von Edge Startup Boost.");
             }
         }
 
@@ -113,19 +102,17 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             {
                 int dwordValue = enable ? 0 : 2;
 
-                using RegistryKey key = Registry.LocalMachine.CreateSubKey(RegistryPathPasswordLess);
+                _registry.SetLocalMachineValue(RegistryPathPasswordLess, "DevicePasswordLessBuildVersion", dwordValue, RegistryValueKind.DWord);
 
-                key.SetValue("DevicePasswordLessBuildVersion", dwordValue, RegistryValueKind.DWord);
-
-                _logger.LogInformation("Windows PasswordLess Login requirement set to {State} (RegValue: {Value}).", !enable, dwordValue);
+                _logger.LogInformation("AutoLogon-Einstellung auf {State} gesetzt (RegWert: {Value}).", enable, dwordValue);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Permission denied modifying PasswordLess settings. Run application as Administrator.");
+                _logger.LogError(ex, "Zugriff verweigert beim Ändern der PasswordLess-Einstellungen. Bitte als Administrator ausführen.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error configuring AutoLogon settings.");
+                _logger.LogError(ex, "Fehler beim Konfigurieren der AutoLogon-Einstellungen.");
             }
         }
     }

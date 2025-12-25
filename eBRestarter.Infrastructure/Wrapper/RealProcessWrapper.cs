@@ -8,9 +8,7 @@ namespace eBRestarter.Infrastructure.Wrapper
 {
     public class RealProcessWrapper : IProcessWrapper
     {
-        public void Start(ProcessStartInfo info) => Process.Start(info);
-
-        public Process[] GetProcessesByName(string name) => Process.GetProcessesByName(name);
+        public Process? Start(ProcessStartInfo info) => Process.Start(info);
 
         public bool IsProcessRunning(string name)
         {
@@ -20,11 +18,12 @@ namespace eBRestarter.Infrastructure.Wrapper
         public void KillProcess(string name)
         {
             var processes = Process.GetProcessesByName(name);
-
             foreach (var process in processes)
             {
                 process.Kill();
             }
         }
+
+        public Process[] GetProcesses() => Process.GetProcesses();
     }
 }

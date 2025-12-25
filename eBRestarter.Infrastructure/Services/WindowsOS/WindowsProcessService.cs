@@ -13,6 +13,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
     public class WindowsProcessService : IProcessControlService
     {
         private readonly ILogger<WindowsProcessService> _logger;
+
         private readonly IProcessWrapper _processWrapper;
 
         public WindowsProcessService(ILogger<WindowsProcessService> logger, IProcessWrapper processWrapper)
@@ -25,11 +26,16 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
         {
             try
             {
-                _processWrapper.Start(new ProcessStartInfo { FileName = exeFilePath });
+                _processWrapper.Start(new ProcessStartInfo
+                {
+                    FileName = exeFilePath,
+                    UseShellExecute = true
+                });
+                _logger.LogInformation("Executable gestartet: {Path}", exeFilePath);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "...");
+                _logger.LogError(ex, "Fehler beim Starten der EXE: {Path}", exeFilePath);
             }
         }
 
@@ -49,7 +55,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
 
             try
             {
-                using var process = Process.Start(startInfo);
+                using var process = _processWrapper.Start(startInfo);
 
                 if (process == null)
                 {
@@ -82,7 +88,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
         {
             try
             {
-                Process.Start(new ProcessStartInfo
+                _processWrapper.Start(new ProcessStartInfo
                 {
                     FileName = url,
                     UseShellExecute = true
@@ -99,7 +105,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             try
             {
                 _logger.LogInformation("Fahre Computer herunter (Neustart)...");
-                Process.Start("shutdown", "/r /f /t 0");
+                _processWrapper.Start(new ProcessStartInfo("shutdown", "/r /f /t 0") { UseShellExecute = true });
             }
             catch (Exception ex)
             {
@@ -109,7 +115,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
 
         public bool IsProcessAlive(string processName)
         {
-            return Process.GetProcessesByName(processName).Length > 0;
+            return _processWrapper.IsProcessRunning(processName);
         }
 
         public void CloseApplication(string processName)
@@ -129,7 +135,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
 
         public void CloseAllOpenPrograms()
         {
-            var processes = Process.GetProcesses();
+            var processes = _processWrapper.GetProcesses();
 
             foreach (var process in processes)
             {
@@ -146,7 +152,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
 
                         if (!exited)
                         {
-                            _logger.LogWarning("Prozess {Name} hat auf WM_CLOSE nicht reagiert (hängt evtl.).", process.ProcessName);
+                            _logger.LogWarning("Prozess {Name} hat auf WM_CLOSE nicht reagiert.", process.ProcessName);
                         }
                     }
                 }
@@ -154,34 +160,6 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
                 {
                     _logger.LogError(ex, "Fehler beim Schließen von Prozess {Name}", process.ProcessName);
                 }
-            }
-        }
-
-
-        private void StopProcessInternal(string processName)
-        {
-            try
-            {
-                foreach (var process in Process.GetProcessesByName(processName))
-                {
-                    try
-                    {
-                        process.Kill();
-                        _logger.LogInformation("Prozess gekillt: {Name}", processName);
-                    }
-                    catch (Win32Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Konnte Prozess {Name} nicht killen (Win32Exception).", processName);
-                    }
-                }
-            }
-            catch (IOException ex)
-            {
-                _logger.LogError(ex, "IOException beim Stoppen von Prozess {Name}", processName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Allgemeiner Fehler beim Stoppen von Prozess {Name}", processName);
             }
         }
 

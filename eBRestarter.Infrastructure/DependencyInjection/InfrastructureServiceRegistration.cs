@@ -22,11 +22,15 @@ namespace eBRestarter.Infrastructure.DependencyInjection
                 builder.AddDebug();
             });
 
-            services.AddTransient<IProcessWrapper, RealProcessWrapper>();
 
 #pragma warning disable CA1416 // Plattformkompatibilität überprüfen
+
+            services.AddTransient<IProcessWrapper, RealProcessWrapper>();
             services.AddSingleton<IProcessControlService, WindowsProcessService>();
             services.AddSingleton<ISystemInfoService, WindowsSystemInfoService>();
+
+            services.AddTransient<IProcessInfoService, ProcessInfoService>();
+            services.AddTransient<IRegistryService, RegistryService>();
             services.AddSingleton<IStartupManagerService, WindowsStartupService>();
 #pragma warning restore CA1416 // Plattformkompatibilität überprüfen
 
