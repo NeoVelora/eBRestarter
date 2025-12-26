@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace eBRestarter.Infrastructure.Wrapper.Interface
+namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS
 {
-    public interface IRegistryService
+    public interface IWindowsRegistryService
     {
         void SetCurrentUserValue(string subKey, string name, object value);
         void DeleteCurrentUserValue(string subKey, string name);

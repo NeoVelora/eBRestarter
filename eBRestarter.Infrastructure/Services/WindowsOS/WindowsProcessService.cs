@@ -1,4 +1,4 @@
-using eBRestarter.Application.Services.Ports.Interfaces;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
@@ -10,7 +10,7 @@ using System.Runtime.Versioning;
 namespace eBRestarter.Infrastructure.Services.WindowsOS
 {
     [SupportedOSPlatform("windows")]
-    public class WindowsProcessService : IProcessControlService
+    public class WindowsProcessService : IWindowsProcessControlService
     {
         private readonly ILogger<WindowsProcessService> _logger;
 

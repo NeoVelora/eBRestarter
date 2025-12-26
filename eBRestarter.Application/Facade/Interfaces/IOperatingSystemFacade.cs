@@ -9,6 +9,8 @@ namespace eBRestarter.Application.Facade.Interfaces
     {
         IProcessControlService Process { get; }
         ISystemInfoService SystemInfo { get; }
+        IRegistryService Registry { get; }
         IStartupManagerService Startup { get; }
+        IFileSystemService FileSystem { get; }
     }
 }

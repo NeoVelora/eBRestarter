@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using eBRestarter.Application.Facade.Interfaces;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +23,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             _os = os;
 
-            StandardBrowser = _os.SystemInfo.GetCurrentStandardBrowserName();
+            StandardBrowser = _os.WindowsSystemInfoService.GetCurrentStandardBrowserName();
         }
 
         [RelayCommand(CanExecute = nameof(CanAddUsername))]

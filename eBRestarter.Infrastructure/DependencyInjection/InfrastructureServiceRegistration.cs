@@ -1,6 +1,9 @@
-using eBRestarter.Application.Facade;
-using eBRestarter.Application.Facade.Interfaces;
-using eBRestarter.Application.Services.Ports.Interfaces;
+using eBRestarter.Core.Application.Facade;
+using eBRestarter.Core.Application.Interfaces.Browser;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Infrastructure.Browsers;
+using eBRestarter.Infrastructure.Factories;
 using eBRestarter.Infrastructure.Services.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper;
 using eBRestarter.Infrastructure.Wrapper.Interface;
@@ -26,15 +29,21 @@ namespace eBRestarter.Infrastructure.DependencyInjection
 #pragma warning disable CA1416 // Plattformkompatibilität überprüfen
 
             services.AddTransient<IProcessWrapper, RealProcessWrapper>();
-            services.AddSingleton<IProcessControlService, WindowsProcessService>();
-            services.AddSingleton<ISystemInfoService, WindowsSystemInfoService>();
+            services.AddSingleton<IWindowsProcessControlService, WindowsProcessService>();
+            services.AddSingleton<IWindowsSystemInfoService, WindowsSystemInfoService>();
 
             services.AddTransient<IProcessInfoService, ProcessInfoService>();
-            services.AddTransient<IRegistryService, RegistryService>();
-            services.AddSingleton<IStartupManagerService, WindowsStartupService>();
+            services.AddTransient<IWindowsRegistryService, WindowsRegistryService>();
+            services.AddTransient<IWindowsFileSystemService, WindowsFileSystemService>();
+            services.AddSingleton<IWindowsStartupManagerService, WindowsStartupService>();
 #pragma warning restore CA1416 // Plattformkompatibilität überprüfen
 
             services.AddSingleton<IOperatingSystemFacade, OperatingSystemFacade>();
+
+            services.AddTransient<ChromeBrowser>();
+            services.AddTransient<FirefoxBrowser>();
+
+            services.AddSingleton<IBrowserFactory, BrowserFactory>();
 
             return services;
         }

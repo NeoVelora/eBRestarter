@@ -1,4 +1,4 @@
-using eBRestarter.Application.Services.Ports.Interfaces;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -8,7 +8,7 @@ using System.Runtime.Versioning;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS
 {
-    public class WindowsStartupService : IStartupManagerService
+    public class WindowsStartupService : IWindowsStartupManagerService
     {
 
         private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
@@ -19,13 +19,13 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
 
         private readonly ILogger<WindowsStartupService> _logger;
 
-        private readonly IRegistryService _registry;
+        private readonly IWindowsRegistryService _registry;
 
         private readonly IProcessInfoService _processInfo;
 
         public WindowsStartupService(
             ILogger<WindowsStartupService> logger,
-            IRegistryService registry,
+            IWindowsRegistryService registry,
             IProcessInfoService processInfo)
         {
             _logger = logger;

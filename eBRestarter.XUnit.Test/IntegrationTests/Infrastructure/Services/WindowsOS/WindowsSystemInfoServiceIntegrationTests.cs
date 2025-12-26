@@ -17,7 +17,7 @@ namespace eBRestarter.XUnit.Test.IntegrationTests.Infrastructure.Services.Window
         public WindowsSystemInfoServiceIntegrationTests()
         {
             var logger = NullLogger<WindowsSystemInfoService>.Instance;
-            var registryService = new RegistryService();
+            var registryService = new WindowsRegistryService();
 
             _service = new WindowsSystemInfoService(logger, registryService);
         }

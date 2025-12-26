@@ -24,7 +24,7 @@ namespace eBRestarter.XUnit.Test.IntegrationTests.Infrastructure.Services.Window
         public WindowsStartupServiceIntegrationTests()
         {
             var logger = NullLogger<WindowsStartupService>.Instance;
-            var realRegistry = new RegistryService();
+            var realRegistry = new WindowsRegistryService();
             var realProcessInfo = new ProcessInfoService();
 
             _service = new WindowsStartupService(logger, realRegistry, realProcessInfo);
