@@ -42,6 +42,8 @@ namespace eBRestarter.Infrastructure.DependencyInjection
 
             services.AddTransient<ChromeBrowser>();
             services.AddTransient<FirefoxBrowser>();
+            services.AddTransient<EdgeBrowser>();
+            services.AddTransient<BraveBrowser>();
 
             services.AddSingleton<IBrowserFactory, BrowserFactory>();
 

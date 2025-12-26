@@ -1,4 +1,4 @@
-using eBRestarter.Core.Application.Interfaces.Browser;
+﻿using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Infrastructure.Browsers;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +23,8 @@ namespace eBRestarter.Infrastructure.Factories
             {
                 BrowserType.Chrome => _serviceProvider.GetRequiredService<ChromeBrowser>(),
                 BrowserType.Firefox => _serviceProvider.GetRequiredService<FirefoxBrowser>(),
+                BrowserType.Edge => _serviceProvider.GetRequiredService<EdgeBrowser>(),
+                BrowserType.Brave => _serviceProvider.GetRequiredService<BraveBrowser>(),
                 _ => throw new NotSupportedException($"Browser {type} ist noch nicht implementiert.")
             };
         }
