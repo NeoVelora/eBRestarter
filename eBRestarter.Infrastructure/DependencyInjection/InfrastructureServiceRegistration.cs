@@ -1,9 +1,14 @@
 using eBRestarter.Core.Application.Facade;
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
+using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Core.Application.Interfaces.RestClient;
 using eBRestarter.Infrastructure.Browsers;
 using eBRestarter.Infrastructure.Factories;
+using eBRestarter.Infrastructure.Services.Config;
+using eBRestarter.Infrastructure.Services.RestSharp;
 using eBRestarter.Infrastructure.Services.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper;
 using eBRestarter.Infrastructure.Wrapper.Interface;
@@ -25,7 +30,6 @@ namespace eBRestarter.Infrastructure.DependencyInjection
                 builder.AddDebug();
             });
 
-
 #pragma warning disable CA1416 // Plattformkompatibilität überprüfen
 
             services.AddTransient<IProcessWrapper, RealProcessWrapper>();
@@ -46,6 +50,11 @@ namespace eBRestarter.Infrastructure.DependencyInjection
             services.AddTransient<BraveBrowser>();
 
             services.AddSingleton<IBrowserFactory, BrowserFactory>();
+
+            services.AddTransient<IRestClientService, RestSharpClientService>();
+
+            services.AddSingleton<IPathService, WindowsPathService>();
+            services.AddSingleton<IConfigService, JsonConfigService>();
 
             return services;
         }
