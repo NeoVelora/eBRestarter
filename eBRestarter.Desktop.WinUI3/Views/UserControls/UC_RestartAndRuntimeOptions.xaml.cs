@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
 
 
 namespace eBRestarter.Desktop.WinUI3.Views.UserControls
@@ -22,5 +23,7 @@ namespace eBRestarter.Desktop.WinUI3.Views.UserControls
         {
             InitializeComponent();
         }
+
+
     }
 }

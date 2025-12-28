@@ -29,7 +29,7 @@ namespace eBRestarter.Desktop.WinUI3.Views.Pages
         {
             this.InitializeComponent();
 
-            ViewModelRestarterProperties = App.AppHost.Services.GetRequiredService<ViewModelRestarterProperties>();
+            ViewModelRestarterProperties = App.AppHost!.Services.GetRequiredService<ViewModelRestarterProperties>();
 
             this.DataContext = ViewModelRestarterProperties;
         }
