@@ -1,6 +1,7 @@
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ViewModels;
 using eBRestarter.Desktop.WinUI3.Views.Pages;
+using eBRestarter.Desktop.WinUI3.Views.UserControls;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,9 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
             services.AddSingleton<ViewModelRestarterProperties>();
 
             services.AddSingleton<P_CommonOverview>();
+
+            services.AddSingleton<InstalledBrowsersViewModel>();
+            services.AddSingleton<UC_InstalledBrowsers>();
 
             return services;
         }

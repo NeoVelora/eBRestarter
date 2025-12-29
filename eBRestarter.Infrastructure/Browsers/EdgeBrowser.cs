@@ -1,3 +1,4 @@
+using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
@@ -11,6 +12,10 @@ namespace eBRestarter.Infrastructure.Browsers
 {
     public class EdgeBrowser : BrowserBase
     {
+        public override string DisplayName => "Edge";
+        public override string IconPath => "/Resources/Images/Icons/Intersection/fa_chrome.png";
+        public override string DownloadUrl => WebLinks.EdgeDownloadLinkDE;
+
         public override BrowserType Type => BrowserType.Edge;
 
         protected override string ProcessName => "msedge";
@@ -19,8 +24,7 @@ namespace eBRestarter.Infrastructure.Browsers
 
         private const string ExtensionId = "kjhejmaladginnedpoppohfnkionnghi";
 
-        public EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger)
-            : base(os, logger) { }
+        public EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger) : base(os, logger) { }
 
         protected override List<string> ExecutablePaths => new()
         {

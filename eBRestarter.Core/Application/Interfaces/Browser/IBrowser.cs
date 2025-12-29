@@ -8,6 +8,10 @@ namespace eBRestarter.Core.Application.Interfaces.Browser
 {
     public interface IBrowser
     {
+        string DisplayName { get; }
+        string IconPath { get; }
+        string DownloadUrl { get; }
+
         BrowserType Type { get; }
         string BrowserVersion { get; }
         bool IsInstalled { get; }
@@ -15,5 +19,7 @@ namespace eBRestarter.Core.Application.Interfaces.Browser
         void Close();
 
         BrowserPaths GetPaths();
+
+
     }
 }

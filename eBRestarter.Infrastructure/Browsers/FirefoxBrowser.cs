@@ -1,3 +1,4 @@
+using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
@@ -11,6 +12,9 @@ namespace eBRestarter.Infrastructure.Browsers
 {
     public class FirefoxBrowser : BrowserBase
     {
+        public override string DisplayName => "Firefox";
+        public override string IconPath => "/Resources/Visuals/Icons/Intersection/fa_firefox.png";
+        public override string DownloadUrl => WebLinks.FirefoxDownloadLink;
         public override BrowserType Type => BrowserType.Firefox;
         protected override string ProcessName => "firefox";
         protected override string RegistryKeyVersion => @"SOFTWARE\Mozilla\Mozilla Firefox";

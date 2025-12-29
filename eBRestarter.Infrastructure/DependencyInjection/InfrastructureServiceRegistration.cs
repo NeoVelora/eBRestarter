@@ -36,10 +36,11 @@ namespace eBRestarter.Infrastructure.DependencyInjection
             services.AddSingleton<IWindowsProcessControlService, WindowsProcessService>();
             services.AddSingleton<IWindowsSystemInfoService, WindowsSystemInfoService>();
 
-            services.AddTransient<IProcessInfoService, ProcessInfoService>();
+            services.AddTransient<IProcessInfoService, ProcessInfoService>(); 
             services.AddTransient<IWindowsRegistryService, WindowsRegistryService>();
             services.AddTransient<IWindowsFileSystemService, WindowsFileSystemService>();
             services.AddSingleton<IWindowsStartupManagerService, WindowsStartupService>();
+            
 #pragma warning restore CA1416 // Plattformkompatibilität überprüfen
 
             services.AddSingleton<IOperatingSystemFacade, OperatingSystemFacade>();
@@ -50,6 +51,8 @@ namespace eBRestarter.Infrastructure.DependencyInjection
             services.AddTransient<BraveBrowser>();
 
             services.AddSingleton<IBrowserFactory, BrowserFactory>();
+
+            services.AddSingleton<IBrowserService, WindowsBrowserService>();
 
             services.AddTransient<IRestClientService, RestSharpClientService>();
 

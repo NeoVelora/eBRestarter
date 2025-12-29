@@ -59,6 +59,10 @@ namespace eBRestarter.Infrastructure.Browsers.Abstract
 
         public bool IsInstalled => ExecutablePaths.Any(path => _os.WindowsFileSystemService.FileExists(path));
 
+        public abstract string DisplayName { get; }
+        public abstract string IconPath { get; }
+        public abstract string DownloadUrl { get; }
+
         protected string GetExecutablePath()
         {
             return ExecutablePaths.FirstOrDefault(path => _os.WindowsFileSystemService.FileExists(path))

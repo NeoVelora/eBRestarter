@@ -1,3 +1,4 @@
+using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
@@ -11,6 +12,10 @@ namespace eBRestarter.Infrastructure.Browsers
 {
     public class BraveBrowser : BrowserBase
     {
+        public override string DisplayName => "Brave";
+        public override string IconPath => "/Resources/Visuals/Icons/Intersection/fa_brave.png";
+        public override string DownloadUrl => WebLinks.BraveDownloadLinkDE;
+
         public override BrowserType Type => BrowserType.Brave;
 
         protected override string ProcessName => "brave";
@@ -19,8 +24,7 @@ namespace eBRestarter.Infrastructure.Browsers
 
         private const string ExtensionId = "agchmcconfdfcenopioeilpgjngelefk";
 
-        public BraveBrowser(IOperatingSystemFacade os, ILogger<BraveBrowser> logger)
-            : base(os, logger) { }
+        public BraveBrowser(IOperatingSystemFacade os, ILogger<BraveBrowser> logger) : base(os, logger) { }
 
         protected override List<string> ExecutablePaths => new()
         {

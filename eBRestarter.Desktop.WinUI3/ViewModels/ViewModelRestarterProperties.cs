@@ -4,36 +4,44 @@ using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Facade;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
+using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelRestarterProperties : ObservableObject
     {
+        private readonly AppConfig _currentConfig;
+
         private readonly IOperatingSystemFacade _operatingSystemFacade;
         private readonly IEVisitorConfigService _eVisitorConfigService;
 
-        private readonly AppConfig _currentConfig;
-
-        public int RuntimePauseSecondsMin { get; init; }
-        public int RuntimePauseSecondsMax { get; init; }
-        public int BrowserRuntimeHoursMin { get; init; }
-        public int BrowserRuntimeHoursMax { get; init; }
+        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList => BrowserCacheConstants.Options;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddeVVisitorUsernameCommand))]
         public partial string Username { get; set; } = string.Empty;
 
         [ObservableProperty] private partial string StandardBrowser { get; set; } = string.Empty;
-
         [ObservableProperty] public partial int RuntimePauseSeconds { get; set; }
-
         [ObservableProperty] public partial int RuntimeHours { get; set; }
+
+        [ObservableProperty] public partial BrowserCacheDeleteOption SelectedDeleteBrowserCacheOption { get; set; }
+        [ObservableProperty] public partial bool StartBrowserWithProgrammStartIs { get; set; } = false;
+        [ObservableProperty] public partial bool CheckBrowserIsAliveIsOn { get; set; } = false;
+
+
+        public int RuntimePauseSecondsMin { get; init; }
+        public int RuntimePauseSecondsMax { get; init; }
+        public int BrowserRuntimeHoursMin { get; init; }
+        public int BrowserRuntimeHoursMax { get; init; }
+
 
         public ViewModelRestarterProperties(IOperatingSystemFacade operatingSystemFacade, IEVisitorConfigService eVisitorConfigService)
         {
@@ -47,15 +55,44 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             BrowserRuntimeHoursMin = 1;
             BrowserRuntimeHoursMax = 12;
 
+
             RuntimePauseSeconds = _currentConfig.Browser.RuntimePauseSeconds;
             RuntimeHours = _currentConfig.Browser.RuntimeHours;
 
+            StartBrowserWithProgrammStartIs = _currentConfig.Browser.StartBrowserWithProgrammStart;
+            CheckBrowserIsAliveIsOn = _currentConfig.Browser.CheckBrowserAliveRoutine;
+
+            var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
+
+            SelectedDeleteBrowserCacheOption = BrowserDeleteCacheOptionList.FirstOrDefault(x => x.Days == configDays) ?? BrowserDeleteCacheOptionList[0];
+        }
+
+        partial void OnSelectedDeleteBrowserCacheOptionChanged(BrowserCacheDeleteOption value)
+        {
+            _currentConfig.Browser.DeleteBrowserCacheIntervalDays = value.Days;
+            SaveSettings();
+        }
+
+        partial void OnStartBrowserWithProgrammStartIsChanged(bool value)
+        {
+            Debug.WriteLine($"StartBrowserWithProgrammStartIsChanged: {value}");
+            _currentConfig.Browser.StartBrowserWithProgrammStart = value;
+            SaveSettings();
+        }
+
+        partial void OnCheckBrowserIsAliveIsOnChanged(bool value)
+        {
+            Debug.WriteLine($"CheckBrowserIsAliveIsOnChanged: {value}");
+            _currentConfig.Browser.CheckBrowserAliveRoutine = value;
+            SaveSettings();
         }
 
         [RelayCommand(CanExecute = nameof(CanAddUsername))]
         private void AddeVVisitorUsername()
         {
             _currentConfig.Username = Username;
+            
+            SaveSettings();
 
             Username = string.Empty;
         }
@@ -76,8 +113,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             int clampedValue = Math.Clamp(value, RuntimePauseSecondsMin, RuntimePauseSecondsMax);
 
-            Debug.WriteLine($"RestMinutes geändert: {value} -> Korrigiert auf: {clampedValue}");
-
             if (value != clampedValue)
             {
                 RuntimePauseSeconds = clampedValue;
@@ -93,9 +128,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         partial void OnRuntimeHoursChanged(int value)
         {
-            int clampedValue = Math.Clamp(value, BrowserRuntimeHoursMin, BrowserRuntimeHoursMin);
-
-            Debug.WriteLine($"RestMinutes geändert: {value} -> Korrigiert auf: {clampedValue}");
+            int clampedValue = Math.Clamp(value, BrowserRuntimeHoursMin, BrowserRuntimeHoursMax);
 
             if (value != clampedValue)
             {
@@ -104,8 +137,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
 
             if (_currentConfig.Browser.RuntimeHours != value)
-            {
-                RuntimeHours = value;
+            {        
                 _currentConfig.Browser.RuntimeHours = value;
                 SaveSettings();
             }
