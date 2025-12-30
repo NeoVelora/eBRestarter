@@ -17,16 +17,55 @@ namespace eBRestarter.Infrastructure.Browsers
         public override string DownloadUrl => WebLinks.FirefoxDownloadLink;
         public override BrowserType Type => BrowserType.Firefox;
         protected override string ProcessName => "firefox";
-        protected override string RegistryKeyVersion => @"SOFTWARE\Mozilla\Mozilla Firefox";
+
+        protected override string RegistryKeyVersion => @"Software\Mozilla\Mozilla Firefox";
 
         public FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> logger)
             : base(os, logger) { }
 
-        protected override List<string> ExecutablePaths => new()
+        protected override List<string> ExecutablePaths
         {
-             _os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles"), @"Mozilla Firefox\firefox.exe"),
-             _os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles(x86)"), @"Mozilla Firefox\firefox.exe")
-        };
+            get
+            {
+                var paths = new List<string>();
+
+
+                string? GetPathFromMozillaRegistry(bool isHklm)
+                {
+                    string rootKey = @"Software\Mozilla\Mozilla Firefox";
+
+                    var currentVersionObj = isHklm
+                        ? _os.WindowsRegistryService.GetLocalMachineValue(rootKey, "CurrentVersion")
+                        : _os.WindowsRegistryService.GetCurrentUserValue(rootKey, "CurrentVersion");
+
+                    if (currentVersionObj == null) return null;
+
+                    string currentVersion = currentVersionObj.ToString()!;
+
+                    string mainKeyPath = $@"{rootKey}\{currentVersion}\Main";
+
+                    var pathToExeObj = isHklm
+                        ? _os.WindowsRegistryService.GetLocalMachineValue(mainKeyPath, "PathToExe")
+                        : _os.WindowsRegistryService.GetCurrentUserValue(mainKeyPath, "PathToExe");
+
+                    return pathToExeObj?.ToString();
+                }
+
+                var hkcuPath = GetPathFromMozillaRegistry(false);
+                if (!string.IsNullOrEmpty(hkcuPath)) paths.Add(hkcuPath);
+
+                var hklmPath = GetPathFromMozillaRegistry(true);
+                if (!string.IsNullOrEmpty(hklmPath)) paths.Add(hklmPath);
+
+
+                paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles"), @"Mozilla Firefox\firefox.exe"));
+                paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles(x86)"), @"Mozilla Firefox\firefox.exe"));
+
+                paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData"), @"Mozilla Firefox\firefox.exe"));
+
+                return [.. paths.Distinct()];
+            }
+        }
 
         public override BrowserPaths GetPaths()
         {
@@ -50,7 +89,7 @@ namespace eBRestarter.Infrastructure.Browsers
             if (!_os.WindowsFileSystemService.FileExists(iniPath)) return "Default";
 
 
-            return "Default.default-release";
+            return "Default";
         }
     }
 }

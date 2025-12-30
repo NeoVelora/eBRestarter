@@ -20,7 +20,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
         {
             var browsers = new List<BrowserInfo>();
 
-            foreach (BrowserType type in Enum.GetValues(typeof(BrowserType)))
+            foreach (BrowserType type in Enum.GetValues<BrowserType>())
             {
                 try
                 {

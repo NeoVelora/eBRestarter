@@ -10,10 +10,10 @@ using System.Text;
 
 namespace eBRestarter.Infrastructure.Browsers
 {
-    public class EdgeBrowser : BrowserBase
+    public class EdgeBrowser : ChromiumBrowserBase
     {
         public override string DisplayName => "Edge";
-        public override string IconPath => "/Resources/Images/Icons/Intersection/fa_chrome.png";
+        public override string IconPath => "/Resources/Visuals/Icons/Intersection/fa_edge.png";
         public override string DownloadUrl => WebLinks.EdgeDownloadLinkDE;
 
         public override BrowserType Type => BrowserType.Edge;
@@ -26,11 +26,13 @@ namespace eBRestarter.Infrastructure.Browsers
 
         public EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger) : base(os, logger) { }
 
-        protected override List<string> ExecutablePaths => new()
-        {
-            _os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles(x86)"), @"Microsoft\Edge\Application\msedge.exe"),
-            _os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles"), @"Microsoft\Edge\Application\msedge.exe")
-        };
+        protected override string ExeFileName => "msedge.exe";
+
+        protected override string BrowserRegistryName => "Microsoft Edge";
+
+        protected override string UninstallSubKey => "Microsoft Edge";
+
+        protected override string ProgramFilesSubPath => @"Microsoft\Edge\Application";
 
         public override BrowserPaths GetPaths()
         {
