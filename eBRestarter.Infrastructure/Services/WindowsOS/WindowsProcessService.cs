@@ -167,6 +167,38 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
+        public async Task StartExecutableAsync(string exeFilePath)
+        {
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = exeFilePath,
+                    UseShellExecute = true
+                };
+
+                using var process = _processWrapper.Start(startInfo);
+
+                if (process != null)
+                {
+                    _logger.LogInformation("Executable gestartet und warte auf Beendeung: {Path}", exeFilePath);
+
+                    await process.WaitForExitAsync();
+
+                    _logger.LogInformation("Executable wurde beendet: {Path}", exeFilePath);
+                }
+                else
+                {
+                    _logger.LogWarning("Prozess konnte nicht gestartet werden (null zurückerhalten): {Path}", exeFilePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Starten/Warten der EXE: {Path}", exeFilePath);
+                throw;
+            }
+        }
+
         private const uint WM_CLOSE = 0x0010;
     }
 }

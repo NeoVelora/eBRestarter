@@ -27,5 +27,15 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
                 _ => string.Empty
             };
         }
+
+        public void DeleteFile(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Pfad darf nicht leer sein.", nameof(path));
+            }
+
+            File.Delete(path);
+        }
     }
 }
