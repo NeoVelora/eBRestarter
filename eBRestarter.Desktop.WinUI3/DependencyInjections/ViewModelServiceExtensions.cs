@@ -17,11 +17,13 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
             services.AddSingleton<EBRestarter>();
 
             services.AddSingleton<ViewModelRestarterProperties>();
-
             services.AddSingleton<P_CommonOverview>();
 
             services.AddSingleton<InstalledBrowsersViewModel>();
             services.AddSingleton<UC_InstalledBrowsers>();
+
+            services.AddSingleton<UC_Options>();
+            services.AddSingleton<ViewModelOptions>();
 
             return services;
         }
