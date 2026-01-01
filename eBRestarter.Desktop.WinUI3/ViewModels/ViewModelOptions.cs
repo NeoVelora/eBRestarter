@@ -1,14 +1,18 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.DirectoryServices.AccountManagement;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +20,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelOptions : ObservableObject
     {
+
+        private bool _isInitializing = false;
+
         private readonly AppConfig _currentConfig;
         private readonly IEVisitorConfigService _eVisitorConfigService;
 
@@ -23,7 +30,21 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IWindowsAutoLogonService _autoLogonService;
         private readonly IOperatingSystemFacade _os;
 
-        [ObservableProperty] public partial bool SetStartUp { get; set; } = false;
+        public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList => ComputerRestartConstants.Options;
+
+        [ObservableProperty] public partial ComputerRestartOption SelectedComputerRestartOption { get; set; }
+        [ObservableProperty] public partial int ComputerRestartClockTime { get; set; }
+        [ObservableProperty] public partial bool StartWithWindows { get; set; } = false;
+
+        [ObservableProperty]
+        public partial bool IsRestartSliderVisible { get; set; }
+
+        [ObservableProperty]
+        public partial string RestartStatusText { get; set; } = "";
+
+        public int ComputerRestartClockTimeMin { get; init; }
+        public int ComputerRestartClockTimeMax { get; init; }
+
 
         public ViewModelOptions(
             IDialogService dialogService,
@@ -35,35 +56,112 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _autoLogonService = autoLogonService;
             _os = os;
             _eVisitorConfigService = eVisitorConfigService;
+            _currentConfig = _eVisitorConfigService.LoadConfig();
+
+            ComputerRestartClockTimeMin = 0;
+            ComputerRestartClockTimeMax = 23;
+            ComputerRestartClockTime = _currentConfig.Computer.RestartClockTime;
+
+            var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
+
+            SelectedComputerRestartOption = ComputerRestartList.FirstOrDefault(x => x.Days == configDays) ?? ComputerRestartList[0];
+
+            _ = InitializeAsync();
         }
 
-        [RelayCommand]
-        private void ExecuteToggleSwitchStartWithWindows(object value)
+        private void UpdateRestartUiState()
         {
-            bool activateStartWithWindows = (bool)value;
+            int days = SelectedComputerRestartOption?.Days ?? 0;
 
-            if (activateStartWithWindows is true) { 
+            IsRestartSliderVisible = days > 0;
 
-                _os.WindowsStartupManagerService.EnableAutoStart();
+            if (days == 0)
+            {
+                RestartStatusText = "Computer wird nicht neugestartet";
             }
             else
             {
-                _os.WindowsStartupManagerService.DisableAutoStart();
+                DateTime targetDate = _currentConfig.Computer.NextRestartDate ?? DateTime.MinValue;
+
+                if (targetDate == DateTime.MinValue)
+                {
+                    targetDate = DateTime.Today.AddDays(days).AddHours(ComputerRestartClockTime);
+                }
+
+                RestartStatusText = $"Computer wird am {targetDate:dd.MM.yyyy} um {targetDate:HH} Uhr neugestartet";
             }
         }
 
-        partial void OnSetStartUpChanged(bool value)
+        partial void OnSelectedComputerRestartOptionChanged(ComputerRestartOption value)
         {
-            if (value is true)
+            _currentConfig.Computer.ComputerRestartIntervalDays = value.Days;
+
+            RecalculateNextRestartDate();
+            UpdateRestartUiState();
+
+            SaveSettings();
+        }
+
+        partial void OnComputerRestartClockTimeChanged(int value)
+        {
+            int clampedValue = Math.Clamp(value, ComputerRestartClockTimeMin, ComputerRestartClockTimeMax);
+
+            if (value != clampedValue)
             {
-                _os.WindowsStartupManagerService.EnableAutoStart();
-                _currentConfig.Browser.StartBrowserWithProgrammStart = value;
+                ComputerRestartClockTime = clampedValue;
+                return;
+            }
+
+            if (_currentConfig.Computer.RestartClockTime != value)
+            {
+                _currentConfig.Computer.RestartClockTime = value;
+
+                RecalculateNextRestartDate();
+                UpdateRestartUiState();
+
+                SaveSettings();
+            }
+        }
+
+        private async Task InitializeAsync()
+        {
+            _isInitializing = true;
+
+            try
+            {
+                StartWithWindows = await _os.WindowsStartupManagerService.IsAutoStartEnabledAsync();
+
+                if (_currentConfig.Settings.StartWithWindows is true && StartWithWindows is false)
+                {
+                    await _os.WindowsStartupManagerService.EnableAutoStartAsync();
+                }
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
+        }
+
+
+        partial void OnStartWithWindowsChanged(bool value)
+        {
+            if (_isInitializing) return;
+
+            ToggleAutoStartAsync(value);
+        }
+
+        private async void ToggleAutoStartAsync(bool enable)
+        {
+            if (enable) { 
+
+                await _os.WindowsStartupManagerService.EnableAutoStartAsync();
+                _currentConfig.Settings.StartWithWindows = enable;
                 SaveSettings();
             }
             else
             {
-                _os.WindowsStartupManagerService.DisableAutoStart();
-                _currentConfig.Browser.StartBrowserWithProgrammStart = value;
+                await _os.WindowsStartupManagerService.DisableAutoStartAsync();
+                _currentConfig.Settings.StartWithWindows = enable;
                 SaveSettings();
             }
         }
@@ -135,7 +233,20 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
+        private void RecalculateNextRestartDate()
+        {
+            int days = _currentConfig.Computer.ComputerRestartIntervalDays;
+            int hours = _currentConfig.Computer.RestartClockTime;
 
+            if (days > 0)
+            {
+                _currentConfig.Computer.NextRestartDate = DateTime.Today.AddDays(days).AddHours(hours);
+            }
+            else
+            {
+                _currentConfig.Computer.NextRestartDate = DateTime.MinValue;
+            }
+        }
         private void SaveSettings()
         {
             _eVisitorConfigService.SaveConfig(_currentConfig);

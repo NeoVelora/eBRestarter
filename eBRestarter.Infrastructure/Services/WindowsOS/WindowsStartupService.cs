@@ -5,11 +5,14 @@ using Microsoft.Win32;
 using Serilog;
 using System.Diagnostics;
 using System.Runtime.Versioning;
+using Windows.ApplicationModel;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS
 {
     public class WindowsStartupService : IWindowsStartupManagerService
     {
+        private const string StartupTaskId = "eBRestarterAutoStart";
+
 
         private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
@@ -113,6 +116,62 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fehler beim Konfigurieren der AutoLogon-Einstellungen.");
+            }
+        }
+
+
+        public async Task EnableAutoStartAsync()
+        {
+            try
+            {
+                var startupTask = await StartupTask.GetAsync(StartupTaskId);
+
+                if (startupTask.State == StartupTaskState.Disabled)
+                {
+                    var newState = await startupTask.RequestEnableAsync();
+
+                    if (newState == StartupTaskState.Enabled)
+                        _logger.LogInformation("Autostart erfolgreich aktiviert.");
+                    else
+                        _logger.LogWarning("Autostart Aktivierung fehlgeschlagen (User abgelehnt?).");
+                }
+                else
+                {
+                    _logger.LogInformation($"Autostart ist bereits aktiv oder deaktiviert durch User. Status: {startupTask.State}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Aktivieren des Autostarts via StartupTask.");
+            }
+        }
+
+        public async Task DisableAutoStartAsync()
+        {
+            try
+            {
+                var startupTask = await StartupTask.GetAsync(StartupTaskId);
+
+                startupTask.Disable();
+
+                _logger.LogInformation("Autostart erfolgreich deaktiviert.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Deaktivieren des Autostarts.");
+            }
+        }
+
+        public async Task<bool> IsAutoStartEnabledAsync()
+        {
+            try
+            {
+                var startupTask = await StartupTask.GetAsync(StartupTaskId);
+                return startupTask.State == StartupTaskState.Enabled;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
     }

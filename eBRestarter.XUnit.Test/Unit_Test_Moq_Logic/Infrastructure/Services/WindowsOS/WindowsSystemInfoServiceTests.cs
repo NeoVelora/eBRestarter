@@ -1,3 +1,4 @@
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Infrastructure.Services.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
@@ -12,13 +13,13 @@ namespace eBRestarter.XUnit.Test.Unit_Test_Moq_Logic.Infrastructure.Services.Win
     public class WindowsSystemInfoServiceTests
     {
         private readonly Mock<ILogger<WindowsSystemInfoService>> _loggerMock;
-        private readonly Mock<IRegistryService> _registryMock;
+        private readonly Mock<IWindowsRegistryService> _registryMock;
         private readonly WindowsSystemInfoService _windowsSystemInfoService;
 
         public WindowsSystemInfoServiceTests()
         {
             _loggerMock = new Mock<ILogger<WindowsSystemInfoService>>();
-            _registryMock = new Mock<IRegistryService>();
+            _registryMock = new Mock<IWindowsRegistryService>();
 
             _windowsSystemInfoService = new WindowsSystemInfoService(_loggerMock.Object, _registryMock.Object);
         }
