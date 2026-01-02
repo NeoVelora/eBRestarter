@@ -47,6 +47,12 @@ namespace eBRestarter.Infrastructure.DependencyInjection
 
 #pragma warning restore CA1416 // Plattformkompatibilität überprüfen
 
+            services.AddSingleton<WindowsWmiHardwareService>();
+
+            services.AddSingleton<IHardwareInfoService>(provider => provider.GetRequiredService<WindowsWmiHardwareService>());
+
+            services.AddSingleton<IOsEditionService>(provider => provider.GetRequiredService<WindowsWmiHardwareService>());
+
             services.AddSingleton<IOperatingSystemFacade, OperatingSystemFacade>();
 
             services.AddTransient<ChromeBrowser>();

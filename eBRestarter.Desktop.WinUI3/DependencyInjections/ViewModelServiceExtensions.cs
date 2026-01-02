@@ -22,8 +22,11 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
             services.AddSingleton<InstalledBrowsersViewModel>();
             services.AddSingleton<UC_InstalledBrowsers>();
 
-            services.AddSingleton<UC_Options>();
             services.AddSingleton<ViewModelOptions>();
+            services.AddSingleton<UC_Options>();
+
+            services.AddSingleton<ViewModelInfocenter>();
+            services.AddSingleton<UC_Infocenter>();
 
             return services;
         }
