@@ -30,9 +30,4 @@ public sealed partial class UC_Infocenter : UserControl
 
         this.DataContext = ViewModelInfocenter;
     }
-
-    private void Btn_about_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
 }

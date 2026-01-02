@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Desktop.WinUI3.Services;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,6 +17,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IHardwareInfoService _hardwareService;
         private readonly IOsEditionService _osEditionService;
         private readonly IWindowsSystemInfoService _systemInfoService;
+        private readonly IDialogService _dialogService;
 
         [ObservableProperty] public partial string ProcessorText { get; set; } = "Lade...";
         [ObservableProperty] public partial string GraphicsText { get; set; } = "Lade...";
@@ -30,14 +33,22 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public ViewModelInfocenter(
             IHardwareInfoService hardwareService,
             IOsEditionService osEditionService,
-            IWindowsSystemInfoService systemInfoService)
+            IWindowsSystemInfoService systemInfoService,
+            IDialogService dialogService)
         {
             _hardwareService = hardwareService;
             _osEditionService = osEditionService;
             _systemInfoService = systemInfoService;
-
+            _dialogService = dialogService;
             _ = LoadDataAsync();
         }
+
+        [RelayCommand]
+        private async Task ShowAboutInfo()
+        {
+            await _dialogService.ShowAboutDialogAsync();
+        }
+
 
         private async Task LoadDataAsync()
         {

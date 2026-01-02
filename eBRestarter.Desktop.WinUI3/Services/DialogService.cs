@@ -58,5 +58,15 @@ namespace eBRestarter.Desktop.WinUI3.Services
 
             return null;
         }
+
+        public async Task ShowAboutDialogAsync()
+        {
+            var dialog = new AboutDialog
+            {
+                XamlRoot = _xamlRoot
+            };
+
+            await dialog.ShowAsync();
+        }
     }
 }
