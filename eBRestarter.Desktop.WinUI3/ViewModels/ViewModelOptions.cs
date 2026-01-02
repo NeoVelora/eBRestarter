@@ -32,7 +32,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList => ComputerRestartConstants.Options;
 
+        public ReadOnlyCollection<LanguageOption> LanguageList => LanguageSelectionConstants.Options;
+
         [ObservableProperty] public partial ComputerRestartOption SelectedComputerRestartOption { get; set; }
+
+        [ObservableProperty] public partial LanguageOption SelectedLanguageOption { get; set; }
+
+        partial void OnSelectedLanguageOptionChanged(LanguageOption value)
+        {
+            _currentConfig.Settings.Language = value.Index;
+
+            SaveSettings();
+        }
+
         [ObservableProperty] public partial int ComputerRestartClockTime { get; set; }
         [ObservableProperty] public partial bool StartWithWindows { get; set; } = false;
 
@@ -63,8 +75,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ComputerRestartClockTime = _currentConfig.Computer.RestartClockTime;
 
             var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
+            var configLanguageIndex = _currentConfig.Settings.Language;
 
             SelectedComputerRestartOption = ComputerRestartList.FirstOrDefault(x => x.Days == configDays) ?? ComputerRestartList[0];
+
+            SelectedLanguageOption = LanguageList.FirstOrDefault(x => x.Index == configLanguageIndex) ?? LanguageList[0];
 
             _ = InitializeAsync();
         }
