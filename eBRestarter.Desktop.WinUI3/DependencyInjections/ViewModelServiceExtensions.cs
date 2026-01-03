@@ -30,6 +30,8 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 
             services.AddSingleton<ViewModelAbout>();
 
+            services.AddTransient<NetworkTrafficViewModel>();
+
             return services;
         }
     }

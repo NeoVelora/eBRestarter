@@ -55,6 +55,8 @@ namespace eBRestarter.Infrastructure.DependencyInjection
 
             services.AddSingleton<IOperatingSystemFacade, OperatingSystemFacade>();
 
+            services.AddSingleton<IWindowsNetworkInfoService, WindowsNetworkInfoService>();
+
             services.AddTransient<ChromeBrowser>();
             services.AddTransient<FirefoxBrowser>();
             services.AddTransient<EdgeBrowser>();
