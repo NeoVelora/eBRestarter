@@ -46,7 +46,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial int ComputerRestartClockTime { get; set; }
         [ObservableProperty] public partial bool StartWithWindows { get; set; } = false;
         [ObservableProperty] public partial bool IsRestartSliderVisible { get; set; }
-        [ObservableProperty] public partial string RestartStatusText { get; set; } = "";
+        [ObservableProperty] public partial string RestartStatusText { get; set; } = string.Empty;
 
 
         public ViewModelOptions(
