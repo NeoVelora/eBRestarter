@@ -68,5 +68,15 @@ namespace eBRestarter.Desktop.WinUI3.Services
 
             await dialog.ShowAsync();
         }
+
+        public async Task ShowBrowserDeleteContentDialogAsync()
+        {
+            var dialog = new DeleteBrowserContentDialog
+            {
+                XamlRoot = _xamlRoot
+            };
+
+            await dialog.ShowAsync();
+        }
     }
 }

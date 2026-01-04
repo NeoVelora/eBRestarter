@@ -1,3 +1,5 @@
+using eBRestarter.Desktop.WinUI3.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -16,11 +18,16 @@ using Windows.Foundation.Collections;
 
 namespace eBRestarter.Desktop.WinUI3.Views.Dialogs
 {
-    public sealed partial class DeleteBrowserContentDialog : ContentDialog
+    public partial class DeleteBrowserContentDialog : ContentDialog
     {
+        public ViewModelDeleteBrowserContent ViewModelDeleteBrowserContent { get; }
         public DeleteBrowserContentDialog()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+
+            ViewModelDeleteBrowserContent = App.AppHost!.Services.GetRequiredService<ViewModelDeleteBrowserContent>();
+
+            this.DataContext = ViewModelDeleteBrowserContent;
         }
     }
 }

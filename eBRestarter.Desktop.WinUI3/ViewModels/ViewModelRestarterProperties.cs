@@ -6,12 +6,15 @@ using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
+using eBRestarter.Desktop.WinUI3.Services;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
@@ -21,6 +24,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private readonly IOperatingSystemFacade _operatingSystemFacade;
         private readonly IEVisitorConfigService _eVisitorConfigService;
+        private readonly IDialogService _dialogService;
 
         public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList => BrowserCacheConstants.Options;
 
@@ -43,10 +47,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public int BrowserRuntimeHoursMax { get; init; }
 
 
-        public ViewModelRestarterProperties(IOperatingSystemFacade operatingSystemFacade, IEVisitorConfigService eVisitorConfigService)
+        public ViewModelRestarterProperties(
+            IOperatingSystemFacade operatingSystemFacade,
+            IEVisitorConfigService eVisitorConfigService,
+            IDialogService dialogService)
         {
             _operatingSystemFacade = operatingSystemFacade;
             _eVisitorConfigService = eVisitorConfigService;
+            _dialogService = dialogService;
 
             _currentConfig = _eVisitorConfigService.LoadConfig();
 
@@ -87,6 +95,40 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             SaveSettings();
         }
 
+        partial void OnRuntimePauseSecondsChanged(int value)
+        {
+            int clampedValue = Math.Clamp(value, RuntimePauseSecondsMin, RuntimePauseSecondsMax);
+
+            if (value != clampedValue)
+            {
+                RuntimePauseSeconds = clampedValue;
+                return;
+            }
+
+            if (_currentConfig.Browser.RuntimePauseSeconds != value)
+            {
+                _currentConfig.Browser.RuntimePauseSeconds = value;
+                SaveSettings();
+            }
+        }
+
+        partial void OnRuntimeHoursChanged(int value)
+        {
+            int clampedValue = Math.Clamp(value, BrowserRuntimeHoursMin, BrowserRuntimeHoursMax);
+
+            if (value != clampedValue)
+            {
+                RuntimeHours = clampedValue;
+                return;
+            }
+
+            if (_currentConfig.Browser.RuntimeHours != value)
+            {
+                _currentConfig.Browser.RuntimeHours = value;
+                SaveSettings();
+            }
+        }
+
         [RelayCommand(CanExecute = nameof(CanAddUsername))]
         private void AddeVVisitorUsername()
         {
@@ -108,39 +150,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _operatingSystemFacade.WindowsProcessControlService.OpenUrlInBrowser(WebLinks.RegistrationLink);
         }
 
-
-        partial void OnRuntimePauseSecondsChanged(int value)
+        [RelayCommand]
+        private async Task ShowBrowserDeleteContent()
         {
-            int clampedValue = Math.Clamp(value, RuntimePauseSecondsMin, RuntimePauseSecondsMax);
-
-            if (value != clampedValue)
-            {
-                RuntimePauseSeconds = clampedValue;
-                return; 
-            }
-
-            if (_currentConfig.Browser.RuntimePauseSeconds != value)
-            {
-                _currentConfig.Browser.RuntimePauseSeconds = value;
-                SaveSettings();
-            }
-        }
-
-        partial void OnRuntimeHoursChanged(int value)
-        {
-            int clampedValue = Math.Clamp(value, BrowserRuntimeHoursMin, BrowserRuntimeHoursMax);
-
-            if (value != clampedValue)
-            {
-                RuntimeHours = clampedValue;
-                return;
-            }
-
-            if (_currentConfig.Browser.RuntimeHours != value)
-            {        
-                _currentConfig.Browser.RuntimeHours = value;
-                SaveSettings();
-            }
+            await _dialogService.ShowBrowserDeleteContentDialogAsync();
         }
 
         private void SaveSettings()
