@@ -22,7 +22,8 @@ namespace eBRestarter.Infrastructure.Browsers
 
         protected override string RegistryKeyVersion => @"Software\Microsoft\Edge\BLBeacon";
 
-        private const string ExtensionId = "kjhejmaladginnedpoppohfnkionnghi";
+        protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
+        public override string ExtensionInstallUrl => "https://chrome.google.com/webstore/detail/ebesucher-addon/agchmcconfdfcenopioeilpgjngelefk";
 
         public EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger) : base(os, logger) { }
 

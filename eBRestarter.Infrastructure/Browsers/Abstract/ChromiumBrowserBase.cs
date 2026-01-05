@@ -15,6 +15,20 @@ namespace eBRestarter.Infrastructure.Browsers.Abstract
         protected abstract string UninstallSubKey { get; }
         protected abstract string ProgramFilesSubPath { get; }
 
+        protected abstract string ExtensionId { get; }
+
+        public override bool IsExtensionInstalled(string? extensionId = null)
+        {
+            var idToCheck = string.IsNullOrEmpty(extensionId) ? ExtensionId : extensionId;
+
+            if (string.IsNullOrEmpty(idToCheck)) return false;
+
+            var paths = GetPaths();
+            return _os.WindowsFileSystemService.DirectoryExists(paths.ExtensionsDir);
+
+
+        }
+
         protected override List<string> ExecutablePaths
         {
             get
@@ -42,5 +56,7 @@ namespace eBRestarter.Infrastructure.Browsers.Abstract
                 return paths.Distinct().ToList();
             }
         }
+
+        
     }
 }

@@ -20,6 +20,9 @@ namespace eBRestarter.Core.Application.Interfaces.Browser
 
         BrowserPaths GetPaths();
 
+        bool IsExtensionInstalled(string extensionId);
+        string ExtensionInstallUrl { get; }
+
 
     }
 }

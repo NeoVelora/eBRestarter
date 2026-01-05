@@ -156,6 +156,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             await _dialogService.ShowBrowserDeleteContentDialogAsync();
         }
 
+        [RelayCommand]
+        private async Task ShowInstallAddOnDialog()
+        {
+            await _dialogService.ShowInstallAddOnDialogAsync();
+        }
+
         private void SaveSettings()
         {
             _eVisitorConfigService.SaveConfig(_currentConfig);

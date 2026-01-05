@@ -12,9 +12,12 @@ namespace eBRestarter.Infrastructure.Browsers
 {
     public class FirefoxBrowser : BrowserBase
     {
+        private const string FirefoxEbesucherAddOnLink = "https://addons.mozilla.org/de/firefox/addon/ebesucher-addon1/";
+        private const string EbesucherAddOnNameForFirefox = "{fef425dc-a60f-4484-954d-71ecf2544846}.xpi";
         public override string DisplayName => "Firefox";
         public override string IconPath => "/Resources/Visuals/Icons/Intersection/fa_firefox.png";
         public override string DownloadUrl => WebLinks.FirefoxDownloadLink;
+        public override string ExtensionInstallUrl => FirefoxEbesucherAddOnLink;
         public override BrowserType Type => BrowserType.Firefox;
         protected override string ProcessName => "firefox";
 
@@ -22,6 +25,26 @@ namespace eBRestarter.Infrastructure.Browsers
 
         public FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> logger)
             : base(os, logger) { }
+
+        public override bool IsExtensionInstalled(string? extensionId = null)
+        {
+            var paths = GetPaths();
+            var extensionsDir = paths.ExtensionsDir;
+
+            if (!_os.WindowsFileSystemService.DirectoryExists(extensionsDir)) return false;
+
+            var idToCheck = string.IsNullOrEmpty(extensionId)
+                ? EbesucherAddOnNameForFirefox.TrimStart('\\')
+                : extensionId;
+
+            var xpiPath = _os.WindowsFileSystemService.CombinePaths(extensionsDir, idToCheck);
+            if (_os.WindowsFileSystemService.FileExists(xpiPath)) return true;
+
+            var folderName = idToCheck.Replace(".xpi", "");
+            var folderPath = _os.WindowsFileSystemService.CombinePaths(extensionsDir, folderName);
+
+            return _os.WindowsFileSystemService.DirectoryExists(folderPath);
+        }
 
         protected override List<string> ExecutablePaths
         {

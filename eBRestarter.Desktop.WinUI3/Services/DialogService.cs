@@ -78,5 +78,14 @@ namespace eBRestarter.Desktop.WinUI3.Services
 
             await dialog.ShowAsync();
         }
+
+        public async Task ShowInstallAddOnDialogAsync()
+        {
+            var dialog = new InstallAddOnDialog
+            {
+                XamlRoot = _xamlRoot
+            };
+            await dialog.ShowAsync();
+        }
     }
 }

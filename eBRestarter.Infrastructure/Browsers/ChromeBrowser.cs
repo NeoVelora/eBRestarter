@@ -24,7 +24,8 @@ namespace eBRestarter.Infrastructure.Browsers
         public override string DownloadUrl => WebLinks.ChromeDownloadLinkDE;
         protected override string ProcessName => "chrome";
         protected override string RegistryKeyVersion => @"Software\Google\Chrome\BLBeacon";
-
+        protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
+        public override string ExtensionInstallUrl => "https://chrome.google.com/webstore/detail/ebesucher-addon/agchmcconfdfcenopioeilpgjngelefk";
         public ChromeBrowser(IOperatingSystemFacade os, ILogger<ChromeBrowser> logger) : base(os, logger) { }
 
         public override BrowserPaths GetPaths()

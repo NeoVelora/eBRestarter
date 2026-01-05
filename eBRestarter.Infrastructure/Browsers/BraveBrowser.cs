@@ -28,7 +28,8 @@ namespace eBRestarter.Infrastructure.Browsers
 
         protected override string RegistryKeyVersion => @"Software\BraveSoftware\Brave-Browser\BLBeacon";
 
-        private const string ExtensionId = "agchmcconfdfcenopioeilpgjngelefk";
+        protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
+        public override string ExtensionInstallUrl => "https://chrome.google.com/webstore/detail/ebesucher-addon/agchmcconfdfcenopioeilpgjngelefk";
 
         public BraveBrowser(IOperatingSystemFacade os, ILogger<BraveBrowser> logger) : base(os, logger) { }
 
