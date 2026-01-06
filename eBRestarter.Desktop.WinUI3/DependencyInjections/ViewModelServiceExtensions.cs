@@ -35,6 +35,8 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 
             services.AddTransient<InstallAddOnViewModel>();
 
+            services.AddTransient<ActivateApiViewModel>();
+
             return services;
         }
     }

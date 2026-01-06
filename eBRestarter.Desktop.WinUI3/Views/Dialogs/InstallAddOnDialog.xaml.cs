@@ -27,6 +27,8 @@ public sealed partial class InstallAddOnDialog : ContentDialog
         InitializeComponent();
         InstallAddOnViewModel = App.AppHost!.Services.GetRequiredService<InstallAddOnViewModel>();
 
+        this.DataContext = InstallAddOnViewModel;
+
         this.Closed += (s, e) => InstallAddOnViewModel.Dispose();
     }
 }

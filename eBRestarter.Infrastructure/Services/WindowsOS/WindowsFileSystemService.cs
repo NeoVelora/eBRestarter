@@ -37,5 +37,17 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
 
             File.Delete(path);
         }
+
+        public void WriteAllText(string path, string content)
+        {
+            File.WriteAllText(path, content);
+        }
+
+        public string ReadAllText(string path)
+        {
+            var content = File.ReadAllText(path);
+
+            return content;
+        }
     }
 }

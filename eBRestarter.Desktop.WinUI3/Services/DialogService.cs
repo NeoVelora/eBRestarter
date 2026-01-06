@@ -87,5 +87,14 @@ namespace eBRestarter.Desktop.WinUI3.Services
             };
             await dialog.ShowAsync();
         }
+
+        public async Task ShowActivateApiDialogAsync()
+        {
+            var dialog = new ActivateApiDialog
+            {
+                XamlRoot = _xamlRoot
+            };
+            await dialog.ShowAsync();
+        }
     }
 }
