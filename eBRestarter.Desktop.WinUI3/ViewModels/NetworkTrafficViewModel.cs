@@ -1,13 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Extensions;
+using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Desktop.WinUI3.Models.UI;
 using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Timers;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
@@ -29,7 +29,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public NetworkTrafficViewModel(IWindowsNetworkInfoService networkService)
         {
             _networkService = networkService;
-
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             _timer = new System.Timers.Timer(1000);
@@ -37,41 +36,68 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _timer.AutoReset = true;
             _timer.Start();
 
-            UpdateTrafficData();
+            System.Threading.Tasks.Task.Run(() => PerformUpdate());
         }
 
         private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
         {
+            PerformUpdate();
+        }
+
+        private void PerformUpdate()
+        {
+
+            bool isAvailable = false;
+            List<NetworkStats>? currentStats = null;
+
+            try
+            {
+                isAvailable = _networkService.IsNetworkAvailable();
+                if (isAvailable)
+                {
+                    currentStats = _networkService.GetActiveInterfaces().ToList();
+                }
+            }
+            catch (Exception)
+            {
+                isAvailable = false;
+            }
+
             _dispatcherQueue.TryEnqueue(() =>
             {
-                UpdateTrafficData();
+                ApplyDataToUi(isAvailable, currentStats);
             });
         }
 
-        private void UpdateTrafficData()
+        private void ApplyDataToUi(bool isNetworkAvailable, IEnumerable<NetworkStats>? stats)
         {
-            if (!_networkService.IsNetworkAvailable())
+            if (!isNetworkAvailable || stats == null)
             {
                 ShowOfflineState();
                 return;
             }
 
-            var currentStats = _networkService.GetActiveInterfaces().ToList();
 
-
-            var activeIds = currentStats.Select(x => $"Netzwerkkarte: {x.Name}").ToList();
+            var activeIds = stats.Select(x => $"Netzwerkkarte: {x.Name}").ToList();
             var itemsToRemove = NetworkCards.Where(x => !activeIds.Contains(x.AdapterName)).ToList();
-            foreach (var item in itemsToRemove) NetworkCards.Remove(item);
 
-            foreach (var stat in currentStats)
+            foreach (var item in itemsToRemove)
+            {
+                NetworkCards.Remove(item);
+            }
+
+            foreach (var stat in stats)
             {
                 string name = $"Netzwerkkarte: {stat.Name}";
                 var existingItem = NetworkCards.FirstOrDefault(x => x.AdapterName == name);
 
+                string received = $"Empfangen: {FormatExtensions.ToSizeSuffix(stat.BytesReceived)}";
+                string sent = $"Gesendet: {FormatExtensions.ToSizeSuffix(stat.BytesSent)}";
+
                 if (existingItem != null)
                 {
-                    existingItem.ReceivedData = $"Empfangen: {FormatExtensions.ToSizeSuffix(stat.BytesReceived)}";
-                    existingItem.SentData = $"Gesendet: {FormatExtensions.ToSizeSuffix(stat.BytesSent)}";
+                    existingItem.ReceivedData = received;
+                    existingItem.SentData = sent;
                     existingItem.ForegroundColor = ColorDefault;
                 }
                 else
@@ -79,8 +105,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     NetworkCards.Add(new NetworkCardDisplayModel
                     {
                         AdapterName = name,
-                        ReceivedData = $"Empfangen: {FormatExtensions.ToSizeSuffix(stat.BytesReceived)}",
-                        SentData = $"Gesendet: {FormatExtensions.ToSizeSuffix(stat.BytesSent)}",
+                        ReceivedData = received,
+                        SentData = sent,
                         ImagePathNetworkCard = ImgCard,
                         ImagePathReceivedData = ImgDown,
                         ImagePathSendData = ImgUp,
@@ -92,6 +118,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private void ShowOfflineState()
         {
+            if (NetworkCards.Count == 1 && NetworkCards[0].AdapterName == "Netzwerkkarte: nicht verfügbar")
+                return;
+
             NetworkCards.Clear();
             NetworkCards.Add(new NetworkCardDisplayModel
             {

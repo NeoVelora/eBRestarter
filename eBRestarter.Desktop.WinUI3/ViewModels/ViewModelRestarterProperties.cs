@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Facade;
 using eBRestarter.Core.Application.Interfaces.Config;
@@ -135,6 +136,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _currentConfig.Username = Username;
             
             SaveSettings();
+
+            WeakReferenceMessenger.Default.Send(new UsernameChangedMessage(Username));
 
             Username = string.Empty;
         }
