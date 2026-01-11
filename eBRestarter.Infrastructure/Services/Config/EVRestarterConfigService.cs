@@ -9,10 +9,10 @@ using System.Text.Json;
 
 namespace eBRestarter.Infrastructure.Services.Config
 {
-    public class EVRestarterConfigService : IEVisitorConfigService
+    public class EVisitorConfigService : IEVisitorConfigService
     {
         private readonly IPathService _pathService;
-        private readonly ILogger<EVRestarterConfigService> _logger;
+        private readonly ILogger<EVisitorConfigService> _logger;
 
         private readonly JsonSerializerOptions _jsonOptions = new()
         {
@@ -20,7 +20,7 @@ namespace eBRestarter.Infrastructure.Services.Config
             PropertyNameCaseInsensitive = true
         };
 
-        public EVRestarterConfigService(IPathService pathService, ILogger<EVRestarterConfigService> logger)
+        public EVisitorConfigService(IPathService pathService, ILogger<EVisitorConfigService> logger)
         {
             _pathService = pathService;
             _logger = logger;

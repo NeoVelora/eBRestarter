@@ -1,3 +1,4 @@
+using eBRestarter.Core.Application.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.Services;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
@@ -55,6 +56,7 @@ namespace eBRestarter.Desktop.WinUI3
                  .ConfigureServices((ctx, services) =>
                  {
                      services.AddInfrastructureServices();
+                     services.AddApplicationServices();
                      services.AddNavigationService();
                      services.AddDialoglServiceExtensions();
                      services.AddViewModels();
