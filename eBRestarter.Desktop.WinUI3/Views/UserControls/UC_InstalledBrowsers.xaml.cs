@@ -20,14 +20,14 @@ namespace eBRestarter.Desktop.WinUI3.Views.UserControls
 {
     public sealed partial class UC_InstalledBrowsers : UserControl
     {
-        public InstalledBrowsersViewModel InstalledBrowsersViewModel { get; }
+        public ViewModelInstalledBrowsers ViewModelInstalledBrowsers { get; }
         public UC_InstalledBrowsers()
         {
             InitializeComponent();
 
-            InstalledBrowsersViewModel = App.AppHost!.Services.GetRequiredService<InstalledBrowsersViewModel>();
+            ViewModelInstalledBrowsers = App.AppHost!.Services.GetRequiredService<ViewModelInstalledBrowsers>();
 
-            this.DataContext = InstalledBrowsersViewModel;
+            this.DataContext = ViewModelInstalledBrowsers;
         }
     }
 }

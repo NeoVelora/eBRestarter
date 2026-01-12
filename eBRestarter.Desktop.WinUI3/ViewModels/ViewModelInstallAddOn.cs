@@ -9,21 +9,21 @@ using System.Timers;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-    public partial class InstallAddOnViewModel : ObservableObject, IDisposable
+    public partial class ViewModelInstallAddOn : ObservableObject, IDisposable
     {
         private readonly IBrowserFactory _browserFactory;
         private readonly Timer _timer;
 
-        public ObservableCollection<BrowserAddonStatusViewModel> Browsers { get; } = [];
+        public ObservableCollection<ViewModelBrowserAddonStatus> Browsers { get; } = [];
 
-        public InstallAddOnViewModel(IBrowserFactory browserFactory)
+        public ViewModelInstallAddOn(IBrowserFactory browserFactory)
         {
             _browserFactory = browserFactory;
 
-            Browsers.Add(new BrowserAddonStatusViewModel(_browserFactory.Create(BrowserType.Chrome)));
-            Browsers.Add(new BrowserAddonStatusViewModel(_browserFactory.Create(BrowserType.Firefox)));
-            Browsers.Add(new BrowserAddonStatusViewModel(_browserFactory.Create(BrowserType.Edge)));
-            Browsers.Add(new BrowserAddonStatusViewModel(_browserFactory.Create(BrowserType.Brave)));
+            Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Chrome)));
+            Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Firefox)));
+            Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Edge)));
+            Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Brave)));
 
             _timer = new Timer(2000);
             _timer.Elapsed += (s, e) =>

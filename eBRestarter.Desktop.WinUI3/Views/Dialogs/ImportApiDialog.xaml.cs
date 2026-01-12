@@ -22,12 +22,12 @@ namespace eBRestarter.Desktop.WinUI3.Views.Dialogs;
 
 public sealed partial class ImportApiDialog : ContentDialog
 {
-    public ImportApiViewModel ViewModel { get; }
+    public ViewModelImportApi ViewModelImportApi { get; }
 
     public ImportApiDialog()
     {
         InitializeComponent();
-        ViewModel = App.AppHost!.Services.GetRequiredService<ImportApiViewModel>();
+        ViewModelImportApi = App.AppHost!.Services.GetRequiredService<ViewModelImportApi>();
     }
 
     private void DropZone_DragOver(object sender, DragEventArgs e)
@@ -43,7 +43,7 @@ public sealed partial class ImportApiDialog : ContentDialog
             var items = await e.DataView.GetStorageItemsAsync();
             if (items.Count > 0 && items[0] is Windows.Storage.StorageFile file)
             {
-                ViewModel.HandleFileDrop(file.Path);
+                ViewModelImportApi.HandleFileDrop(file.Path);
             }
         }
     }
