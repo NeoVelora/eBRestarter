@@ -199,6 +199,27 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             }
         }
 
+        public void OpenExplorer(string folderPath)
+        {
+            try
+            {
+                string args = $"\"{folderPath}\"";
+
+                _processWrapper.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = args,
+                    UseShellExecute = true
+                });
+
+                _logger.LogInformation("Explorer geöffnet in: {Path}", folderPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Öffnen des Explorers: {Path}", folderPath);
+            }
+        }
+
         private const uint WM_CLOSE = 0x0010;
     }
 }

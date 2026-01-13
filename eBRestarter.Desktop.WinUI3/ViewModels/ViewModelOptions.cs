@@ -20,6 +20,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
+    using eBRestarter.Core.Application.Interfaces.Update;
+    using eBRestarter.Infrastructure.Constants;
     using System.Collections.ObjectModel;
     using System.DirectoryServices.AccountManagement;
 
@@ -33,6 +35,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IDialogService _dialogService;
         private readonly IWindowsAutoLogonService _autoLogonService;
         private readonly IOperatingSystemFacade _os;
+        private readonly IUpdateService _updateService;
 
 
         public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList => ComputerRestartConstants.Options;
@@ -48,16 +51,21 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial bool IsRestartSliderVisible { get; set; }
         [ObservableProperty] public partial string RestartStatusText { get; set; } = string.Empty;
 
+        [ObservableProperty] public partial bool IsUpdateAvailable { get; set; }
+        [ObservableProperty] public partial string UpdateMessage { get; set; } = string.Empty;
+
 
         public ViewModelOptions(
             IDialogService dialogService,
             IWindowsAutoLogonService autoLogonService,
             IOperatingSystemFacade os,
+            IUpdateService updateService,
             IEVisitorConfigService eVisitorConfigService)
         {
             _dialogService = dialogService;
             _autoLogonService = autoLogonService;
             _os = os;
+            _updateService = updateService;
             _eVisitorConfigService = eVisitorConfigService;
 
             _currentConfig = _eVisitorConfigService.LoadConfig();
@@ -72,11 +80,45 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             SelectedComputerRestartOption = ComputerRestartList.FirstOrDefault(x => x.Days == configDays) ?? ComputerRestartList[0];
             SelectedLanguageOption = LanguageList.FirstOrDefault(x => x.Index == configLanguageIndex) ?? LanguageList[0];
 
-            UpdateRestartUiState();
 
             _ = InitializeAsync();
         }
 
+
+        [RelayCommand]
+        private async Task CheckForUpdates()
+        {
+            try
+            {
+                var info = await _updateService.CheckForUpdateAsync();
+
+                if (info.IsUpdateAvailable)
+                {
+                    IsUpdateAvailable = true;
+                    UpdateMessage = $"Version {info.LatestVersion} verfügbar!";
+
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        [RelayCommand]
+        private async Task PerformUpdate()
+        {
+            var info = await _updateService.CheckForUpdateAsync();
+            if (info.IsUpdateAvailable)
+            {
+                await _updateService.DownloadAndInstallAsync(info);
+            }
+        }
+
+        [RelayCommand]
+        private async Task OpenSettingsDataFolder()
+        {
+            _os.WindowsProcessControlService.OpenExplorer(SystemPaths.ApplicationDataBasePath);
+        }
 
         [RelayCommand]
         private async Task ShowActivateApiDialog()
