@@ -14,22 +14,28 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelInfocenter : ObservableObject
     {
+        #region Fields
+        private readonly IDialogService _dialogService;
         private readonly IHardwareInfoService _hardwareService;
         private readonly IOsEditionService _osEditionService;
         private readonly IWindowsSystemInfoService _systemInfoService;
-        private readonly IDialogService _dialogService;
+        #endregion
 
-        [ObservableProperty] public partial string ProcessorText { get; set; } = "Lade...";
+        #region Observable Properties
+        [ObservableProperty] public partial string BrowserText { get; set; } = "Lade...";
         [ObservableProperty] public partial string GraphicsText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string RamText { get; set; } = "Lade...";
-
+        [ObservableProperty] public partial string OsBuildText { get; set; } = "Lade...";
         [ObservableProperty] public partial string OsEditionText { get; set; } = "Lade...";
         [ObservableProperty] public partial string OsVersionText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string OsBuildText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string BrowserText { get; set; } = "Lade...";
+        [ObservableProperty] public partial string ProcessorText { get; set; } = "Lade...";
+        [ObservableProperty] public partial string RamText { get; set; } = "Lade...";
+        #endregion
 
+        #region Properties
         public string Title { get; } = "Infocenter";
+        #endregion
 
+        #region Constructors
         public ViewModelInfocenter(
             IHardwareInfoService hardwareService,
             IOsEditionService osEditionService,
@@ -42,14 +48,30 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _dialogService = dialogService;
             _ = LoadDataAsync();
         }
+        #endregion
+
+        #region Commands
+        [RelayCommand]
+        public void OpenSupportWebsite(string? url)
+        {
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                }
+                catch {}
+            }
+        }
 
         [RelayCommand]
         private async Task ShowAboutInfo()
         {
             await _dialogService.ShowAboutDialogAsync();
         }
+        #endregion
 
-
+        #region Methods
         private async Task LoadDataAsync()
         {
             var hardware = await _hardwareService.GetHardwareInfoAsync();
@@ -65,18 +87,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             OsBuildText = $"Betriebssystembuild: {_systemInfoService.GetCurrentOsBuildVersion()}";
             BrowserText = $"Standardbrowser: {_systemInfoService.GetCurrentStandardBrowserName()}";
         }
-
-        [RelayCommand]
-        public void OpenSupportWebsite(string? url)
-        {
-            if (!string.IsNullOrWhiteSpace(url))
-            {
-                try
-                {
-                    Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-                }
-                catch {}
-            }
-        }
+        #endregion
     }
 }

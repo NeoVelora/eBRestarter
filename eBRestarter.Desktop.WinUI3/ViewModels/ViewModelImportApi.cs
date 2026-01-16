@@ -10,17 +10,43 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelImportApi : ObservableObject
     {
+        #region Fields (Private Felder OHNE [ObservableProperty])
+
         private readonly IApiAuthenticationService _authService;
         private readonly ICredentialStore _credentialStore;
 
+        #endregion
+
+        #region Observable Properties (Felder MIT [ObservableProperty])
+
+        [ObservableProperty]
+        public partial string FileStatusIcon { get; set; } = "ms-appx:///Resources/Visuals/Icons/LightTheme/note_light_theme.png";
+
+        [ObservableProperty]
+        public partial string ImportedFileName { get; set; } = string.Empty;
+
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
-        public partial string ImportedFilePath { get; set; } =  string.Empty;
-        [ObservableProperty] public partial string ImportedFileName { get; set; } = string.Empty;
-        [ObservableProperty] public partial string FileStatusIcon { get; set; } = "ms-appx:///Resources/Visuals/Icons/LightTheme/note_light_theme.png";
-        [ObservableProperty] public partial bool IsBusy { get; set; }
-        [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
-        [ObservableProperty] public partial string StatusColor { get; set; } = "Transparent";
+        public partial string ImportedFilePath { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        public partial bool IsBusy { get; set; }
+
+        [ObservableProperty]
+        public partial string StatusColor { get; set; } = "Transparent";
+
+        [ObservableProperty]
+        public partial string StatusMessage { get; set; } = string.Empty;
+
+        #endregion
+
+        #region Properties (Explizite get; set; Eigenschaften)
+
+        private bool CanImport => !string.IsNullOrEmpty(ImportedFilePath) && !IsBusy;
+
+        #endregion
+
+        #region Constructors
 
         public ViewModelImportApi(
             IApiAuthenticationService authService,
@@ -30,30 +56,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _credentialStore = credentialStore;
         }
 
-        public void HandleFileDrop(string filePath)
-        {
-            if (!filePath.EndsWith(".apiaf"))
-            {
-                StatusMessage = "Ungültiges Dateiformat. Bitte .apiaf Datei verwenden.";
-                StatusColor = "#E40E87";
-                FileStatusIcon = "ms-appx:///Resources/Visuals/Icons/Intersection/wrong_document.png";
-                ImportedFilePath = "";
-                ImportedFileName = "";
-                return;
-            }
+        #endregion
 
-            ImportedFilePath = filePath;
-            ImportedFileName = System.IO.Path.GetFileName(filePath);
-            StatusMessage = "Datei erkannt. Bereit zum Import.";
-            StatusColor = "{ThemeResource TextFillColorPrimaryBrush}";
-            FileStatusIcon = "ms-appx:///Resources/Visuals/Icons/Intersection/approval.png";
-        }
-
-        public void HandleFileSelect()
-        {
-        }
-
-        private bool CanImport => !string.IsNullOrEmpty(ImportedFilePath) && !IsBusy;
+        #region Commands (Methoden MIT [RelayCommand])
 
         [RelayCommand(CanExecute = nameof(CanImport))]
         private async Task Import()
@@ -89,5 +94,34 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 StatusColor = "#E40E87";
             }
         }
+
+        #endregion
+
+        #region Methods (Restliche Methoden)
+
+        public void HandleFileDrop(string filePath)
+        {
+            if (!filePath.EndsWith(".apiaf"))
+            {
+                StatusMessage = "Ungültiges Dateiformat. Bitte .apiaf Datei verwenden.";
+                StatusColor = "#E40E87";
+                FileStatusIcon = "ms-appx:///Resources/Visuals/Icons/Intersection/wrong_document.png";
+                ImportedFilePath = "";
+                ImportedFileName = "";
+                return;
+            }
+
+            ImportedFilePath = filePath;
+            ImportedFileName = System.IO.Path.GetFileName(filePath);
+            StatusMessage = "Datei erkannt. Bereit zum Import.";
+            StatusColor = "{ThemeResource TextFillColorPrimaryBrush}";
+            FileStatusIcon = "ms-appx:///Resources/Visuals/Icons/Intersection/approval.png";
+        }
+
+        public void HandleFileSelect()
+        {
+        }
+
+        #endregion
     }
 }

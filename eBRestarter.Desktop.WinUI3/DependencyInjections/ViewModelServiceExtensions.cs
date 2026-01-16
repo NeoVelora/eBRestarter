@@ -18,7 +18,7 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
             services.AddSingleton<ViewModelRestartTask>();
             services.AddSingleton<ViewModelRestarterProperties>();
    
-            services.AddSingleton<ViewModelGeneralOverView>();
+            services.AddSingleton<ViewModelGeneralOverview>();
 
             services.AddSingleton<ViewModelInstalledBrowsers>();
 

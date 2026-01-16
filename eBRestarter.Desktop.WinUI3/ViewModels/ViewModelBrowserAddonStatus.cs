@@ -11,21 +11,28 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelBrowserAddonStatus : ObservableObject
     {
+        #region Fields (Private Felder OHNE [ObservableProperty])
+
         private readonly IBrowser _browser;
         private readonly DispatcherQueue _dispatcherQueue;
 
-        [ObservableProperty] public partial string BrowserName { get; set; } = string.Empty;
-        [ObservableProperty] public partial string IconPath { get; set; } = string.Empty;
+        #endregion
 
-        [ObservableProperty] public partial string InstallStatusText { get; set; } = "Prüfe...";
-        [ObservableProperty] public partial string InstallStatusColor { get; set; } = "#000000";
+        #region Observable Properties (Felder MIT [ObservableProperty])
 
-        [ObservableProperty] public partial string AddonStatusText { get; set; } = "Prüfe...";
         [ObservableProperty] public partial string AddonStatusColor { get; set; } = "#000000";
         [ObservableProperty] public partial string AddonStatusIcon { get; set; } = "?";
-
+        [ObservableProperty] public partial string AddonStatusText { get; set; } = "Prüfe...";
+        [ObservableProperty] public partial string BrowserName { get; set; } = string.Empty;
         [ObservableProperty] public partial string ButtonText { get; set; } = "Lade...";
+        [ObservableProperty] public partial string IconPath { get; set; } = string.Empty;
+        [ObservableProperty] public partial string InstallStatusColor { get; set; } = "#000000";
+        [ObservableProperty] public partial string InstallStatusText { get; set; } = "Prüfe...";
         [ObservableProperty] public partial bool IsButtonEnabled { get; set; } = false;
+
+        #endregion
+
+        #region Constructors
 
         public ViewModelBrowserAddonStatus(IBrowser browser)
         {
@@ -39,6 +46,23 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             RefreshStatus();
         }
+
+        #endregion
+
+        #region Commands (Methoden MIT [RelayCommand])
+
+        [RelayCommand]
+        private void OpenStore()
+        {
+            if (!string.IsNullOrEmpty(_browser.ExtensionInstallUrl))
+            {
+                _browser.Start(_browser.ExtensionInstallUrl);
+            }
+        }
+
+        #endregion
+
+        #region Methods (Restliche Methoden)
 
         public void RefreshStatus()
         {
@@ -80,13 +104,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             });
         }
 
-        [RelayCommand]
-        private void OpenStore()
-        {
-            if (!string.IsNullOrEmpty(_browser.ExtensionInstallUrl))
-            {
-                _browser.Start(_browser.ExtensionInstallUrl);
-            }
-        }
+        #endregion
     }
 }

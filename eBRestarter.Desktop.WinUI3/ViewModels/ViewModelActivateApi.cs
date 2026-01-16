@@ -11,20 +11,38 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelActivateApi : ObservableObject
     {
+        #region Fields (Private Felder OHNE [ObservableProperty])
+
         private readonly IApiAuthenticationService _authService;
         private readonly ICredentialStore _credentialStore;
 
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
-        public partial string Username { get; set; } = string.Empty;
+        #endregion
+
+        #region Observable Properties (Felder MIT [ObservableProperty])
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
         public partial string ApiKey { get; set; } = string.Empty;
 
         [ObservableProperty] public partial bool IsBusy { get; set; }
-        [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
+
         [ObservableProperty] public partial string StatusColor { get; set; } = "Transparent";
+
+        [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
+        public partial string Username { get; set; } = string.Empty;
+
+        #endregion
+
+        #region Properties (Explizite get; set; Eigenschaften)
+
+        private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
+
+        #endregion
+
+        #region Constructors
 
         public ViewModelActivateApi(
             IApiAuthenticationService authService,
@@ -41,7 +59,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
+        #endregion
+
+        #region Commands (Methoden MIT [RelayCommand])
 
         [RelayCommand(CanExecute = nameof(CanSubmit))]
         private async Task Submit()
@@ -68,6 +88,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
+        #endregion
+
+        #region Methods (Restliche Methoden)
+
         public void ImportLegacyFile(string filePath)
         {
             var imported = _credentialStore.ImportFromLegacyFile(filePath);
@@ -84,5 +108,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 StatusColor = "#E40E87";
             }
         }
+
+        #endregion
     }
 }

@@ -6,12 +6,12 @@ using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Infrastructure.Constants;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Globalization;
+using System.Linq;
 using System.Text.Json;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Threading.Tasks;
 
-namespace eBRestarter.Infrastructure.Services
+namespace eBRestarter.Infrastructure.Services.EBesucher
 {
     public class EVisitorApiAdapter : IEVisitorApiService
     {
@@ -71,18 +71,57 @@ namespace eBRestarter.Infrastructure.Services
                 return null;
             }
 
+            var username = config.Settings.ApiUsername;
+            var apiKey = config.Settings.ApiKey;
+            var now = DateTime.Now;
+
+            var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0);
+
+            var startOfYear = new DateTime(now.Year, 1, 1, 0, 0, 0);
+
+            try
+            {
+                var tHourly = GetHourlyEarningsRawAsync(username, apiKey);
+
+                var tMonthlyDetails = GetDailyEarningsRawAsync(username, apiKey, startOfMonth, now);
+
+                var tYearlyDetails = GetMonthlyEarningsRawAsync(username, apiKey, startOfYear, now);
+
+                await Task.WhenAll(tHourly, tMonthlyDetails, tYearlyDetails);
+
+                double[] hourlyArray = tHourly.Result;
+                double[] dailyArray = tMonthlyDetails.Result;
+                double[] monthlyArray = tYearlyDetails.Result;
+
+                double monthlySum = dailyArray.Sum();
+                double yearlySum = monthlyArray.Sum();
+                double todaySum = hourlyArray.Sum();
+
+
+                return new EarningsData(hourlyArray, dailyArray, monthlyArray , yearlySum, monthlySum, todaySum);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Abrufen der Earnings (Gesamtprozess).");
+                return null;
+            }
+        }
+
+
+        private async Task<double[]> GetHourlyEarningsRawAsync(string username, string apiKey)
+        {
             var request = new ApiRequest
             {
                 Url = ApiWebLinks.HourlyEarnings,
                 Method = Core.Domain.Enums.HttpMethod.GET,
-                Username = config.Settings.ApiUsername,
-                Password = config.Settings.ApiKey
+                Username = username,
+                Password = apiKey
             };
 
             var response = await _restClient.ExecuteGetAsync(request);
 
             if (!response.IsSuccess || string.IsNullOrEmpty(response.Content))
-                return null;
+                return new double[24];
 
             try
             {
@@ -94,10 +133,7 @@ namespace eBRestarter.Infrastructure.Services
                 if (root.ValueKind == JsonValueKind.Array)
                 {
                     hourly = root.EnumerateArray()
-                                 .Select(element =>
-                                 {
-                                     return element.TryGetDouble(out double val) ? val : 0.0;
-                                 })
+                                 .Select(element => element.TryGetDouble(out double val) ? val : 0.0)
                                  .ToArray();
                 }
                 else
@@ -112,15 +148,135 @@ namespace eBRestarter.Infrastructure.Services
                     hourly = temp;
                 }
 
-                double todaySum = hourly.Sum();
-
-                return new EarningsData(hourly, 0, todaySum);
+                return hourly;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Parsen der Earnings");
-                return null;
+                _logger.LogError(ex, "Fehler beim Parsen der Hourly Earnings.");
+                return new double[24];
             }
+        }
+
+        private async Task<double[]> GetDailyEarningsRawAsync(string username, string apiKey, DateTime start, DateTime end)
+        {
+            long unixStart = ((DateTimeOffset)start).ToUnixTimeSeconds();
+            long unixEnd = ((DateTimeOffset)end).ToUnixTimeSeconds();
+
+            string url = $"{ApiWebLinks.EarningsThisMonth}{unixStart}-{unixEnd}";
+
+            var request = new ApiRequest
+            {
+                Url = url,
+                Method = Core.Domain.Enums.HttpMethod.GET,
+                Username = username,
+                Password = apiKey
+            };
+
+            int daysInMonth = DateTime.DaysInMonth(start.Year, start.Month);
+            var dailyEarnings = new double[daysInMonth];
+
+            var response = await _restClient.ExecuteGetAsync(request);
+
+            if (!response.IsSuccess || string.IsNullOrEmpty(response.Content))
+                return dailyEarnings;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(response.Content);
+                var root = doc.RootElement;
+
+                if (root.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in root.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
+                        {
+                            string dateStr = dateProp.GetString() ?? "";
+                            if (DateTime.TryParseExact(dateStr, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+                            {
+                                int dayIndex = date.Day - 1;
+                                if (dayIndex >= 0 && dayIndex < daysInMonth)
+                                {
+                                    dailyEarnings[dayIndex] = GetValueSafe(item);
+                                }
+                            }
+                        }
+                    }
+                }
+                return dailyEarnings;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Fehler beim Parsen der Daily Earnings.");
+                return dailyEarnings;
+            }
+        }
+
+        private async Task<double[]> GetMonthlyEarningsRawAsync(string username, string apiKey, DateTime start, DateTime end)
+        {
+            long unixStart = ((DateTimeOffset)start).ToUnixTimeSeconds();
+            long unixEnd = ((DateTimeOffset)end).ToUnixTimeSeconds();
+
+            string url = $"{ApiWebLinks.EarningsThisMonth}{unixStart}-{unixEnd}";
+
+            var request = new ApiRequest
+            {
+                Url = url,
+                Method = Core.Domain.Enums.HttpMethod.GET,
+                Username = username,
+                Password = apiKey
+            };
+
+            var monthlyEarnings = new double[12];
+
+            var response = await _restClient.ExecuteGetAsync(request);
+
+            if (!response.IsSuccess || string.IsNullOrEmpty(response.Content))
+                return monthlyEarnings;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(response.Content);
+                var root = doc.RootElement;
+
+                if (root.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in root.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
+                        {
+                            string dateStr = dateProp.GetString() ?? "";
+                            if (DateTime.TryParseExact(dateStr, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+                            {
+                                int monthIndex = date.Month - 1;
+                                if (monthIndex >= 0 && monthIndex < 12)
+                                {
+                                    monthlyEarnings[monthIndex] += GetValueSafe(item);
+                                }
+                            }
+                        }
+                    }
+                }
+                return monthlyEarnings;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Fehler beim Parsen der Monthly Earnings.");
+                return monthlyEarnings;
+            }
+        }
+
+        private double GetValueSafe(JsonElement item)
+        {
+            if (item.TryGetProperty("value", out JsonElement valProp))
+            {
+                if (valProp.ValueKind == JsonValueKind.Number)
+                    return valProp.GetDouble();
+                else if (valProp.ValueKind == JsonValueKind.String &&
+                         double.TryParse(valProp.GetString()?.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double dVal))
+                    return dVal;
+            }
+            return 0.0;
         }
 
         private string GetStringSafe(JsonElement element, string propertyName)

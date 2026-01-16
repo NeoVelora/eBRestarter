@@ -10,18 +10,36 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelAbout : ObservableObject
     {
+        #region Fields (Private Felder OHNE [ObservableProperty])
+
         private readonly IAppInfoService _appInfoService;
+
+        #endregion
+
+        #region Observable Properties (Felder MIT [ObservableProperty])
 
         [ObservableProperty]
         public partial string AppVersion { get; set; } = "Lade...";
 
+        #endregion
+
+        #region Properties (Explizite get; set; Eigenschaften)
+
         public ObservableCollection<IconCredit> IconCredits { get; } = [];
+
+        #endregion
+
+        #region Constructors
 
         public ViewModelAbout(IAppInfoService appInfoService)
         {
             _appInfoService = appInfoService;
             LoadData();
         }
+
+        #endregion
+
+        #region Methods (Restliche Methoden)
 
         private void LoadData()
         {
@@ -34,5 +52,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 IconCredits.Add(credit);
             }
         }
+
+        #endregion
     }
 }

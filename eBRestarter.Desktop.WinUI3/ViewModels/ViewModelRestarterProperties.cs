@@ -21,33 +21,40 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelRestarterProperties : ObservableObject
     {
+        #region Fields
         private readonly AppConfig _currentConfig;
+        private readonly IDialogService _dialogService;
+        private readonly IEVisitorConfigService _eVisitorConfigService;
 
         private readonly IOperatingSystemFacade _operatingSystemFacade;
-        private readonly IEVisitorConfigService _eVisitorConfigService;
-        private readonly IDialogService _dialogService;
+        #endregion
 
-        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList => BrowserCacheConstants.Options;
+        #region Observable Properties
+        [ObservableProperty] public partial bool CheckBrowserIsAliveIsOn { get; set; } = false;
+        [ObservableProperty] public partial int RuntimeHours { get; set; }
+        [ObservableProperty] public partial int RuntimePauseSeconds { get; set; }
+
+        [ObservableProperty] public partial BrowserCacheDeleteOption SelectedDeleteBrowserCacheOption { get; set; }
+        [ObservableProperty] public partial bool StartBrowserWithProgrammStartIs { get; set; } = false;
+        [ObservableProperty] private partial string StandardBrowser { get; set; } = string.Empty;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddeVVisitorUsernameCommand))]
         public partial string Username { get; set; } = string.Empty;
+        #endregion
 
-        [ObservableProperty] private partial string StandardBrowser { get; set; } = string.Empty;
-        [ObservableProperty] public partial int RuntimePauseSeconds { get; set; }
-        [ObservableProperty] public partial int RuntimeHours { get; set; }
+        #region Properties
+        
+        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList => BrowserCacheConstants.Options;
 
-        [ObservableProperty] public partial BrowserCacheDeleteOption SelectedDeleteBrowserCacheOption { get; set; }
-        [ObservableProperty] public partial bool StartBrowserWithProgrammStartIs { get; set; } = false;
-        [ObservableProperty] public partial bool CheckBrowserIsAliveIsOn { get; set; } = false;
-
-
-        public int RuntimePauseSecondsMin { get; init; }
-        public int RuntimePauseSecondsMax { get; init; }
-        public int BrowserRuntimeHoursMin { get; init; }
         public int BrowserRuntimeHoursMax { get; init; }
+        public int BrowserRuntimeHoursMin { get; init; }
+        public int RuntimePauseSecondsMax { get; init; }
+        public int RuntimePauseSecondsMin { get; init; }
+        #endregion
 
-
+        #region Constructors
+        
         public ViewModelRestarterProperties(
             IOperatingSystemFacade operatingSystemFacade,
             IEVisitorConfigService eVisitorConfigService,
@@ -75,76 +82,20 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             SelectedDeleteBrowserCacheOption = BrowserDeleteCacheOptionList.FirstOrDefault(x => x.Days == configDays) ?? BrowserDeleteCacheOptionList[0];
         }
+        #endregion
 
-        partial void OnSelectedDeleteBrowserCacheOptionChanged(BrowserCacheDeleteOption value)
-        {
-            _currentConfig.Browser.DeleteBrowserCacheIntervalDays = value.Days;
-            SaveSettings();
-        }
-
-        partial void OnStartBrowserWithProgrammStartIsChanged(bool value)
-        {
-            Debug.WriteLine($"StartBrowserWithProgrammStartIsChanged: {value}");
-            _currentConfig.Browser.StartBrowserWithProgrammStart = value;
-            SaveSettings();
-        }
-
-        partial void OnCheckBrowserIsAliveIsOnChanged(bool value)
-        {
-            Debug.WriteLine($"CheckBrowserIsAliveIsOnChanged: {value}");
-            _currentConfig.Browser.CheckBrowserAliveRoutine = value;
-            SaveSettings();
-        }
-
-        partial void OnRuntimePauseSecondsChanged(int value)
-        {
-            int clampedValue = Math.Clamp(value, RuntimePauseSecondsMin, RuntimePauseSecondsMax);
-
-            if (value != clampedValue)
-            {
-                RuntimePauseSeconds = clampedValue;
-                return;
-            }
-
-            if (_currentConfig.Browser.RuntimePauseSeconds != value)
-            {
-                _currentConfig.Browser.RuntimePauseSeconds = value;
-                SaveSettings();
-            }
-        }
-
-        partial void OnRuntimeHoursChanged(int value)
-        {
-            int clampedValue = Math.Clamp(value, BrowserRuntimeHoursMin, BrowserRuntimeHoursMax);
-
-            if (value != clampedValue)
-            {
-                RuntimeHours = clampedValue;
-                return;
-            }
-
-            if (_currentConfig.Browser.RuntimeHours != value)
-            {
-                _currentConfig.Browser.RuntimeHours = value;
-                SaveSettings();
-            }
-        }
-
+        #region Commands
+        
         [RelayCommand(CanExecute = nameof(CanAddUsername))]
         private void AddeVVisitorUsername()
         {
             _currentConfig.Username = Username;
-            
+
             SaveSettings();
 
             WeakReferenceMessenger.Default.Send(new UsernameChangedMessage(Username));
 
             Username = string.Empty;
-        }
-
-        private bool CanAddUsername()
-        {
-            return !string.IsNullOrWhiteSpace(Username);
         }
 
         [RelayCommand]
@@ -164,10 +115,73 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             await _dialogService.ShowInstallAddOnDialogAsync();
         }
+        #endregion
+
+        #region Methods
+        
+        private bool CanAddUsername()
+        {
+            return !string.IsNullOrWhiteSpace(Username);
+        }
+
+        partial void OnCheckBrowserIsAliveIsOnChanged(bool value)
+        {
+            Debug.WriteLine($"OnCheckBrowserIsAliveIsOnChanged: {value}");
+            _currentConfig.Browser.CheckBrowserAliveRoutine = value;
+            SaveSettings();
+        }
+
+        partial void OnRuntimeHoursChanged(int value)
+        {
+            int clampedValue = Math.Clamp(value, BrowserRuntimeHoursMin, BrowserRuntimeHoursMax);
+
+            if (value != clampedValue)
+            {
+                RuntimeHours = clampedValue;
+                return;
+            }
+
+            if (_currentConfig.Browser.RuntimeHours != value)
+            {
+                _currentConfig.Browser.RuntimeHours = value;
+                SaveSettings();
+            }
+        }
+
+        partial void OnRuntimePauseSecondsChanged(int value)
+        {
+            int clampedValue = Math.Clamp(value, RuntimePauseSecondsMin, RuntimePauseSecondsMax);
+
+            if (value != clampedValue)
+            {
+                RuntimePauseSeconds = clampedValue;
+                return;
+            }
+
+            if (_currentConfig.Browser.RuntimePauseSeconds != value)
+            {
+                _currentConfig.Browser.RuntimePauseSeconds = value;
+                SaveSettings();
+            }
+        }
+
+        partial void OnSelectedDeleteBrowserCacheOptionChanged(BrowserCacheDeleteOption value)
+        {
+            _currentConfig.Browser.DeleteBrowserCacheIntervalDays = value.Days;
+            SaveSettings();
+        }
+
+        partial void OnStartBrowserWithProgrammStartIsChanged(bool value)
+        {
+            Debug.WriteLine($"OnStartBrowserWithProgrammStartIsChanged: {value}");
+            _currentConfig.Browser.StartBrowserWithProgrammStart = value;
+            SaveSettings();
+        }
 
         private void SaveSettings()
         {
             _eVisitorConfigService.SaveConfig(_currentConfig);
         }
+        #endregion
     }
 }

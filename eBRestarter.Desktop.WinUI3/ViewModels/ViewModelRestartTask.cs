@@ -13,25 +13,32 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelRestartTask : ObservableObject, IRecipient<UsernameChangedMessage>, IRecipient<BrowserChangedMessage>
     {
-        private readonly IEVisitorConfigService _configService;
-        private readonly IBrowserFactory _browserFactory;
-        private readonly DispatcherQueue _dispatcherQueue;
-
-        private DispatcherTimer? _uiTimer;
-        private RestartTaskState _currentState = RestartTaskState.Idle;
-        private IBrowser? _currentBrowser;
-
-        private int _runtimeSeconds = 3600;
-        private int _pauseSeconds = 20;
-        private const int _initialDelaySeconds = 5;
+        #region Constants
+        
         private const string _baseUrl = "https://www.ebesucher.com/surfbar/";
+        private const int _initialDelaySeconds = 5;
+        #endregion
 
-        [ObservableProperty] public partial int SecondsRemaining { get; set; }
-        [ObservableProperty] public partial string Username { get; set; } = "-";
+        #region Fields
+        private readonly IBrowserFactory _browserFactory;
+        private readonly IEVisitorConfigService _configService;
+        private IBrowser? _currentBrowser;
+        private RestartTaskState _currentState = RestartTaskState.Idle;
+        private readonly DispatcherQueue _dispatcherQueue;
+        private int _pauseSeconds = 20;
+        private int _runtimeSeconds = 3600;
+        private DispatcherTimer? _uiTimer;
+        #endregion
+
+        #region Observable Properties
         [ObservableProperty] public partial string ChoosenBrowser { get; set; } = "Nicht gewählt";
         [ObservableProperty] public partial bool IsActive { get; set; } = false;
+        [ObservableProperty] public partial int SecondsRemaining { get; set; }
         [ObservableProperty] public partial string StatusInfoText { get; set; } = "Bereit.";
+        [ObservableProperty] public partial string Username { get; set; } = "-";
+        #endregion
 
+        #region Constructors
         public ViewModelRestartTask(IEVisitorConfigService configService, IBrowserFactory browserFactory)
         {
             _configService = configService;
@@ -41,23 +48,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             LoadInitialData();
             WeakReferenceMessenger.Default.RegisterAll(this);
         }
+        #endregion
 
-        private void LoadInitialData()
-        {
-            var config = _configService.LoadConfig();
-            Username = config.Username ?? "-";
-            ChoosenBrowser = config.Browser?.Selected ?? "Nicht gewählt";
-
-            _runtimeSeconds = config.Browser.RuntimeHours * 3600;
-            _pauseSeconds = config.Browser.RuntimePauseSeconds;
-        }
-
-        public void Receive(UsernameChangedMessage message) =>
-            _dispatcherQueue.TryEnqueue(() => Username = message.NewUsername ?? "-");
-
-        public void Receive(BrowserChangedMessage message) =>
-            _dispatcherQueue.TryEnqueue(() => ChoosenBrowser = message.BrowserName ?? "-");
-
+        #region Commands
+        
         [RelayCommand]
         private void ExecuteStartTimerScheduler(bool? isChecked)
         {
@@ -73,7 +67,94 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 StopLoop();
             }
         }
+        #endregion
 
+        #region Methods
+        
+        public void Receive(BrowserChangedMessage message) =>
+            _dispatcherQueue.TryEnqueue(() => ChoosenBrowser = message.BrowserName ?? "-");
+
+        public void Receive(UsernameChangedMessage message) =>
+            _dispatcherQueue.TryEnqueue(() => Username = message.NewUsername ?? "-");
+
+        private void CloseCurrentBrowser()
+        {
+            _currentBrowser?.Close();
+            _currentBrowser = null;
+        }
+
+        private BrowserType GetBrowserTypeFromString(string browserName)
+        {
+            if (string.IsNullOrWhiteSpace(browserName) || browserName == "Nicht gewählt")
+                return BrowserType.Chrome;
+
+            if (Enum.TryParse(browserName, true, out BrowserType type))
+            {
+                return type;
+            }
+
+            return BrowserType.Chrome;
+        }
+
+        private void HandleStateTransition()
+        {
+            switch (_currentState)
+            {
+                case RestartTaskState.InitialDelay:
+                    SwitchState(RestartTaskState.Running);
+                    break;
+
+                case RestartTaskState.Running:
+                    SwitchState(RestartTaskState.Cooldown);
+                    break;
+
+                case RestartTaskState.Cooldown:
+                    SwitchState(RestartTaskState.Running);
+                    break;
+            }
+        }
+
+        private void LaunchBrowser()
+        {
+            try
+            {
+                var browserType = GetBrowserTypeFromString(ChoosenBrowser);
+
+                _currentBrowser = _browserFactory.Create(browserType);
+
+                string url = $"{_baseUrl}{Username}";
+
+                _currentBrowser.Start(url);
+            }
+            catch (Exception ex)
+            {
+                StatusInfoText = $"Fehler: {ex.Message}";
+                IsActive = false;
+            }
+        }
+
+        private void LoadInitialData()
+        {
+            var config = _configService.LoadConfig();
+            Username = config.Username ?? "-";
+            ChoosenBrowser = config.Browser?.Selected ?? "Nicht gewählt";
+
+            _runtimeSeconds = config.Browser.RuntimeHours * 3600;
+            _pauseSeconds = config.Browser.RuntimePauseSeconds;
+        }
+
+        private void OnTimerTick(object? sender, object e)
+        {
+            if (SecondsRemaining > 0)
+            {
+                SecondsRemaining--;
+                UpdateDynamicStatusText();
+            }
+            else
+            {
+                HandleStateTransition();
+            }
+        }
 
         private void StartLoop()
         {
@@ -100,37 +181,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             CloseCurrentBrowser();
 
             SwitchState(RestartTaskState.Idle);
-        }
-
-        private void OnTimerTick(object? sender, object e)
-        {
-            if (SecondsRemaining > 0)
-            {
-                SecondsRemaining--;
-                UpdateDynamicStatusText();
-            }
-            else
-            {
-                HandleStateTransition();
-            }
-        }
-
-        private void HandleStateTransition()
-        {
-            switch (_currentState)
-            {
-                case RestartTaskState.InitialDelay:
-                    SwitchState(RestartTaskState.Running);
-                    break;
-
-                case RestartTaskState.Running:
-                    SwitchState(RestartTaskState.Cooldown);
-                    break;
-
-                case RestartTaskState.Cooldown:
-                    SwitchState(RestartTaskState.Running);
-                    break;
-            }
         }
 
         private void SwitchState(RestartTaskState newState)
@@ -172,44 +222,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             else if (_currentState == RestartTaskState.Cooldown)
                 StatusInfoText = $"Neustart in {SecondsRemaining}s...";
         }
-
-
-        private void LaunchBrowser()
-        {
-            try
-            {
-                var browserType = GetBrowserTypeFromString(ChoosenBrowser);
-
-                _currentBrowser = _browserFactory.Create(browserType);
-
-                string url = $"{_baseUrl}{Username}";
-
-                _currentBrowser.Start(url);
-            }
-            catch (Exception ex)
-            {
-                StatusInfoText = $"Fehler: {ex.Message}";
-                IsActive = false;
-            }
-        }
-
-        private void CloseCurrentBrowser()
-        {
-            _currentBrowser?.Close();
-            _currentBrowser = null;
-        }
-
-        private BrowserType GetBrowserTypeFromString(string browserName)
-        {
-            if (string.IsNullOrWhiteSpace(browserName) || browserName == "Nicht gewählt")
-                return BrowserType.Chrome;
-
-            if (Enum.TryParse(browserName, true, out BrowserType type))
-            {
-                return type;
-            }
-
-            return BrowserType.Chrome;
-        }
+        #endregion
     }
 }

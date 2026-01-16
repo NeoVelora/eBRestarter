@@ -18,19 +18,28 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelDeleteBrowserContent : ObservableObject
     {
-        private readonly IBrowserFactory _browserFactory;
-        private readonly IWindowsProcessControlService _processService;
-        private readonly IFileDeletionService _fileDeletionService;
-        private readonly IDialogService _dialogService;
+        #region Fields (Private Felder OHNE [ObservableProperty])
 
-        private IBrowser? _currentBrowser;
+        private readonly IBrowserFactory _browserFactory;
+        private readonly IDialogService _dialogService;
+        private readonly IFileDeletionService _fileDeletionService;
+        private readonly IWindowsProcessControlService _processService;
         private BrowserPaths? _browserPaths;
+        private CancellationTokenSource? _cts;
+        private IBrowser? _currentBrowser;
         private string _processName = "";
 
-        private CancellationTokenSource? _cts;
+        #endregion
 
+        #region Observable Properties (Felder MIT [ObservableProperty])
+
+        [ObservableProperty] public partial string BrowserIconPath { get; set; } = string.Empty;
         [ObservableProperty] public partial string BrowserName { get; set; } = "Lade...";
-        [ObservableProperty] public partial string BrowserIconPath { get; set; }  = string.Empty;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
+        [NotifyCanExecuteChangedFor(nameof(CancelCleaningCommand))]
+        public partial bool IsBusy { get; set; } = false;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
@@ -40,15 +49,21 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
         public partial bool IsDeleteInternetCacheChecked { get; set; } = true;
 
-        [ObservableProperty] public partial double ProgressValue { get; set; } = 0;
         [ObservableProperty] public partial double ProgressMaximum { get; set; } = 100;
         [ObservableProperty] public partial string ProgressText { get; set; } = "0 %";
+        [ObservableProperty] public partial double ProgressValue { get; set; } = 0;
         [ObservableProperty] public partial string StatusText { get; set; } = "Bereit.";
 
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
-        [NotifyCanExecuteChangedFor(nameof(CancelCleaningCommand))]
-        public partial bool IsBusy { get; set; } = false;
+        #endregion
+
+        #region Properties (Explizite get; set; Eigenschaften)
+
+        private bool CanCancel() => IsBusy;
+        private bool CanClean() => !IsBusy && (IsDeleteCookiesChecked || IsDeleteInternetCacheChecked);
+
+        #endregion
+
+        #region Constructors
 
         public ViewModelDeleteBrowserContent(
             IBrowserFactory browserFactory,
@@ -62,23 +77,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _dialogService = dialogService;
         }
 
-        public void Initialize(BrowserType selectedBrowserType)
+        #endregion
+
+        #region Commands (Methoden MIT [RelayCommand])
+
+        [RelayCommand(CanExecute = nameof(CanCancel))]
+        private void CancelCleaning()
         {
-            try
-            {
-                _currentBrowser = _browserFactory.Create(selectedBrowserType);
-
-                BrowserName = _currentBrowser.DisplayName;
-                BrowserIconPath = FixIconPathForWinUI(_currentBrowser.IconPath);
-
-                _browserPaths = _currentBrowser.GetPaths();
-
-                _processName = GetProcessNameByType(selectedBrowserType);
-            }
-            catch (Exception ex)
-            {
-                StatusText = $"Fehler beim Laden: {ex.Message}";
-            }
+            _cts?.Cancel();
+            StatusText = "Breche ab...";
         }
 
         [RelayCommand(CanExecute = nameof(CanClean))]
@@ -160,15 +167,28 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanCancel))]
-        private void CancelCleaning()
-        {
-            _cts?.Cancel();
-            StatusText = "Breche ab...";
-        }
+        #endregion
 
-        private bool CanClean() => !IsBusy && (IsDeleteCookiesChecked || IsDeleteInternetCacheChecked);
-        private bool CanCancel() => IsBusy;
+        #region Methods (Restliche Methoden)
+
+        public void Initialize(BrowserType selectedBrowserType)
+        {
+            try
+            {
+                _currentBrowser = _browserFactory.Create(selectedBrowserType);
+
+                BrowserName = _currentBrowser.DisplayName;
+                BrowserIconPath = FixIconPathForWinUI(_currentBrowser.IconPath);
+
+                _browserPaths = _currentBrowser.GetPaths();
+
+                _processName = GetProcessNameByType(selectedBrowserType);
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Fehler beim Laden: {ex.Message}";
+            }
+        }
 
         private string FixIconPathForWinUI(string path)
         {
@@ -186,5 +206,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 _ => ""
             };
         }
+
+        #endregion
     }
 }

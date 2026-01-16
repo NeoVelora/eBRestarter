@@ -14,18 +14,25 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
     {
-        private readonly IWindowsNetworkInfoService _networkService;
-        private readonly Timer _timer;
-        private readonly DispatcherQueue _dispatcherQueue;
-
-        public ObservableCollection<NetworkCardDisplayModel> NetworkCards { get; } = [];
-
+        #region Constants
+        private const string ColorDefault = "#FFFFFF";
+        private const string ColorError = "#FF0000";
         private const string ImgCard = "/Resources/Visuals/Icons/LightTheme/network-interface-card_light_theme.png";
         private const string ImgDown = "/Resources/Visuals/Icons/LightTheme/download_light_theme.png";
         private const string ImgUp = "/Resources/Visuals/Icons/LightTheme/send-data-light_theme.png";
-        private const string ColorDefault = "#FFFFFF";
-        private const string ColorError = "#FF0000";
+        #endregion
 
+        #region Fields
+        private readonly DispatcherQueue _dispatcherQueue;
+        private readonly IWindowsNetworkInfoService _networkService;
+        private readonly Timer _timer;
+        #endregion
+
+        #region Properties
+        public ObservableCollection<NetworkCardDisplayModel> NetworkCards { get; } = [];
+        #endregion
+
+        #region Constructors
         public ViewModelNetworkTraffic(IWindowsNetworkInfoService networkService)
         {
             _networkService = networkService;
@@ -38,35 +45,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             System.Threading.Tasks.Task.Run(() => PerformUpdate());
         }
+        #endregion
 
-        private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+        #region Methods
+        public void Dispose()
         {
-            PerformUpdate();
-        }
-
-        private void PerformUpdate()
-        {
-
-            bool isAvailable = false;
-            List<NetworkStats>? currentStats = null;
-
-            try
-            {
-                isAvailable = _networkService.IsNetworkAvailable();
-                if (isAvailable)
-                {
-                    currentStats = _networkService.GetActiveInterfaces().ToList();
-                }
-            }
-            catch (Exception)
-            {
-                isAvailable = false;
-            }
-
-            _dispatcherQueue.TryEnqueue(() =>
-            {
-                ApplyDataToUi(isAvailable, currentStats);
-            });
+            _timer?.Stop();
+            _timer?.Dispose();
         }
 
         private void ApplyDataToUi(bool isNetworkAvailable, IEnumerable<NetworkStats>? stats)
@@ -116,6 +101,36 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
+        private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+        {
+            PerformUpdate();
+        }
+
+        private void PerformUpdate()
+        {
+
+            bool isAvailable = false;
+            List<NetworkStats>? currentStats = null;
+
+            try
+            {
+                isAvailable = _networkService.IsNetworkAvailable();
+                if (isAvailable)
+                {
+                    currentStats = _networkService.GetActiveInterfaces().ToList();
+                }
+            }
+            catch (Exception)
+            {
+                isAvailable = false;
+            }
+
+            _dispatcherQueue.TryEnqueue(() =>
+            {
+                ApplyDataToUi(isAvailable, currentStats);
+            });
+        }
+
         private void ShowOfflineState()
         {
             if (NetworkCards.Count == 1 && NetworkCards[0].AdapterName == "Netzwerkkarte: nicht verfügbar")
@@ -133,11 +148,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 ImagePathSendData = ImgUp
             });
         }
-
-        public void Dispose()
-        {
-            _timer?.Stop();
-            _timer?.Dispose();
-        }
+        #endregion
     }
 }
