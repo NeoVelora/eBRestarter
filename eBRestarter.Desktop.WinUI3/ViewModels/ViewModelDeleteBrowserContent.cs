@@ -2,10 +2,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
+using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Infrastructure.Browsers.Abstract;
 using System;
@@ -21,6 +23,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region Fields (Private Felder OHNE [ObservableProperty])
 
         private readonly IBrowserFactory _browserFactory;
+        private readonly IEVisitorConfigService _iEVisitorConfigService;
         private readonly IDialogService _dialogService;
         private readonly IFileDeletionService _fileDeletionService;
         private readonly IWindowsProcessControlService _processService;
@@ -69,12 +72,28 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IBrowserFactory browserFactory,
             IWindowsProcessControlService processService,
             IFileDeletionService fileDeletionService,
+            IEVisitorConfigService iEVisitorConfigService,
             IDialogService dialogService)
         {
             _browserFactory = browserFactory;
+            _iEVisitorConfigService = iEVisitorConfigService;
             _processService = processService;
             _fileDeletionService = fileDeletionService;
             _dialogService = dialogService;
+
+            AppConfig config = iEVisitorConfigService.LoadConfig();
+
+            string selectedBrowserString = config.Browser.Selected;
+
+            if (Enum.TryParse(typeof(BrowserType), selectedBrowserString, true, out var result))
+            {
+                var browserType = (BrowserType)result;
+                Initialize(browserType);
+            }
+            else
+            {
+                StatusText = $"Konfiguration fehlerhaft: Unbekannter Browser '{selectedBrowserString}'.";
+            }
         }
 
         #endregion
@@ -178,7 +197,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 _currentBrowser = _browserFactory.Create(selectedBrowserType);
 
                 BrowserName = _currentBrowser.DisplayName;
-                BrowserIconPath = FixIconPathForWinUI(_currentBrowser.IconPath);
+                BrowserIconPath = _currentBrowser.IconPath;
 
                 _browserPaths = _currentBrowser.GetPaths();
 
@@ -190,10 +209,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        private string FixIconPathForWinUI(string path)
-        {
-            return path.Replace("/Resources/Visuals", "ms-appx:///Assets/Visuals");
-        }
 
         private string GetProcessNameByType(BrowserType type)
         {

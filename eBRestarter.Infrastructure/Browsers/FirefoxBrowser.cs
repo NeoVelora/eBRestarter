@@ -15,7 +15,7 @@ namespace eBRestarter.Infrastructure.Browsers
         private const string FirefoxEbesucherAddOnLink = "https://addons.mozilla.org/de/firefox/addon/ebesucher-addon1/";
         private const string EbesucherAddOnNameForFirefox = "{fef425dc-a60f-4484-954d-71ecf2544846}.xpi";
         public override string DisplayName => "Firefox";
-        public override string IconPath => "/Resources/Visuals/Icons/Intersection/fa_firefox.png";
+        public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_firefox.png";
         public override string DownloadUrl => WebLinks.FirefoxDownloadLink;
         public override string ExtensionInstallUrl => FirefoxEbesucherAddOnLink;
         public override BrowserType Type => BrowserType.Firefox;
