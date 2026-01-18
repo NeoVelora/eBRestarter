@@ -6,6 +6,8 @@ using System.Text;
 
 namespace eBRestarter.Infrastructure.Browsers.Abstract
 {
+
+
     public abstract class ChromiumBrowserBase : BrowserBase
     {
         protected ChromiumBrowserBase(IOperatingSystemFacade os, ILogger logger) : base(os, logger) { }
@@ -24,9 +26,27 @@ namespace eBRestarter.Infrastructure.Browsers.Abstract
             if (string.IsNullOrEmpty(idToCheck)) return false;
 
             var paths = GetPaths();
-            return _os.WindowsFileSystemService.DirectoryExists(paths.ExtensionsDir);
+
+            if (paths.ExtensionsDirs == null || paths.ExtensionsDirs.Count == 0) return false;
+
+            foreach (var extensionsDir in paths.ExtensionsDirs)
+            {
+                if (!_os.WindowsFileSystemService.DirectoryExists(extensionsDir)) continue;
 
 
+                if (extensionsDir.EndsWith(idToCheck, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                var fullExtensionPath = _os.WindowsFileSystemService.CombinePaths(extensionsDir, idToCheck);
+                if (_os.WindowsFileSystemService.DirectoryExists(fullExtensionPath))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         protected override List<string> ExecutablePaths
@@ -56,7 +76,7 @@ namespace eBRestarter.Infrastructure.Browsers.Abstract
                 return paths.Distinct().ToList();
             }
         }
-
-        
     }
+
+
 }

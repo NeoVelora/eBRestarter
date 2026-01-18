@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
+
     public partial class ViewModelDeleteBrowserContent : ObservableObject
     {
         #region Fields (Private Felder OHNE [ObservableProperty])
@@ -138,11 +139,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             var directoriesToDelete = new List<string>();
 
-            if (IsDeleteInternetCacheChecked && !string.IsNullOrEmpty(_browserPaths.CacheDir))
-                directoriesToDelete.Add(_browserPaths.CacheDir);
+            if (IsDeleteInternetCacheChecked && _browserPaths.CacheDirs != null && _browserPaths.CacheDirs.Count > 0)
+            {
+                directoriesToDelete.AddRange(_browserPaths.CacheDirs);
+            }
 
-            if (IsDeleteCookiesChecked && !string.IsNullOrEmpty(_browserPaths.CookiesDir))
-                directoriesToDelete.Add(_browserPaths.CookiesDir);
+            if (IsDeleteCookiesChecked && _browserPaths.CookiesDirs != null && _browserPaths.CookiesDirs.Count > 0)
+            {
+                directoriesToDelete.AddRange(_browserPaths.CookiesDirs);
+            }
 
 
             if (directoriesToDelete.Count == 0)
@@ -171,7 +176,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 });
 
                 await _fileDeletionService.DeleteFilesAsync(directoriesToDelete, statusProgress, valueProgress, _cts.Token);
-
 
                 StatusText = "Bereinigung abgeschlossen.";
             }
@@ -209,7 +213,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-
         private string GetProcessNameByType(BrowserType type)
         {
             return type switch
@@ -224,4 +227,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
     }
+
+
 }
