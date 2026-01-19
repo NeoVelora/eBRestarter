@@ -29,20 +29,23 @@ namespace eBRestarter.Infrastructure.Browsers.Abstract
         protected abstract List<string> ExecutablePaths { get; }
 
         public abstract bool IsExtensionInstalled(string? extensionId = null);
+
         public virtual void Start(string url, string arguments = "")
         {
             try
             {
                 var exePath = GetExecutablePath();
-                _logger.LogInformation($"Starte {Type}...");
+                _logger.LogInformation($"Starte {Type} mit URL {url}...");
 
-                _os.WindowsProcessControlService.StartExecutable(exePath);
+                string finalArguments = $"{url} {arguments}".Trim();
+
+                _os.WindowsProcessControlService.OpenUrlInBrowser(exePath, finalArguments);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Fehler beim Starten von {Type}");
             }
-        }
+        }      
 
         public virtual void Close()
         {

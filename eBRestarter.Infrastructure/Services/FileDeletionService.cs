@@ -5,9 +5,9 @@ using System.Text;
 
 namespace eBRestarter.Infrastructure.Services
 {
+
     public class FileDeletionService : IFileDeletionService
     {
-
         public async Task<int> CountFilesAsync(List<string> directories)
         {
             return await Task.Run(() =>
@@ -33,16 +33,15 @@ namespace eBRestarter.Infrastructure.Services
             await Task.Run(() =>
             {
                 int deletedCount = 0;
+                int reportInterval = 10;
+                int updateCounter = 0;
 
                 foreach (var dir in directories)
                 {
                     if (!Directory.Exists(dir)) continue;
 
-
                     string[] files;
-
                     try { files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories); }
-
                     catch { continue; }
 
                     foreach (var file in files)
@@ -55,16 +54,25 @@ namespace eBRestarter.Infrastructure.Services
 
                             File.Delete(file);
                             deletedCount++;
+                            updateCounter++;
 
-                            statusReporter.Report($"Gelöscht: {Path.GetFileName(file)}");
-                            valueReporter.Report(deletedCount);
+                            if (updateCounter >= reportInterval)
+                            {
+                                statusReporter.Report($"Lösche: {Path.GetFileName(file)}");
+                                valueReporter.Report(deletedCount);
+                                updateCounter = 0;
+                            }
                         }
-                        catch
-                        {
-                        }
+                        catch { }
                     }
 
+                    if (token.IsCancellationRequested) return;
+                    try { Directory.Delete(dir, true); } catch { }
                 }
+
+                statusReporter.Report("Abschließe Bereinigung...");
+                valueReporter.Report(deletedCount);
+
             }, token);
         }
 
@@ -77,3 +85,5 @@ namespace eBRestarter.Infrastructure.Services
         }
     }
 }
+
+       

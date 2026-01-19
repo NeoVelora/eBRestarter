@@ -53,6 +53,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
         public partial bool IsDeleteInternetCacheChecked { get; set; } = true;
 
+        [ObservableProperty] public partial bool IsProcessConflict { get; set; } = false;
         [ObservableProperty] public partial double ProgressMaximum { get; set; } = 100;
         [ObservableProperty] public partial string ProgressText { get; set; } = "0 %";
         [ObservableProperty] public partial double ProgressValue { get; set; } = 0;
@@ -115,40 +116,48 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             if (_processService.IsProcessAlive(_processName))
             {
-                var result = await _dialogService.ShowYesNoDialogAsync(
-                    "Browser schließen?",
-                    $"Der Browser '{BrowserName}' läuft noch. Er muss beendet werden, um zu bereinigen.");
-
-                if (result)
-                {
-                    _processService.CloseApplication(_processName);
-                    await Task.Delay(1000);
-
-                    if (_processService.IsProcessAlive(_processName))
-                    {
-                        StatusText = "Konnte Browser nicht beenden.";
-                        return;
-                    }
-                }
-                else
-                {
-                    StatusText = "Abbruch durch Benutzer.";
-                    return;
-                }
+                IsProcessConflict = true;
+                StatusText = "Browser läuft noch. Bitte Aktion wählen.";
+                return;
             }
 
+            await ExecuteCleaningLogic();
+        }
+
+        [RelayCommand]
+        private async Task ForceCloseAndContinue()
+        {
+            IsProcessConflict = false;
+
+            _processService.CloseApplication(_processName);
+            StatusText = "Beende Browser...";
+            await Task.Delay(1000);
+
+            if (_processService.IsProcessAlive(_processName))
+            {
+                StatusText = "Konnte Browser nicht beenden. Bitte manuell schließen.";
+                return;
+            }
+
+            await ExecuteCleaningLogic();
+        }
+
+        [RelayCommand]
+        private void CancelConflict()
+        {
+            IsProcessConflict = false;
+            StatusText = "Abbruch durch Benutzer.";
+        }
+
+        private async Task ExecuteCleaningLogic()
+        {
             var directoriesToDelete = new List<string>();
 
             if (IsDeleteInternetCacheChecked && _browserPaths.CacheDirs != null && _browserPaths.CacheDirs.Count > 0)
-            {
                 directoriesToDelete.AddRange(_browserPaths.CacheDirs);
-            }
 
             if (IsDeleteCookiesChecked && _browserPaths.CookiesDirs != null && _browserPaths.CookiesDirs.Count > 0)
-            {
                 directoriesToDelete.AddRange(_browserPaths.CookiesDirs);
-            }
-
 
             if (directoriesToDelete.Count == 0)
             {
@@ -171,12 +180,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 var valueProgress = new Progress<int>(val =>
                 {
                     ProgressValue = val;
-                    if (totalFiles > 0)
-                        ProgressText = $"{(val * 100 / totalFiles)} %";
+                    if (totalFiles > 0) ProgressText = $"{(val * 100 / totalFiles)} %";
                 });
 
                 await _fileDeletionService.DeleteFilesAsync(directoriesToDelete, statusProgress, valueProgress, _cts.Token);
-
                 StatusText = "Bereinigung abgeschlossen.";
             }
             catch (Exception ex)
@@ -189,6 +196,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 _cts = null;
             }
         }
+
 
         #endregion
 

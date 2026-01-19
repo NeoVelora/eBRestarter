@@ -84,19 +84,23 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             }
         }
 
-        public void OpenUrlInBrowser(string url)
+        public void OpenUrlInBrowser(string exeFilePath, string arguments = "")
         {
             try
             {
-                _processWrapper.Start(new ProcessStartInfo
+                var startInfo = new ProcessStartInfo
                 {
-                    FileName = url,
+                    FileName = exeFilePath,
+                    Arguments = arguments,
                     UseShellExecute = true
-                });
+                };
+
+                _processWrapper.Start(startInfo);
+                _logger.LogInformation("Executable gestartet: {Path} mit Arguments: {Args}", exeFilePath, arguments);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Öffnen der URL: {Url}", url);
+                _logger.LogError(ex, "Fehler beim Starten der EXE: {Path}", exeFilePath);
             }
         }
 

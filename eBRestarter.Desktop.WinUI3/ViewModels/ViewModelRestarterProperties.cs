@@ -101,7 +101,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [RelayCommand]
         public void RegisterToEVisitor()
         {
-            _operatingSystemFacade.WindowsProcessControlService.OpenUrlInBrowser(WebLinks.RegistrationLink);
+            _operatingSystemFacade.WindowsProcessControlService.OpenUrlInBrowser(WebLinks.RegistrationLink, string.Empty);
         }
 
         [RelayCommand]
@@ -126,7 +126,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         partial void OnCheckBrowserIsAliveIsOnChanged(bool value)
         {
-            Debug.WriteLine($"OnCheckBrowserIsAliveIsOnChanged: {value}");
             _currentConfig.Browser.CheckBrowserAliveRoutine = value;
             SaveSettings();
         }
