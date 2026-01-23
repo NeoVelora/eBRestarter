@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using eBRestarter.Core.Application.Interfaces.Authentication;
+using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Domain.Models.Records;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region Fields (Private Felder OHNE [ObservableProperty])
 
         private readonly IApiAuthenticationService _authService;
-        private readonly ICredentialStore _credentialStore;
+        private readonly IEVisitorConfigService _configService;
 
         #endregion
 
@@ -46,17 +47,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public ViewModelActivateApi(
             IApiAuthenticationService authService,
-            ICredentialStore credentialStore)
+            IEVisitorConfigService configService)
         {
             _authService = authService;
-            _credentialStore = credentialStore;
+            _configService = configService;
 
-            var saved = _credentialStore.LoadCredentials();
-            if (saved != null)
-            {
-                Username = saved.Username;
-                ApiKey = saved.ApiKey;
-            }
+            var config = _configService.LoadConfig();
+
+            Username = config.Settings.ApiUsername;
+            ApiKey = config.Settings.ApiKey;
         }
 
         #endregion
@@ -68,22 +67,32 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             IsBusy = true;
             StatusMessage = "Prüfe Zugangsdaten...";
-            StatusColor = "{ThemeResource SystemFillColorCautionBrush}";
 
-            var result = await _authService.VerifyCredentialsAsync(Username, ApiKey);
+            var (IsValid, Message) = await _authService.VerifyCredentialsAsync(Username, ApiKey);
 
             IsBusy = false;
 
-            if (result.IsValid)
+            if (IsValid)
             {
-                _credentialStore.SaveCredentials(new ApiCredentials(Username, ApiKey));
+                var currentConfig = _configService.LoadConfig();
 
-                StatusMessage = "Erfolgreich aktiviert!";
+                var newConfig = currentConfig with
+                {
+                    Settings = currentConfig.Settings with
+                    {
+                        ApiUsername = Username,
+                        ApiKey = ApiKey
+                    }
+                };
+
+                _configService.SaveConfig(newConfig);
+
+                StatusMessage = "Erfolgreich aktiviert & verschlüsselt gespeichert!";
                 StatusColor = "#7ED422";
             }
             else
             {
-                StatusMessage = result.Message;
+                StatusMessage = Message;
                 StatusColor = "#E40E87";
             }
         }
@@ -94,18 +103,34 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public void ImportLegacyFile(string filePath)
         {
-            var imported = _credentialStore.ImportFromLegacyFile(filePath);
-            if (imported != null)
+            if (!System.IO.File.Exists(filePath))
             {
-                Username = imported.Username;
-                ApiKey = imported.ApiKey;
-                StatusMessage = "Daten aus Datei importiert. Bitte 'Aktivieren' klicken.";
+                StatusMessage = "Datei nicht gefunden.";
+                StatusColor = "#E40E87";
+                return;
+            }
+
+            try
+            {
+                using var stream = System.IO.File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                using var reader = new System.IO.BinaryReader(stream);
+
+                var importedUser = reader.ReadString();
+                var importedKey = reader.ReadString();
+
+                Username = importedUser;
+                ApiKey = importedKey;
+
+                StatusMessage = "Daten importiert. Bitte jetzt 'Aktivieren' klicken.";
                 StatusColor = "{ThemeResource SystemFillColorSuccessBrush}";
             }
-            else
+            catch (Exception)
             {
-                StatusMessage = "Fehler beim Lesen der Datei.";
+                StatusMessage = "Fehler: Die Datei hat ein falsches Format.";
                 StatusColor = "#E40E87";
+
+                Username = string.Empty;
+                ApiKey = string.Empty;
             }
         }
 
