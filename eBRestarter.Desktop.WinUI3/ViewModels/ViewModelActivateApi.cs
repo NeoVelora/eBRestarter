@@ -24,11 +24,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
         public partial string ApiKey { get; set; } = string.Empty;
-
         [ObservableProperty] public partial bool IsBusy { get; set; }
-
         [ObservableProperty] public partial string StatusColor { get; set; } = "Transparent";
-
         [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
 
         [ObservableProperty]
@@ -95,7 +92,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 StatusMessage = Message;
                 StatusColor = "#E40E87";
             }
-        }
+        }      
 
         #endregion
 

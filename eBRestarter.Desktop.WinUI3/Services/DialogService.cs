@@ -1,9 +1,12 @@
+using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.Views.Dialogs;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,45 +14,74 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.Services
 {
+
     public class DialogService : IDialogService
     {
-        private XamlRoot _xamlRoot => App.MainWindoweBRestarter!.Content.XamlRoot;
+        private XamlRoot XamlRoot => App.MainWindoweBRestarter!.Content.XamlRoot;
 
-        public Task ShowMessageAsync(string title, string message)
+        private async Task<ContentDialogResult> ShowDialogInternalAsync<T>(Action<T>? configure = null) where T : ContentDialog, new()
         {
-            throw new NotImplementedException();
+            var dialog = new T
+            {
+                XamlRoot = XamlRoot
+            };
+
+            configure?.Invoke(dialog);
+
+            return await dialog.ShowAsync();
         }
 
-        public async Task<bool> ShowYesNoDialogAsync(string title, string message)
+
+        public async Task ShowMessageAsync(string title, string message, DialogIcon icon = DialogIcon.None)
         {
             var dialog = new ContentDialog
             {
-                XamlRoot = _xamlRoot,
-                Title = title,
+                XamlRoot = XamlRoot,
+                Title = CreateTitleContent(title, icon),
+                Content = message,
+                CloseButtonText = "Schließen",
+                DefaultButton = ContentDialogButton.Close
+            };
+
+            await dialog.ShowAsync();
+        }
+
+        public async Task<bool> ShowYesNoDialogAsync(string title, string message, DialogIcon icon = DialogIcon.Question)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = CreateTitleContent(title, icon),
                 Content = message,
                 PrimaryButtonText = "Ja",
-                CloseButtonText = "Nein"
+                CloseButtonText = "Nein",
+                DefaultButton = ContentDialogButton.Primary
             };
 
             var result = await dialog.ShowAsync();
-
             return result == ContentDialogResult.Primary;
         }
 
+
+        public async Task ShowAboutDialogAsync() => await ShowDialogInternalAsync<AboutDialog>();
+        public async Task ShowBrowserDeleteContentDialogAsync() => await ShowDialogInternalAsync<DeleteBrowserContentDialog>();
+        public async Task ShowInstallAddOnDialogAsync() => await ShowDialogInternalAsync<InstallAddOnDialog>();
+        public async Task ShowActivateApiDialogAsync() => await ShowDialogInternalAsync<ActivateApiDialog>();
+        public async Task ShowImportApiDialogAsync() => await ShowDialogInternalAsync<ImportApiDialog>();
+
         public async Task<AutoLogonDialogResult?> ShowAutoLogonDialogAsync(string defaultUser = null, string defaultDomain = null)
         {
-            var dialog = new AutoLogonDialog
+            AutoLogonDialog dialogInstance = null!;
+
+            var result = await ShowDialogInternalAsync<AutoLogonDialog>(d =>
             {
-                XamlRoot = _xamlRoot
-            };
-
-            dialog.SetDefaults(defaultUser, defaultDomain);
-
-            var result = await dialog.ShowAsync();
+                dialogInstance = d;
+                d.SetDefaults(defaultUser, defaultDomain);
+            });
 
             if (result == ContentDialogResult.Primary)
             {
-                return AutoLogonDialogResult.Save(dialog.GetCredentials());
+                return AutoLogonDialogResult.Save(dialogInstance.GetCredentials());
             }
             else if (result == ContentDialogResult.Secondary)
             {
@@ -59,51 +91,61 @@ namespace eBRestarter.Desktop.WinUI3.Services
             return null;
         }
 
-        public async Task ShowAboutDialogAsync()
+        private object CreateTitleContent(string title, DialogIcon icon)
         {
-            var dialog = new AboutDialog
+            if (icon == DialogIcon.None) return title;
+
+            var stackPanel = new StackPanel
             {
-                XamlRoot = _xamlRoot
+                Orientation = Orientation.Horizontal,
+                Spacing = 12,
+                VerticalAlignment = VerticalAlignment.Center
             };
 
-            await dialog.ShowAsync();
-        }
-
-        public async Task ShowBrowserDeleteContentDialogAsync()
-        {
-            var dialog = new DeleteBrowserContentDialog
+            var fontIcon = new FontIcon
             {
-                XamlRoot = _xamlRoot
+                FontFamily = new FontFamily("Segoe Fluent Icons"),
+                FontSize = 24,
+                VerticalAlignment = VerticalAlignment.Center
             };
 
-            await dialog.ShowAsync();
-        }
-
-        public async Task ShowInstallAddOnDialogAsync()
-        {
-            var dialog = new InstallAddOnDialog
+            switch (icon)
             {
-                XamlRoot = _xamlRoot
-            };
-            await dialog.ShowAsync();
-        }
+                case DialogIcon.Error:
+                    fontIcon.Glyph = "\uE783";
+                    fontIcon.Foreground = new SolidColorBrush(Colors.Red);
+                    break;
+                case DialogIcon.Warning:
+                    fontIcon.Glyph = "\uE7BA";
+                    fontIcon.Foreground = new SolidColorBrush(Colors.Orange);
+                    break;
+                case DialogIcon.Information:
+                    fontIcon.Glyph = "\uE946";
+                    fontIcon.Foreground = new SolidColorBrush(Colors.CornflowerBlue);
+                    break;
+                case DialogIcon.Success:
+                    fontIcon.Glyph = "\uE73E";
+                    fontIcon.Foreground = new SolidColorBrush(Colors.LimeGreen);
+                    break;
+                case DialogIcon.Question:
+                    fontIcon.Glyph = "\uE9CE";
+                    break;
+            }
 
-        public async Task ShowActivateApiDialogAsync()
-        {
-            var dialog = new ActivateApiDialog
+            var textBlock = new TextBlock
             {
-                XamlRoot = _xamlRoot
+                Text = title,
+                FontSize = 20,
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                VerticalAlignment = VerticalAlignment.Center
             };
-            await dialog.ShowAsync();
-        }
 
-        public async Task ShowImportApiDialogAsync()
-        {
-            var dialog = new ImportApiDialog
-            {
-                XamlRoot = _xamlRoot
-            };
-            await dialog.ShowAsync();
+            stackPanel.Children.Add(fontIcon);
+            stackPanel.Children.Add(textBlock);
+
+            return stackPanel;
         }
     }
+
+
 }

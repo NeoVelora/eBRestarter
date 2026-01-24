@@ -88,15 +88,21 @@ namespace eBRestarter.Infrastructure.Services.Config
                     Directory.CreateDirectory(directory);
                 }
 
-                string jsonString = JsonSerializer.Serialize(config, _jsonOptions);
+                var encryptedKey = _encryptionService.Encrypt(config.Settings.ApiKey);
 
+                var configToSave = config with
+                {
+                    Settings = config.Settings with { ApiKey = encryptedKey }
+                };
+
+                string jsonString = JsonSerializer.Serialize(configToSave, _jsonOptions);
                 File.WriteAllText(filePath, jsonString);
 
-                _logger.LogInformation("Konfiguration erfolgreich unter '{Path}' gespeichert.", filePath);
+                _logger.LogInformation("Konfiguration gespeichert.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Kritischer Fehler beim Speichern der Konfiguration. Änderungen gingen verloren.");
+                _logger.LogError(ex, "Fehler beim Speichern der Konfiguration.");
             }
         }
 

@@ -2,6 +2,7 @@ using eBRestarter.Core.Application.Interfaces.Authentication;
 using eBRestarter.Core.Application.Interfaces.RestClient;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models;
+using eBRestarter.Infrastructure.Constants;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,7 +22,7 @@ namespace eBRestarter.Infrastructure.Services.Authentication
         {
             var request = new ApiRequest
             {
-                Url = "https://www.ebesucher.de/api/visitor_exchange.json/account/status",
+                Url = ApiWebLinks.HourlyEarnings,
                 Username = username,
                 Password = apiKey,
                 TimeoutSeconds = 10

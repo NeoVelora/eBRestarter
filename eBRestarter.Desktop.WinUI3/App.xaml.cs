@@ -1,37 +1,19 @@
 using eBRestarter.Core.Application.DependencyInjections;
+using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Desktop.WinUI3.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.Services;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
-using eBRestarter.Desktop.WinUI3.ViewModels;
+using eBRestarter.Desktop.WinUI3.Views;
 using eBRestarter.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Devices.Display.Core;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Globalization;
-using Windows.Services.Maps;
-
 
 namespace eBRestarter.Desktop.WinUI3
 {
-    public partial class App : Microsoft.UI.Xaml.Application
+    public partial class App : Application
     {
         public static Window? MainWindoweBRestarter { get; private set; }
         public static IHost? AppHost { get; private set; }
@@ -43,29 +25,48 @@ namespace eBRestarter.Desktop.WinUI3
 
             AppHost = CreateHostBuilder().Build();
 
-            ApplicationLanguages.PrimaryLanguageOverride = "en-US";
         }
 
         private static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder()
-                 .ConfigureAppConfiguration((ctx, cfg) =>
-                 {
-                     cfg.Sources.Clear();
-                     cfg.SetBasePath(AppContext.BaseDirectory);
-                     cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-                 })
-                 .ConfigureServices((ctx, services) =>
-                 {
-                     services.AddInfrastructureServices();
-                     services.AddApplicationServices();
-                     services.AddNavigationService();
-                     services.AddDialoglServiceExtensions();
-                     services.AddViewModels();
-                 });
+             .ConfigureAppConfiguration((ctx, cfg) =>
+             {
+                 cfg.Sources.Clear();
+                 cfg.SetBasePath(AppContext.BaseDirectory);
+                 cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+             })
+             .ConfigureServices((ctx, services) =>
+             {
+                 services.AddInfrastructureServices();
+                 services.AddApplicationServices();
+                 services.AddNavigationService();
+                 services.AddDialoglServiceExtensions();
+                 services.AddViewModels();
 
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+                 services.AddSingleton<IThemeService, ThemeService>();
+             });
+
+        protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
             MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
+
             AppDispatcherQueue = MainWindoweBRestarter.DispatcherQueue;
+
+            try
+            {
+                var configService = AppHost.Services.GetRequiredService<IEVisitorConfigService>();
+                var themeService = AppHost.Services.GetRequiredService<IThemeService>();
+
+                var config = configService.LoadConfig();
+
+                string themeToSet = string.IsNullOrEmpty(config.Settings.Theme) ? "Light" : config.Settings.Theme;
+
+                themeService.SetTheme(themeToSet);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Fehler beim Laden des Themes: {ex.Message}");
+            }
+
             MainWindoweBRestarter.Activate();
         }
     }
