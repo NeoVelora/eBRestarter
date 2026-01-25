@@ -20,6 +20,7 @@ namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
         Task ShowInstallAddOnDialogAsync();
         Task ShowActivateApiDialogAsync();
         Task ShowImportApiDialogAsync();
+        Task<bool> ShowConfirmationAsync(string title, string message, string yesButtonText = "Ja", string noButtonText = "Nein");
     }
 
 

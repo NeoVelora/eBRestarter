@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.Globalization;
 using System;
 
 namespace eBRestarter.Desktop.WinUI3
@@ -24,7 +25,6 @@ namespace eBRestarter.Desktop.WinUI3
             InitializeComponent();
 
             AppHost = CreateHostBuilder().Build();
-
         }
 
         private static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder()
@@ -43,6 +43,7 @@ namespace eBRestarter.Desktop.WinUI3
                  services.AddViewModels();
 
                  services.AddSingleton<IThemeService, ThemeService>();
+                 services.AddSingleton<ILanguageService, LanguageService>();
              });
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -50,6 +51,21 @@ namespace eBRestarter.Desktop.WinUI3
             MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
 
             AppDispatcherQueue = MainWindoweBRestarter.DispatcherQueue;
+
+            try
+            {
+                var configService = AppHost.Services.GetRequiredService<IEVisitorConfigService>();
+
+                var config = configService.LoadConfig();
+
+                string languageCode = config.Settings.Language == 0 ? "de-DE" : "en-US";
+
+                ApplicationLanguages.PrimaryLanguageOverride = languageCode;
+            }
+            catch (Exception)
+            {
+                ApplicationLanguages.PrimaryLanguageOverride = "en-US";
+            }
 
             try
             {

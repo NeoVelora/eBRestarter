@@ -4,9 +4,13 @@ using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Core.Application.Interfaces.Update;
+using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
+using eBRestarter.Infrastructure.Constants;
+using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,15 +22,6 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-    using CommunityToolkit.Mvvm.ComponentModel;
-    using CommunityToolkit.Mvvm.Input;
-    using eBRestarter.Core.Application.Interfaces.Update;
-    using eBRestarter.Core.Domain.Enums;
-    using eBRestarter.Infrastructure.Constants;
-    using eBRestarter.Infrastructure.Services.Config;
-    using System.Collections.ObjectModel;
-    using System.DirectoryServices.AccountManagement;
-
     public partial class ViewModelOptions : ObservableObject
     {
 
@@ -39,6 +34,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IOperatingSystemFacade _os;
         private readonly IUpdateService _updateService;
         private readonly IThemeService _themeService;
+        private readonly ILanguageService _languageService;
 
 
         public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList => ComputerRestartConstants.Options;
@@ -64,14 +60,18 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IOperatingSystemFacade os,
             IUpdateService updateService,
             IThemeService themeService,
-            IEVisitorConfigService eVisitorConfigService)
+            IEVisitorConfigService eVisitorConfigService,
+            ILanguageService languageService)
         {
+            _isInitializing = true;
+
             _dialogService = dialogService;
             _autoLogonService = autoLogonService;
             _os = os;
             _updateService = updateService;
             _themeService = themeService;
             _eVisitorConfigService = eVisitorConfigService;
+            _languageService = languageService;
 
             _currentConfig = _eVisitorConfigService.LoadConfig();
 
@@ -83,10 +83,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             var configLanguageIndex = _currentConfig.Settings.Language;
 
             SelectedComputerRestartOption = ComputerRestartList.FirstOrDefault(x => x.Days == configDays) ?? ComputerRestartList[0];
+
             SelectedLanguageOption = LanguageList.FirstOrDefault(x => x.Index == configLanguageIndex) ?? LanguageList[0];
 
+            _isInitializing = false;
 
             _ = InitializeAsync();
+
         }
 
 
@@ -244,10 +247,34 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        partial void OnSelectedLanguageOptionChanged(LanguageOption value)
+        async partial void OnSelectedLanguageOptionChanged(LanguageOption value)
         {
-            _currentConfig.Settings.Language = value.Index;
-            SaveSettings();
+            if (value == null || _isInitializing) return;
+
+            if (_currentConfig.Settings.Language != value.Index)
+            {
+                _currentConfig.Settings.Language = value.Index;
+                SaveSettings();
+            }
+
+            string newLanguageCode = value.Index == 0 ? "de-DE" : "en-US";
+
+            if (_languageService.CurrentLanguageCode != newLanguageCode)
+            {
+                _languageService.SetLanguage(newLanguageCode);
+
+                bool restartNow = await _dialogService.ShowConfirmationAsync(
+                    "Neustart erforderlich / Restart required",
+                    "Die Sprache wurde geändert. Damit alle Texte aktualisiert werden, muss die Anwendung neu gestartet werden.\n\nMöchten Sie die Anwendung jetzt neustarten?\n\n(The language has been changed. Restart now to apply all changes?)",
+                    "Ja / Yes",
+                    "Nein / No"
+                );
+
+                if (restartNow)
+                {
+                    AppInstance.Restart(string.Empty);
+                }
+            }
         }
 
         partial void OnStartWithWindowsChanged(bool value)
