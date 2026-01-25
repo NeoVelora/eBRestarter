@@ -40,7 +40,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             new Axis
             {
                 Name = "Punkte",
-        NamePaint = new SolidColorPaint(SKColors.DarkGray), 
         
         LabelsDensity = 1,
 
@@ -49,7 +48,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             StrokeThickness = 1,
         },
 
-        LabelsPaint = new SolidColorPaint(SKColors.Black),
                 MinStep = 100,
                 TextSize = 12
             }
@@ -201,8 +199,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             var axis = new Axis
             {
-                NamePaint = new SolidColorPaint(SKColors.DarkGray),
-                LabelsPaint = new SolidColorPaint(SKColors.Black),
                 TextSize = 12,
                 LabelsRotation = 0
             };

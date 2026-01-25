@@ -1,5 +1,7 @@
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
+using LiveChartsCore;
 using Microsoft.UI.Xaml;
+using LiveChartsCore.SkiaSharpView;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,15 @@ namespace eBRestarter.Desktop.WinUI3.Services
             {
                 rootElement.RequestedTheme = themeName == "Dark" ? ElementTheme.Dark : ElementTheme.Light;
 
+            }
+
+            if (themeName == "Dark")
+            {
+                LiveCharts.Configure(config => config.AddDarkTheme());
+            }
+            else
+            {
+                LiveCharts.Configure(config => config.AddLightTheme());
             }
 
             CurrentTheme = themeName;
