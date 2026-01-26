@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Facade;
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Domain.Models.Records;
@@ -25,6 +26,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly AppConfig _currentConfig;
         private readonly IDialogService _dialogService;
         private readonly IEVisitorConfigService _eVisitorConfigService;
+        private readonly ILocalizationService _localizationService;
 
         private readonly IOperatingSystemFacade _operatingSystemFacade;
         #endregion
@@ -45,7 +47,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #region Properties
         
-        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList => BrowserCacheConstants.Options;
+        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList { get; }
 
         public int BrowserRuntimeHoursMax { get; init; }
         public int BrowserRuntimeHoursMin { get; init; }
@@ -58,12 +60,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public ViewModelRestarterProperties(
             IOperatingSystemFacade operatingSystemFacade,
             IEVisitorConfigService eVisitorConfigService,
+            ILocalizationService localizationService,
             IDialogService dialogService)
         {
             _operatingSystemFacade = operatingSystemFacade;
             _eVisitorConfigService = eVisitorConfigService;
             _dialogService = dialogService;
-
+            _localizationService = localizationService;
             _currentConfig = _eVisitorConfigService.LoadConfig();
 
             RuntimePauseSecondsMin = 20;
@@ -79,6 +82,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             CheckBrowserIsAliveIsOn = _currentConfig.Browser.CheckBrowserAliveRoutine;
 
             var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
+            BrowserDeleteCacheOptionList = new ReadOnlyCollection<BrowserCacheDeleteOption>(
+            localizationService.GetBrowserCacheOptions().ToList()
+        );
 
             SelectedDeleteBrowserCacheOption = BrowserDeleteCacheOptionList.FirstOrDefault(x => x.Days == configDays) ?? BrowserDeleteCacheOptionList[0];
         }

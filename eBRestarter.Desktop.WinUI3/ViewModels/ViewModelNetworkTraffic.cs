@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Extensions;
 using eBRestarter.Core.Domain.Models.Records;
@@ -25,6 +26,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region Fields
         private readonly DispatcherQueue _dispatcherQueue;
         private readonly IWindowsNetworkInfoService _networkService;
+        private readonly ILocalizationService _localizationService;
         private readonly Timer _timer;
         #endregion
 
@@ -33,9 +35,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #endregion
 
         #region Constructors
-        public ViewModelNetworkTraffic(IWindowsNetworkInfoService networkService)
+        
+        public ViewModelNetworkTraffic(
+            IWindowsNetworkInfoService networkService,
+            ILocalizationService localizationService)
         {
             _networkService = networkService;
+            _localizationService = localizationService;
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             _timer = new System.Timers.Timer(1000);
@@ -62,8 +68,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 return;
             }
 
+            string prefixCard = _localizationService.GetString("Network_CardPrefix");
+            string prefixRec = _localizationService.GetString("Network_Received");
+            string prefixSent = _localizationService.GetString("Network_Sent");
 
-            var activeIds = stats.Select(x => $"Netzwerkkarte: {x.Name}").ToList();
+            var activeIds = stats.Select(x => $"{prefixCard}: {x.Name}").ToList();
             var itemsToRemove = NetworkCards.Where(x => !activeIds.Contains(x.AdapterName)).ToList();
 
             foreach (var item in itemsToRemove)
@@ -73,11 +82,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             foreach (var stat in stats)
             {
-                string name = $"Netzwerkkarte: {stat.Name}";
+                string name = $"{prefixCard}: {stat.Name}";
                 var existingItem = NetworkCards.FirstOrDefault(x => x.AdapterName == name);
 
-                string received = $"Empfangen: {FormatExtensions.ToSizeSuffix(stat.BytesReceived)}";
-                string sent = $"Gesendet: {FormatExtensions.ToSizeSuffix(stat.BytesSent)}";
+                string received = $"{prefixRec}: {FormatExtensions.ToSizeSuffix(stat.BytesReceived)}";
+                string sent = $"{prefixSent}: {FormatExtensions.ToSizeSuffix(stat.BytesSent)}";
 
                 if (existingItem != null)
                 {
@@ -108,7 +117,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private void PerformUpdate()
         {
-
             bool isAvailable = false;
             List<NetworkStats>? currentStats = null;
 
@@ -133,15 +141,22 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private void ShowOfflineState()
         {
-            if (NetworkCards.Count == 1 && NetworkCards[0].AdapterName == "Netzwerkkarte: nicht verfügbar")
+            string prefixCard = _localizationService.GetString("Network_CardPrefix");
+            string notAvail = _localizationService.GetString("Network_NotAvailable");
+            string prefixRec = _localizationService.GetString("Network_Received");
+            string prefixSent = _localizationService.GetString("Network_Sent");
+
+            string fullName = $"{prefixCard}: {notAvail}";
+
+            if (NetworkCards.Count == 1 && NetworkCards[0].AdapterName == fullName)
                 return;
 
             NetworkCards.Clear();
             NetworkCards.Add(new NetworkCardDisplayModel
             {
-                AdapterName = "Netzwerkkarte: nicht verfügbar",
-                ReceivedData = "Empfangen: -",
-                SentData = "Gesendet: -",
+                AdapterName = fullName,
+                ReceivedData = $"{prefixRec}: -",
+                SentData = $"{prefixSent}: -",
                 ForegroundColor = ColorError,
                 ImagePathNetworkCard = ImgCard,
                 ImagePathReceivedData = ImgDown,

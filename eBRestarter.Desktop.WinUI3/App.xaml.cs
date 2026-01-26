@@ -1,4 +1,5 @@
 using eBRestarter.Core.Application.DependencyInjections;
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Desktop.WinUI3.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.Services;
@@ -44,6 +45,7 @@ namespace eBRestarter.Desktop.WinUI3
 
                  services.AddSingleton<IThemeService, ThemeService>();
                  services.AddSingleton<ILanguageService, LanguageService>();
+                 services.AddSingleton<ILocalizationService, LocalizationService>();
              });
 
         protected override void OnLaunched(LaunchActivatedEventArgs args)
