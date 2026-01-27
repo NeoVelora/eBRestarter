@@ -9,25 +9,24 @@ using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
-using eBRestarter.Infrastructure.Browsers.Abstract;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-
     public partial class ViewModelDeleteBrowserContent : ObservableObject
     {
-        #region Fields (Private Felder OHNE [ObservableProperty])
+        #region Fields
 
         private readonly IBrowserFactory _browserFactory;
         private readonly IEVisitorConfigService _iEVisitorConfigService;
         private readonly IDialogService _dialogService;
         private readonly IFileDeletionService _fileDeletionService;
         private readonly IWindowsProcessControlService _processService;
+        private readonly ILocalizationService _localizationService;
+
         private BrowserPaths? _browserPaths;
         private CancellationTokenSource? _cts;
         private IBrowser? _currentBrowser;
@@ -35,10 +34,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Observable Properties (Felder MIT [ObservableProperty])
+        #region Observable Properties
 
         [ObservableProperty] public partial string BrowserIconPath { get; set; } = string.Empty;
-        [ObservableProperty] public partial string BrowserName { get; set; } = "Lade...";
+
+        [ObservableProperty] public partial string BrowserName { get; set; }
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
@@ -56,12 +56,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial bool IsProcessConflict { get; set; } = false;
         [ObservableProperty] public partial double ProgressMaximum { get; set; } = 100;
         [ObservableProperty] public partial string ProgressText { get; set; } = "0 %";
+
         [ObservableProperty] public partial double ProgressValue { get; set; } = 0;
-        [ObservableProperty] public partial string StatusText { get; set; } = "Bereit.";
+        [ObservableProperty] public partial string StatusText { get; set; }
 
         #endregion
 
-        #region Properties (Explizite get; set; Eigenschaften)
+        #region Properties
 
         private bool CanCancel() => IsBusy;
         private bool CanClean() => !IsBusy && (IsDeleteCookiesChecked || IsDeleteInternetCacheChecked);
@@ -75,13 +76,18 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IWindowsProcessControlService processService,
             IFileDeletionService fileDeletionService,
             IEVisitorConfigService iEVisitorConfigService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            ILocalizationService localizationService)
         {
             _browserFactory = browserFactory;
             _iEVisitorConfigService = iEVisitorConfigService;
             _processService = processService;
             _fileDeletionService = fileDeletionService;
             _dialogService = dialogService;
+            _localizationService = localizationService;
+
+            BrowserName = _localizationService.GetString("Cleanup_Loading");
+            StatusText = _localizationService.GetString("Cleanup_Ready");
 
             AppConfig config = iEVisitorConfigService.LoadConfig();
 
@@ -94,19 +100,20 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             else
             {
-                StatusText = $"Konfiguration fehlerhaft: Unbekannter Browser '{selectedBrowserString}'.";
+                string errorFormat = _localizationService.GetString("Cleanup_ConfigError");
+                StatusText = string.Format(errorFormat, selectedBrowserString);
             }
         }
 
         #endregion
 
-        #region Commands (Methoden MIT [RelayCommand])
+        #region Commands
 
         [RelayCommand(CanExecute = nameof(CanCancel))]
         private void CancelCleaning()
         {
             _cts?.Cancel();
-            StatusText = "Breche ab...";
+            StatusText = _localizationService.GetString("Cleanup_Canceling");
         }
 
         [RelayCommand(CanExecute = nameof(CanClean))]
@@ -117,7 +124,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             if (_processService.IsProcessAlive(_processName))
             {
                 IsProcessConflict = true;
-                StatusText = "Browser läuft noch. Bitte Aktion wählen.";
+                StatusText = _localizationService.GetString("Cleanup_BrowserRunning");
                 return;
             }
 
@@ -130,12 +137,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IsProcessConflict = false;
 
             _processService.CloseApplication(_processName);
-            StatusText = "Beende Browser...";
+            StatusText = _localizationService.GetString("Cleanup_ClosingBrowser");
             await Task.Delay(1000);
 
             if (_processService.IsProcessAlive(_processName))
             {
-                StatusText = "Konnte Browser nicht beenden. Bitte manuell schließen.";
+                StatusText = _localizationService.GetString("Cleanup_CloseFailed");
                 return;
             }
 
@@ -146,7 +153,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private void CancelConflict()
         {
             IsProcessConflict = false;
-            StatusText = "Abbruch durch Benutzer.";
+            StatusText = _localizationService.GetString("Cleanup_CanceledByUser");
         }
 
         private async Task ExecuteCleaningLogic()
@@ -161,7 +168,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             if (directoriesToDelete.Count == 0)
             {
-                StatusText = "Keine gültigen Pfade gefunden.";
+                StatusText = _localizationService.GetString("Cleanup_NoPaths");
                 return;
             }
 
@@ -170,7 +177,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             try
             {
-                StatusText = "Analysiere Dateien...";
+                StatusText = _localizationService.GetString("Cleanup_Analyzing");
 
                 int totalFiles = await _fileDeletionService.CountFilesAsync(directoriesToDelete);
                 ProgressMaximum = totalFiles > 0 ? totalFiles : 1;
@@ -184,11 +191,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 });
 
                 await _fileDeletionService.DeleteFilesAsync(directoriesToDelete, statusProgress, valueProgress, _cts.Token);
-                StatusText = "Bereinigung abgeschlossen.";
+
+                StatusText = _localizationService.GetString("Cleanup_Finished");
             }
             catch (Exception ex)
             {
-                StatusText = $"Fehler: {ex.Message}";
+                string errorFormat = _localizationService.GetString("General_ErrorPrefix");
+                StatusText = string.Format(errorFormat, ex.Message);
             }
             finally
             {
@@ -197,10 +206,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-
         #endregion
 
-        #region Methods (Restliche Methoden)
+        #region Methods
 
         public void Initialize(BrowserType selectedBrowserType)
         {
@@ -212,12 +220,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 BrowserIconPath = _currentBrowser.IconPath;
 
                 _browserPaths = _currentBrowser.GetPaths();
-
                 _processName = GetProcessNameByType(selectedBrowserType);
             }
             catch (Exception ex)
             {
-                StatusText = $"Fehler beim Laden: {ex.Message}";
+                string errorFormat = _localizationService.GetString("General_LoadErrorPrefix");
+                StatusText = string.Format(errorFormat, ex.Message);
             }
         }
 
@@ -235,6 +243,4 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
     }
-
-
 }

@@ -70,8 +70,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             CurrentDay = _localizationService.GetString("General_Today");
 
-            YAxes = new Axis[]
-            {
+            YAxes =
+            [
                 new Axis
                 {
                     Name = _localizationService.GetString("Chart_YAxisPoints"),
@@ -83,7 +83,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     MinStep = 100,
                     TextSize = 12
                 }
-            };
+            ];
 
             _chartValues = [];
             for (int i = 0; i < 24; i++) _chartValues.Add(new ObservableValue(0));
@@ -229,7 +229,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     break;
             }
 
-            return new[] { axis };
+            return [axis];
         }
     }
 }

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.WinUI.Helpers;
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
@@ -12,8 +13,6 @@ using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,7 +27,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Fields (Private Felder OHNE [ObservableProperty])
+        #region Fields
 
         private readonly BrowserInfo _browserInfo;
         private readonly AppConfig _currentConfig;
@@ -36,11 +35,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IBrowserDownloadService _downloadService;
         private readonly IEVisitorConfigService _eVisitorConfigService;
         private readonly IOperatingSystemFacade _os;
+        private readonly ILocalizationService _localizationService;
         private CancellationTokenSource? _cts;
 
         #endregion
 
-        #region Observable Properties (Felder MIT [ObservableProperty])
+        #region Observable Properties
 
         [ObservableProperty]
         public partial double DownloadProgressValue { get; set; }
@@ -61,7 +61,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Properties (Explizite get; set; Eigenschaften)
+        #region Properties
 
         public string BrowserExist => _browserInfo.IsInstalled ? "✓" : "✘";
 
@@ -69,9 +69,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ? new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorGreen))
             : new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorRed));
 
-        public string BrowserVersion => _browserInfo.IsInstalled ? $"Version: {_browserInfo.Version}" : "Nicht installiert";
+        public string BrowserVersion => _browserInfo.IsInstalled
+            ? $"{_localizationService.GetString("Browser_VersionPrefix")} {_browserInfo.Version}"
+            : _localizationService.GetString("Browser_NotInstalled");
 
-        public string DownloadButtonContent => IsDownloadActive ? "Abbrechen" : "Download";
+        public string DownloadButtonContent => IsDownloadActive
+            ? _localizationService.GetString("General_Cancel")
+            : _localizationService.GetString("General_Download");
 
         public string DownloadButtonStyleKey => IsDownloadActive
             ? "DownloadBrowserToggleButtonRed"
@@ -108,28 +112,28 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IBrowserDownloadService downloadService,
             IOperatingSystemFacade os,
             IEVisitorConfigService eVisitorConfigService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            ILocalizationService localizationService)
         {
             _browserInfo = info;
             _downloadService = downloadService;
             _os = os;
             _eVisitorConfigService = eVisitorConfigService;
             _dialogService = dialogService;
+            _localizationService = localizationService;
 
             _currentConfig = _eVisitorConfigService.LoadConfig();
         }
 
         #endregion
 
-        #region Commands (Methoden MIT [RelayCommand])
+        #region Commands
 
         [RelayCommand]
         private void ChooseBrowser()
         {
             _currentConfig.Browser.Selected = HeaderTitleBrowser;
-
             WeakReferenceMessenger.Default.Send(new BrowserChangedMessage(HeaderTitleBrowser));
-
             SaveSettings();
         }
 
@@ -148,20 +152,21 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Methods (Restliche Methoden)
+        #region Methods
 
         private async Task AskToInstall(string path)
         {
-
             bool installNow = await _dialogService.ShowYesNoDialogAsync(
-               "Installation",
-               "Möchtest du installieren?");
+               _localizationService.GetString("Install_DialogTitle"),
+               _localizationService.GetString("Install_DialogQuestion"));
 
             if (installNow)
             {
                 await _os.WindowsProcessControlService.StartExecutableAsync(path);
 
-                await _dialogService.ShowMessageAsync("Installation beendet", "Der Browser wurde installiert.");
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.GetString("Install_FinishedTitle"),
+                    _localizationService.GetString("Install_FinishedMessage"));
             }
         }
 
