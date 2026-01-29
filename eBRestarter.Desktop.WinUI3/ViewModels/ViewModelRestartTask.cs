@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Domain.Enums;
@@ -14,7 +15,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
     public partial class ViewModelRestartTask : ObservableObject, IRecipient<UsernameChangedMessage>, IRecipient<BrowserChangedMessage>
     {
         #region Constants
-        
         private const string _baseUrl = "https://www.ebesucher.com/surfbar/";
         private const int _initialDelaySeconds = 5;
         #endregion
@@ -22,28 +22,39 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region Fields
         private readonly IBrowserFactory _browserFactory;
         private readonly IEVisitorConfigService _configService;
+        private readonly ILocalizationService _localizationService;
+        private readonly DispatcherQueue _dispatcherQueue;
+
         private IBrowser? _currentBrowser;
         private RestartTaskState _currentState = RestartTaskState.Idle;
-        private readonly DispatcherQueue _dispatcherQueue;
         private int _pauseSeconds = 20;
         private int _runtimeSeconds = 3600;
         private DispatcherTimer? _uiTimer;
         #endregion
 
         #region Observable Properties
-        [ObservableProperty] public partial string ChoosenBrowser { get; set; } = "Nicht gewählt";
+
+        [ObservableProperty] public partial string ChoosenBrowser { get; set; }
         [ObservableProperty] public partial bool IsActive { get; set; } = false;
         [ObservableProperty] public partial int SecondsRemaining { get; set; }
-        [ObservableProperty] public partial string StatusInfoText { get; set; } = "Bereit.";
+        [ObservableProperty] public partial string StatusInfoText { get; set; }
         [ObservableProperty] public partial string Username { get; set; } = "-";
+
         #endregion
 
         #region Constructors
-        public ViewModelRestartTask(IEVisitorConfigService configService, IBrowserFactory browserFactory)
+        public ViewModelRestartTask(
+            IEVisitorConfigService configService,
+            IBrowserFactory browserFactory,
+            ILocalizationService localizationService)
         {
             _configService = configService;
             _browserFactory = browserFactory;
+            _localizationService = localizationService;
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+
+            ChoosenBrowser = _localizationService.GetString("Task_DefaultBrowser");
+            StatusInfoText = _localizationService.GetString("Task_StatusReady");
 
             LoadInitialData();
             WeakReferenceMessenger.Default.RegisterAll(this);
@@ -51,7 +62,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #endregion
 
         #region Commands
-        
         [RelayCommand]
         private void ExecuteStartTimerScheduler(bool? isChecked)
         {
@@ -70,7 +80,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #endregion
 
         #region Methods
-        
         public void Receive(BrowserChangedMessage message) =>
             _dispatcherQueue.TryEnqueue(() => ChoosenBrowser = message.BrowserName ?? "-");
 
@@ -85,7 +94,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private BrowserType GetBrowserTypeFromString(string browserName)
         {
-            if (string.IsNullOrWhiteSpace(browserName) || browserName == "Nicht gewählt")
+            string defaultText = _localizationService.GetString("Task_DefaultBrowser");
+
+            if (string.IsNullOrWhiteSpace(browserName) || browserName == defaultText || browserName == "Nicht gewählt")
                 return BrowserType.Chrome;
 
             if (Enum.TryParse(browserName, true, out BrowserType type))
@@ -119,16 +130,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             try
             {
                 var browserType = GetBrowserTypeFromString(ChoosenBrowser);
-
                 _currentBrowser = _browserFactory.Create(browserType);
-
                 string url = $"{_baseUrl}{Username}";
-
                 _currentBrowser.Start(url);
             }
             catch (Exception ex)
             {
-                StatusInfoText = $"Fehler: {ex.Message}";
+                string errorFormat = _localizationService.GetString("General_ErrorPrefix");
+                StatusInfoText = string.Format(errorFormat, ex.Message);
                 IsActive = false;
             }
         }
@@ -137,7 +146,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             var config = _configService.LoadConfig();
             Username = config.Username ?? "-";
-            ChoosenBrowser = config.Browser?.Selected ?? "Nicht gewählt";
+
+            ChoosenBrowser = config.Browser?.Selected ?? _localizationService.GetString("Task_DefaultBrowser");
 
             _runtimeSeconds = config.Browser.RuntimeHours * 3600;
             _pauseSeconds = config.Browser.RuntimePauseSeconds;
@@ -179,7 +189,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
 
             CloseCurrentBrowser();
-
             SwitchState(RestartTaskState.Idle);
         }
 
@@ -190,27 +199,25 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             switch (_currentState)
             {
                 case RestartTaskState.Idle:
-                    StatusInfoText = "Restarter gestoppt.";
+                    StatusInfoText = _localizationService.GetString("Task_StatusStopped");
                     SecondsRemaining = 0;
                     break;
 
                 case RestartTaskState.InitialDelay:
                     SecondsRemaining = _initialDelaySeconds;
-                    StatusInfoText = $"Start in {SecondsRemaining}s...";
+                    UpdateDynamicStatusText();
                     break;
 
                 case RestartTaskState.Running:
                     LaunchBrowser();
                     SecondsRemaining = _runtimeSeconds;
-                    StatusInfoText = "Browser läuft.";
+                    StatusInfoText = _localizationService.GetString("Task_StatusRunning");
                     break;
 
                 case RestartTaskState.Cooldown:
                     CloseCurrentBrowser();
-
-
                     SecondsRemaining = _pauseSeconds;
-                    StatusInfoText = $"Neustart in {SecondsRemaining}s...";
+                    UpdateDynamicStatusText();
                     break;
             }
         }
@@ -218,9 +225,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private void UpdateDynamicStatusText()
         {
             if (_currentState == RestartTaskState.InitialDelay)
-                StatusInfoText = $"Start in {SecondsRemaining}s...";
+            {
+                string format = _localizationService.GetString("Task_StatusStartIn");
+                StatusInfoText = string.Format(format, SecondsRemaining);
+            }
             else if (_currentState == RestartTaskState.Cooldown)
-                StatusInfoText = $"Neustart in {SecondsRemaining}s...";
+            {
+                string format = _localizationService.GetString("Task_StatusRestartIn");
+                StatusInfoText = string.Format(format, SecondsRemaining);
+            }
         }
         #endregion
     }

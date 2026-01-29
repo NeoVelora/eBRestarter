@@ -13,13 +13,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region Fields (Private Felder OHNE [ObservableProperty])
 
         private readonly IAppInfoService _appInfoService;
+        private readonly ILocalizationService _localizationService;
 
         #endregion
 
         #region Observable Properties (Felder MIT [ObservableProperty])
 
         [ObservableProperty]
-        public partial string AppVersion { get; set; } = "Lade...";
+        public partial string AppVersion { get; set; }
 
         #endregion
 
@@ -31,9 +32,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #region Constructors
 
-        public ViewModelAbout(IAppInfoService appInfoService)
+        public ViewModelAbout(
+            IAppInfoService appInfoService,
+            ILocalizationService localizationService)
         {
             _appInfoService = appInfoService;
+            _localizationService = localizationService;
+
+            AppVersion = _localizationService.GetString("About_Loading");
+
             LoadData();
         }
 
@@ -43,7 +50,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private void LoadData()
         {
-            AppVersion = $"Version: {_appInfoService.GetAppVersion()}";
+            string prefix = _localizationService.GetString("About_VersionPrefix");
+            AppVersion = $"{prefix} {_appInfoService.GetAppVersion()}";
 
             var credits = _appInfoService.GetIconCredits();
             IconCredits.Clear();

@@ -11,7 +11,6 @@ using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Infrastructure.Constants;
-using Microsoft.Windows.ApplicationModel.Resources;
 using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Collections.Generic;
@@ -49,6 +48,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial LanguageOption SelectedLanguageOption { get; set; }
         [ObservableProperty] public partial int ComputerRestartClockTime { get; set; }
         [ObservableProperty] public partial bool StartWithWindows { get; set; } = false;
+
         [ObservableProperty] public partial bool IsRestartSliderVisible { get; set; }
         [ObservableProperty] public partial string RestartStatusText { get; set; } = string.Empty;
 
@@ -78,8 +78,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _localizationService = localizationService;
 
             ComputerRestartList = new ReadOnlyCollection<ComputerRestartOption>(
-            [.. localizationService.GetComputerRestartOptions()]
-        );
+                [.. localizationService.GetComputerRestartOptions()]
+            );
+
             LanguageList = new ReadOnlyCollection<LanguageOption>(
                 [.. localizationService.GetAvailableLanguages()]
             );
@@ -94,13 +95,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             var configLanguageIndex = _currentConfig.Settings.Language;
 
             SelectedComputerRestartOption = ComputerRestartList.FirstOrDefault(x => x.Days == configDays) ?? ComputerRestartList[0];
-
             SelectedLanguageOption = LanguageList.FirstOrDefault(x => x.Index == configLanguageIndex) ?? LanguageList[0];
 
             _isInitializing = false;
 
             _ = InitializeAsync();
-
         }
 
 
@@ -114,8 +113,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 if (info.IsUpdateAvailable)
                 {
                     IsUpdateAvailable = true;
-                    UpdateMessage = $"Version {info.LatestVersion} verfügbar!";
-
+                    string format = _localizationService.GetString("Options_UpdateAvailable");
+                    UpdateMessage = string.Format(format, info.LatestVersion);
                 }
             }
             catch (Exception ex)
@@ -186,7 +185,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             };
             _eVisitorConfigService.SaveConfig(newConfig);
 
-            await _dialogService.ShowMessageAsync("API Zugang", "Deine API Zugangsdaten wurden entfernt.", DialogIcon.Success);
+            await _dialogService.ShowMessageAsync(
+                _localizationService.GetString("Options_RemoveCreds_Title"),
+                _localizationService.GetString("Options_RemoveCreds_Message"),
+                DialogIcon.Success);
         }
 
         [RelayCommand]
@@ -204,7 +206,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 if (dialogResult.IsDeactivateAction)
                 {
                     _autoLogonService.DisableAutoLogon();
-                    await _dialogService.ShowMessageAsync("Info", "Die automatische Anmeldung wurde deaktiviert.");
+                    await _dialogService.ShowMessageAsync("Info",
+                        _localizationService.GetString("Options_AutoLogon_Deactivated"));
                 }
                 else if (dialogResult.Credentials != null)
                 {
@@ -216,17 +219,20 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
                     if (!isValid)
                     {
-                        await _dialogService.ShowMessageAsync("Fehler", "Benutzername oder Passwort sind nicht korrekt. Bitte prüfen Sie die Eingaben.");
+                        await _dialogService.ShowMessageAsync("Fehler",
+                            _localizationService.GetString("Options_AutoLogon_ValidationError"));
                         return;
                     }
 
                     _autoLogonService.EnableAutoLogon(user, domain, pass);
-                    await _dialogService.ShowMessageAsync("Erfolg", "Die automatische Anmeldung wurde eingerichtet.");
+                    await _dialogService.ShowMessageAsync("Erfolg",
+                        _localizationService.GetString("Options_AutoLogon_Success"));
                 }
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowMessageAsync("Fehler", $"Ein unerwarteter Fehler ist aufgetreten: {ex.Message}");
+                string errorFormat = _localizationService.GetString("General_UnexpectedError");
+                await _dialogService.ShowMessageAsync("Fehler", string.Format(errorFormat, ex.Message));
             }
         }
 
@@ -234,7 +240,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         partial void OnSelectedComputerRestartOptionChanged(ComputerRestartOption value)
         {
             _currentConfig.Computer.ComputerRestartIntervalDays = value.Days;
-
             RecalculateNextRestartDate();
             UpdateRestartUiState();
             SaveSettings();
@@ -277,8 +282,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 bool restartNow = await _dialogService.ShowConfirmationAsync(
                     "Neustart erforderlich / Restart required",
                     "Die Sprache wurde geändert. Damit alle Texte aktualisiert werden, muss die Anwendung neu gestartet werden.\n\nMöchten Sie die Anwendung jetzt neustarten?\n\n(The language has been changed. Restart now to apply all changes?)",
-                    "Ja / Yes",
-                    "Nein / No"
+                    "Ja / Yes", "Nein / No"
                 );
 
                 if (restartNow)
@@ -321,7 +325,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             if (days == 0)
             {
-                RestartStatusText = "Computer wird nicht neugestartet";
+                RestartStatusText = _localizationService.GetString("Options_RestartStatus_None");
             }
             else
             {
@@ -332,7 +336,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     targetDate = DateTime.Today.AddDays(days).AddHours(ComputerRestartClockTime);
                 }
 
-                RestartStatusText = $"Computer wird am {targetDate:dd.MM.yyyy} um {targetDate:HH} Uhr neugestartet";
+                string format = _localizationService.GetString("Options_RestartStatus_Scheduled");
+                RestartStatusText = string.Format(format, targetDate.ToString("dd.MM.yyyy"), targetDate.ToString("HH"));
             }
         }
 
@@ -354,13 +359,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async void ToggleAutoStartAsync(bool enable)
         {
             if (enable)
-            {
                 await _os.WindowsStartupManagerService.EnableAutoStartAsync();
-            }
             else
-            {
                 await _os.WindowsStartupManagerService.DisableAutoStartAsync();
-            }
 
             _currentConfig.Settings.StartWithWindows = enable;
             SaveSettings();
@@ -384,7 +385,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             catch (PrincipalServerDownException)
             {
-                throw new Exception("Der Domänen-Controller konnte zur Überprüfung nicht erreicht werden.");
+                throw new Exception(_localizationService.GetString("Options_AutoLogon_DomainError"));
             }
             catch (Exception)
             {

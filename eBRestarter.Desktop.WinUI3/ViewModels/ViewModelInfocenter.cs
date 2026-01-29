@@ -16,23 +16,27 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
     {
         #region Fields
         private readonly IDialogService _dialogService;
+        private readonly ILocalizationService _localizationService;
+
         private readonly IHardwareInfoService _hardwareService;
         private readonly IOsEditionService _osEditionService;
         private readonly IWindowsSystemInfoService _systemInfoService;
         #endregion
 
         #region Observable Properties
-        [ObservableProperty] public partial string BrowserText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string GraphicsText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string OsBuildText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string OsEditionText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string OsVersionText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string ProcessorText { get; set; } = "Lade...";
-        [ObservableProperty] public partial string RamText { get; set; } = "Lade...";
+
+        [ObservableProperty] public partial string BrowserText { get; set; }
+        [ObservableProperty] public partial string GraphicsText { get; set; }
+        [ObservableProperty] public partial string OsBuildText { get; set; }
+        [ObservableProperty] public partial string OsEditionText { get; set; }
+        [ObservableProperty] public partial string OsVersionText { get; set; }
+        [ObservableProperty] public partial string ProcessorText { get; set; }
+        [ObservableProperty] public partial string RamText { get; set; }
         #endregion
 
         #region Properties
-        public string Title { get; } = "Infocenter";
+        
+        public string Title { get; private set; }
         #endregion
 
         #region Constructors
@@ -40,12 +44,27 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IHardwareInfoService hardwareService,
             IOsEditionService osEditionService,
             IWindowsSystemInfoService systemInfoService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            ILocalizationService localizationService)
         {
             _hardwareService = hardwareService;
             _osEditionService = osEditionService;
             _systemInfoService = systemInfoService;
             _dialogService = dialogService;
+            _localizationService = localizationService;
+
+            string loading = _localizationService.GetString("Infocenter_Loading");
+
+            BrowserText = loading;
+            GraphicsText = loading;
+            OsBuildText = loading;
+            OsEditionText = loading;
+            OsVersionText = loading;
+            ProcessorText = loading;
+            RamText = loading;
+
+            Title = _localizationService.GetString("Infocenter_Title");
+
             _ = LoadDataAsync();
         }
         #endregion
@@ -76,16 +95,16 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             var hardware = await _hardwareService.GetHardwareInfoAsync();
 
-            ProcessorText = $"Prozessor: {hardware.ProcessorName}";
-            GraphicsText = $"Grafikkarte: {hardware.GraphicsCardName}";
-            RamText = $"Installierter RAM: {hardware.InstalledRam}";
+            ProcessorText = $"{_localizationService.GetString("Infocenter_ProcessorPrefix")} {hardware.ProcessorName}";
+            GraphicsText = $"{_localizationService.GetString("Infocenter_GraphicsPrefix")} {hardware.GraphicsCardName}";
+            RamText = $"{_localizationService.GetString("Infocenter_RamPrefix")} {hardware.InstalledRam}";
 
             var edition = await _osEditionService.GetOsEditionAsync();
-            OsEditionText = $"Edition: {edition}";
+            OsEditionText = $"{_localizationService.GetString("Infocenter_EditionPrefix")} {edition}";
 
-            OsVersionText = $"Version: {_systemInfoService.GetCurrentOsDisplayVersion()}";
-            OsBuildText = $"Betriebssystembuild: {_systemInfoService.GetCurrentOsBuildVersion()}";
-            BrowserText = $"Standardbrowser: {_systemInfoService.GetCurrentStandardBrowserName()}";
+            OsVersionText = $"{_localizationService.GetString("Infocenter_VersionPrefix")} {_systemInfoService.GetCurrentOsDisplayVersion()}";
+            OsBuildText = $"{_localizationService.GetString("Infocenter_BuildPrefix")} {_systemInfoService.GetCurrentOsBuildVersion()}";
+            BrowserText = $"{_localizationService.GetString("Infocenter_BrowserPrefix")} {_systemInfoService.GetCurrentStandardBrowserName()}";
         }
         #endregion
     }

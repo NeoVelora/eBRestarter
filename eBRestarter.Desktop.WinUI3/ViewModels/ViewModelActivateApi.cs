@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Authentication;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Domain.Models.Records;
@@ -12,18 +13,20 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelActivateApi : ObservableObject
     {
-        #region Fields (Private Felder OHNE [ObservableProperty])
+        #region Fields
 
         private readonly IApiAuthenticationService _authService;
         private readonly IEVisitorConfigService _configService;
+        private readonly ILocalizationService _localizationService;
 
         #endregion
 
-        #region Observable Properties (Felder MIT [ObservableProperty])
+        #region Observable Properties
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
         public partial string ApiKey { get; set; } = string.Empty;
+
         [ObservableProperty] public partial bool IsBusy { get; set; }
         [ObservableProperty] public partial string StatusColor { get; set; } = "Transparent";
         [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
@@ -34,7 +37,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Properties (Explizite get; set; Eigenschaften)
+        #region Properties
 
         private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
 
@@ -44,10 +47,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public ViewModelActivateApi(
             IApiAuthenticationService authService,
-            IEVisitorConfigService configService)
+            IEVisitorConfigService configService,
+            ILocalizationService localizationService)
         {
             _authService = authService;
             _configService = configService;
+            _localizationService = localizationService;
 
             var config = _configService.LoadConfig();
 
@@ -57,13 +62,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Commands (Methoden MIT [RelayCommand])
+        #region Commands
 
         [RelayCommand(CanExecute = nameof(CanSubmit))]
         private async Task Submit()
         {
             IsBusy = true;
-            StatusMessage = "Prüfe Zugangsdaten...";
+            StatusMessage = _localizationService.GetString("ActivateApi_Checking");
 
             var (IsValid, Message) = await _authService.VerifyCredentialsAsync(Username, ApiKey);
 
@@ -84,7 +89,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
                 _configService.SaveConfig(newConfig);
 
-                StatusMessage = "Erfolgreich aktiviert & verschlüsselt gespeichert!";
+                StatusMessage = _localizationService.GetString("ActivateApi_Success");
                 StatusColor = "#7ED422";
             }
             else
@@ -92,17 +97,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 StatusMessage = Message;
                 StatusColor = "#E40E87";
             }
-        }      
+        }
 
         #endregion
 
-        #region Methods (Restliche Methoden)
+        #region Methods
 
         public void ImportLegacyFile(string filePath)
         {
             if (!System.IO.File.Exists(filePath))
             {
-                StatusMessage = "Datei nicht gefunden.";
+                StatusMessage = _localizationService.GetString("ActivateApi_FileNotFound");
                 StatusColor = "#E40E87";
                 return;
             }
@@ -118,12 +123,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 Username = importedUser;
                 ApiKey = importedKey;
 
-                StatusMessage = "Daten importiert. Bitte jetzt 'Aktivieren' klicken.";
+                StatusMessage = _localizationService.GetString("ActivateApi_ImportSuccess");
                 StatusColor = "{ThemeResource SystemFillColorSuccessBrush}";
             }
             catch (Exception)
             {
-                StatusMessage = "Fehler: Die Datei hat ein falsches Format.";
+                StatusMessage = _localizationService.GetString("ActivateApi_ImportError");
                 StatusColor = "#E40E87";
 
                 Username = string.Empty;
