@@ -1,16 +1,15 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.WinUI.Helpers;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
+using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
-using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using System;
 using System.Threading;
@@ -29,7 +28,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #region Fields
 
-        private readonly BrowserInfo _browserInfo;
+        private BrowserInfo _browserInfo;
+
         private readonly AppConfig _currentConfig;
         private readonly IDialogService _dialogService;
         private readonly IBrowserDownloadService _downloadService;
@@ -59,9 +59,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [NotifyPropertyChangedFor(nameof(IsNotInstalling))]
         public partial bool IsInstalling { get; set; }
 
+        [ObservableProperty]
+        public partial string BrowserVersionText { get; set; } = string.Empty;
+
         #endregion
 
-        #region Properties
+        #region Properties (Computed)
+
+        public BrowserType BrowserType => _browserInfo.Type;
 
         public string BrowserExist => _browserInfo.IsInstalled ? "✓" : "✘";
 
@@ -69,9 +74,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ? new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorGreen))
             : new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorRed));
 
-        public string BrowserVersion => _browserInfo.IsInstalled
-            ? $"{_localizationService.GetString("Browser_VersionPrefix")} {_browserInfo.Version}"
-            : _localizationService.GetString("Browser_NotInstalled");
 
         public string DownloadButtonContent => IsDownloadActive
             ? _localizationService.GetString("General_Cancel")
@@ -89,7 +91,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public string ImageSizeWidthBrowser => _browserInfo.IconWidth;
 
-        public bool IsBrowserVersionVisible => _browserInfo.IsInstalled;
 
         public bool IsChooseButtonVisible => _browserInfo.IsInstalled;
 
@@ -121,8 +122,51 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _eVisitorConfigService = eVisitorConfigService;
             _dialogService = dialogService;
             _localizationService = localizationService;
-
+            
             _currentConfig = _eVisitorConfigService.LoadConfig();
+
+            RefreshBrowserVersionText();
+        }
+
+        #endregion
+
+        #region Methods (Update Logic)
+
+        public void Update(BrowserInfo newInfo)
+        {
+            if (_browserInfo.IsInstalled == newInfo.IsInstalled &&
+                _browserInfo.Version == newInfo.Version)
+            {
+                return;
+            }
+
+            _browserInfo = newInfo;
+
+            OnPropertyChanged(nameof(BrowserExist));
+            OnPropertyChanged(nameof(BrowserExistTextForground));
+            RefreshBrowserVersionText();
+            OnPropertyChanged(nameof(IsChooseButtonVisible));
+            OnPropertyChanged(nameof(IsDownloadButtonVisible));
+            OnPropertyChanged(nameof(IsDownloadSizeTextVisible));
+
+            OnPropertyChanged(nameof(DownloadButtonContent));
+        }
+
+        private void RefreshBrowserVersionText()
+        {
+            if (_browserInfo.IsInstalled && IsDownloading is false)
+            {
+                string prefix = _localizationService.GetString("Browser_VersionPrefix");
+                BrowserVersionText = $"{prefix} {_browserInfo.Version}";
+            }
+            else if (IsDownloading is true)
+            {
+                BrowserVersionText = string.Empty;
+            }
+            else
+            {
+                BrowserVersionText = _localizationService.GetString("Browser_NotInstalled");
+            }
         }
 
         #endregion
@@ -152,8 +196,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Methods
-
+        #region Methods (Internal Logic)
         private async Task AskToInstall(string path)
         {
             bool installNow = await _dialogService.ShowYesNoDialogAsync(
@@ -185,9 +228,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     _os.WindowsFileSystemService.DeleteFile(path);
                 }
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception) { }
         }
 
         private async Task ResetDownloadState()
@@ -195,6 +236,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IsDownloadActive = false;
             DownloadProgressValue = 0;
             DownloadSizeText = "";
+            RefreshBrowserVersionText();
             _cts = null;
         }
 
@@ -206,8 +248,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task StartDownloadAsync()
         {
             _cts = new CancellationTokenSource();
-
             IsDownloadActive = true;
+            RefreshBrowserVersionText();
 
             var fileName = $"{_browserInfo.Name}_Installer.exe";
             var userProfile = _os.WindowsFileSystemService.GetEnvironmentPath("UserProfile");
@@ -230,7 +272,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 CleanupPartialFile(downloadPath);
                 await ResetDownloadState();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 CleanupPartialFile(downloadPath);
                 await ResetDownloadState();
