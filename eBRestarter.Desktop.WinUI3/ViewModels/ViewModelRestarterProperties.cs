@@ -173,8 +173,43 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         partial void OnSelectedDeleteBrowserCacheOptionChanged(BrowserCacheDeleteOption value)
         {
             _currentConfig.Browser.DeleteBrowserCacheIntervalDays = value.Days;
+
+            if (IsIntervalAllowed(value.Days))
+            {
+                DateTime nextDate = DateTime.Today.AddDays(value.Days);
+
+                _currentConfig.Browser.NextBrowserDeleteCacheDate = nextDate;
+
+
+                string formatPattern = _localizationService.GetString("Browser_NextDeleteDate_Format");
+
+                string formattedDateString = string.Format(formatPattern, nextDate);
+
+
+                WeakReferenceMessenger.Default.Send(new NextDeletionProcess(_localizationService.GetString("NextDeletionProcess")));
+                WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(formattedDateString));
+                WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.GetString("Activate")));
+                WeakReferenceMessenger.Default.Send(new DeleteBrowserContentIsActive(true));
+            }
+            else
+            {
+                _currentConfig.Browser.NextBrowserDeleteCacheDate = DateTime.MinValue;
+
+                WeakReferenceMessenger.Default.Send(new NextDeletionProcess(string.Empty));
+                WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(string.Empty));
+                WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.GetString("Disabled")));
+                WeakReferenceMessenger.Default.Send(new DeleteBrowserContentIsActive(false));
+            }
+
             SaveSettings();
         }
+
+        public bool IsIntervalAllowed(int days) => days switch
+        {
+            1 or 3 or 7 or 14 => true,
+            _ => false
+        };
+
 
         partial void OnStartBrowserWithProgrammStartIsChanged(bool value)
         {

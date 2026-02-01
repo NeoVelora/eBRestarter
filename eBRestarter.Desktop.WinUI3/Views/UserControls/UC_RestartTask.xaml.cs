@@ -20,12 +20,8 @@ namespace eBRestarter.Desktop.WinUI3.Views.UserControls;
 
 public sealed partial class UC_RestartTask : UserControl
 {
-    public ViewModelRestartTask ViewModelRestartTask { get; }
     public UC_RestartTask()
     {
         InitializeComponent();
-
-        ViewModelRestartTask = App.AppHost!.Services.GetRequiredService<ViewModelRestartTask>();
-        this.DataContext = ViewModelRestartTask;
     }
 }

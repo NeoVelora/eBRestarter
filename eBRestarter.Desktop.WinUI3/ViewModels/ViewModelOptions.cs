@@ -337,6 +337,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 }
 
                 string format = _localizationService.GetString("Options_RestartStatus_Scheduled");
+
                 RestartStatusText = string.Format(format, targetDate.ToString("dd.MM.yyyy"), targetDate.ToString("HH"));
             }
         }

@@ -12,7 +12,13 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-    public partial class ViewModelRestartTask : ObservableObject, IRecipient<UsernameChangedMessage>, IRecipient<BrowserChangedMessage>
+    public partial class ViewModelRestartTask : ObservableObject, 
+                                                IRecipient<UsernameChangedMessage>,
+                                                IRecipient<BrowserChangedMessage>,
+                                                IRecipient<DeleteBrowserContentActivateMessage>,
+                                                IRecipient<DeleteBrowserContentIsActive>,
+                                                IRecipient<NextDeletionProcess>,
+                                                IRecipient<NextDeletionProcessDate> 
     {
         #region Constants
         private const string _baseUrl = "https://www.ebesucher.com/surfbar/";
@@ -36,9 +42,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         [ObservableProperty] public partial string ChoosenBrowser { get; set; }
         [ObservableProperty] public partial bool IsActive { get; set; } = false;
+        [ObservableProperty] public partial bool DeleteBrowserContentIsActive { get; set; } = false;
+
+        [ObservableProperty] public partial string NextDeletionProcessMessage { get; set; }
+        [ObservableProperty] public partial string NextDeletionProcessDateMessage { get; set; }
+
         [ObservableProperty] public partial int SecondsRemaining { get; set; }
         [ObservableProperty] public partial string StatusInfoText { get; set; }
         [ObservableProperty] public partial string Username { get; set; } = "-";
+        [ObservableProperty] public partial string DeleteIsActivatedMessage { get; set; } = "Disable";
 
         #endregion
 
@@ -58,6 +70,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             LoadInitialData();
             WeakReferenceMessenger.Default.RegisterAll(this);
+
         }
         #endregion
 
@@ -80,11 +93,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #endregion
 
         #region Methods
-        public void Receive(BrowserChangedMessage message) =>
-            _dispatcherQueue.TryEnqueue(() => ChoosenBrowser = message.BrowserName ?? "-");
-
-        public void Receive(UsernameChangedMessage message) =>
-            _dispatcherQueue.TryEnqueue(() => Username = message.NewUsername ?? "-");
+        public void Receive(BrowserChangedMessage message) => _dispatcherQueue.TryEnqueue(() => ChoosenBrowser = message.BrowserName ?? "-");
+        public void Receive(UsernameChangedMessage message) => _dispatcherQueue.TryEnqueue(() => Username = message.NewUsername ?? "-");
+        public void Receive(DeleteBrowserContentActivateMessage message) => _dispatcherQueue.TryEnqueue(() => DeleteIsActivatedMessage = message.ActivateMessage ?? "-");
+        public void Receive(DeleteBrowserContentIsActive message) => _dispatcherQueue.TryEnqueue(() => DeleteBrowserContentIsActive = message.IsActiveOrNot);
+        public void Receive(NextDeletionProcess message) => _dispatcherQueue.TryEnqueue(() => NextDeletionProcessMessage = message.NextDeletionProcessMessage ?? "-");
+        public void Receive(NextDeletionProcessDate message) => _dispatcherQueue.TryEnqueue(() => NextDeletionProcessDateMessage = message.NextDeletionProcessDateMessage ?? "-");
 
         private void CloseCurrentBrowser()
         {
@@ -151,7 +165,36 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             _runtimeSeconds = config.Browser.RuntimeHours * 3600;
             _pauseSeconds = config.Browser.RuntimePauseSeconds;
+
+            int intervalDays = config.Browser.DeleteBrowserCacheIntervalDays;
+            DateTime nextDate = config.Browser.NextBrowserDeleteCacheDate;
+
+            if (IsIntervalAllowed(intervalDays))
+            {
+                DeleteBrowserContentIsActive = true;
+                DeleteIsActivatedMessage = _localizationService.GetString("Activate");
+                NextDeletionProcessMessage = _localizationService.GetString("NextDeletionProcess");
+
+                string formatPattern = _localizationService.GetString("Browser_NextDeleteDate_Format");
+
+                if (nextDate == DateTime.MinValue) nextDate = DateTime.Today.AddDays(intervalDays);
+
+                NextDeletionProcessDateMessage = string.Format(formatPattern, nextDate);
+            }
+            else
+            {
+                DeleteBrowserContentIsActive = false;
+                DeleteIsActivatedMessage = _localizationService.GetString("Disabled");
+                NextDeletionProcessMessage = string.Empty;
+                NextDeletionProcessDateMessage = string.Empty;
+            }
         }
+
+        private bool IsIntervalAllowed(int days) => days switch
+        {
+            1 or 3 or 7 or 14 => true,
+            _ => false
+        };
 
         private void OnTimerTick(object? sender, object e)
         {
