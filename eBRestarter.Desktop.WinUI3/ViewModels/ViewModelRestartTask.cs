@@ -6,19 +6,21 @@ using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
+using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-    public partial class ViewModelRestartTask : ObservableObject, 
+    public partial class ViewModelRestartTask : ObservableObject,
                                                 IRecipient<UsernameChangedMessage>,
                                                 IRecipient<BrowserChangedMessage>,
                                                 IRecipient<DeleteBrowserContentActivateMessage>,
                                                 IRecipient<DeleteBrowserContentIsActive>,
                                                 IRecipient<NextDeletionProcess>,
-                                                IRecipient<NextDeletionProcessDate> 
+                                                IRecipient<NextDeletionProcessDate>
     {
         #region Constants
         private const string _baseUrl = "https://www.ebesucher.com/surfbar/";
@@ -28,6 +30,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region Fields
         private readonly IBrowserFactory _browserFactory;
         private readonly IEVisitorConfigService _configService;
+        private readonly IDialogService _dialogService;
         private readonly ILocalizationService _localizationService;
         private readonly DispatcherQueue _dispatcherQueue;
 
@@ -36,6 +39,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private int _pauseSeconds = 20;
         private int _runtimeSeconds = 3600;
         private DispatcherTimer? _uiTimer;
+
+        private bool _isTestMode = false;
+        private int _testRuntimeSeconds = 20;
         #endregion
 
         #region Observable Properties
@@ -58,10 +64,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public ViewModelRestartTask(
             IEVisitorConfigService configService,
             IBrowserFactory browserFactory,
+            IDialogService dialogService,
             ILocalizationService localizationService)
         {
             _configService = configService;
             _browserFactory = browserFactory;
+            _dialogService = dialogService;
             _localizationService = localizationService;
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
@@ -70,7 +78,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             LoadInitialData();
             WeakReferenceMessenger.Default.RegisterAll(this);
-
         }
         #endregion
 
@@ -121,7 +128,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             return BrowserType.Chrome;
         }
 
-        private void HandleStateTransition()
+        private async void HandleStateTransition()
         {
             switch (_currentState)
             {
@@ -130,12 +137,36 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     break;
 
                 case RestartTaskState.Running:
+                    await CheckAndExecuteBrowserCleanup();
+
                     SwitchState(RestartTaskState.Cooldown);
                     break;
 
                 case RestartTaskState.Cooldown:
                     SwitchState(RestartTaskState.Running);
                     break;
+            }
+        }
+
+        private async Task CheckAndExecuteBrowserCleanup()
+        {
+            var config = _configService.LoadConfig();
+
+            if (config.Browser.DeleteBrowserCacheIntervalDays > 0)
+            {
+                if (DateTime.Today >= config.Browser.NextBrowserDeleteCacheDate)
+                {
+                    CloseCurrentBrowser();
+                    await Task.Delay(1000);
+
+                    await _dialogService.ShowDeleteBrowserContentDialogAsync(autoStart: true);
+
+                    var newDate = DateTime.Today.AddDays(config.Browser.DeleteBrowserCacheIntervalDays);
+                    config.Browser.NextBrowserDeleteCacheDate = newDate;
+                    _configService.SaveConfig(config);
+
+                    LoadInitialData();
+                }
             }
         }
 
@@ -163,8 +194,18 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             ChoosenBrowser = config.Browser?.Selected ?? _localizationService.GetString("Task_DefaultBrowser");
 
-            _runtimeSeconds = config.Browser.RuntimeHours * 3600;
-            _pauseSeconds = config.Browser.RuntimePauseSeconds;
+            if (_isTestMode)
+            {
+                _runtimeSeconds = _testRuntimeSeconds;
+                _pauseSeconds = 5;
+
+                StatusInfoText = $"[TEST] Runtime: {_runtimeSeconds}s";
+            }
+            else
+            {
+                _runtimeSeconds = config.Browser.RuntimeHours * 3600;
+                _pauseSeconds = config.Browser.RuntimePauseSeconds;
+            }
 
             int intervalDays = config.Browser.DeleteBrowserCacheIntervalDays;
             DateTime nextDate = config.Browser.NextBrowserDeleteCacheDate;
@@ -214,7 +255,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             if (_uiTimer == null)
             {
                 _uiTimer = new DispatcherTimer();
-                _uiTimer.Interval = TimeSpan.FromSeconds(1);
+                _uiTimer.Interval = TimeSpan.FromMilliseconds(1000);
                 _uiTimer.Tick += OnTimerTick;
             }
 

@@ -32,6 +32,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private IBrowser? _currentBrowser;
         private string _processName = "";
 
+        public event Action? RequestCloseDialog;
+
+        private bool _isAutoMode = false;
+
         #endregion
 
         #region Observable Properties
@@ -154,6 +158,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             IsProcessConflict = false;
             StatusText = _localizationService.GetString("Cleanup_CanceledByUser");
+        }       
+
+        #endregion
+
+        #region Methods
+
+        public async Task RunAutoSequenceAsync()
+        {
+            _isAutoMode = true;
+
+            await Task.Delay(500);
+
+            await StartCleaning();
         }
 
         private async Task ExecuteCleaningLogic()
@@ -174,6 +191,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             IsBusy = true;
             _cts = new CancellationTokenSource();
+            bool success = false;
 
             try
             {
@@ -193,22 +211,26 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 await _fileDeletionService.DeleteFilesAsync(directoriesToDelete, statusProgress, valueProgress, _cts.Token);
 
                 StatusText = _localizationService.GetString("Cleanup_Finished");
+                success = true;
             }
             catch (Exception ex)
             {
                 string errorFormat = _localizationService.GetString("General_ErrorPrefix");
                 StatusText = string.Format(errorFormat, ex.Message);
+                success = false;
             }
             finally
             {
                 IsBusy = false;
                 _cts = null;
+
+                if (_isAutoMode && success && !IsProcessConflict)
+                {
+                    await Task.Delay(1000);
+                    RequestCloseDialog?.Invoke();
+                }
             }
         }
-
-        #endregion
-
-        #region Methods
 
         public void Initialize(BrowserType selectedBrowserType)
         {

@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.Services
 {
-
     public class DialogService : IDialogService
     {
         private XamlRoot XamlRoot => App.MainWindoweBRestarter!.Content.XamlRoot;
@@ -85,10 +84,31 @@ namespace eBRestarter.Desktop.WinUI3.Services
 
 
         public async Task ShowAboutDialogAsync() => await ShowDialogInternalAsync<AboutDialog>();
-        public async Task ShowBrowserDeleteContentDialogAsync() => await ShowDialogInternalAsync<DeleteBrowserContentDialog>();
+
         public async Task ShowInstallAddOnDialogAsync() => await ShowDialogInternalAsync<InstallAddOnDialog>();
+
+        public async Task ShowInstallAddOnInfoDialogAsync() => await ShowDialogInternalAsync<InstallAddOnInfoDialog>();
+
         public async Task ShowActivateApiDialogAsync() => await ShowDialogInternalAsync<ActivateApiDialog>();
+
         public async Task ShowImportApiDialogAsync() => await ShowDialogInternalAsync<ImportApiDialog>();
+
+        public async Task ShowDeleteBrowserContentDialogAsync(bool autoStart = false)
+        {
+            await ShowDialogInternalAsync<DeleteBrowserContentDialog>(dialog =>
+            {
+                if (autoStart)
+                {
+                    dialog.Opened += async (s, e) =>
+                    {
+                        if (dialog.ViewModelDeleteBrowserContent != null)
+                        {
+                            await dialog.ViewModelDeleteBrowserContent.RunAutoSequenceAsync();
+                        }
+                    };
+                }
+            });
+        }
 
         public async Task<AutoLogonDialogResult?> ShowAutoLogonDialogAsync(string defaultUser = null, string defaultDomain = null)
         {
@@ -167,6 +187,6 @@ namespace eBRestarter.Desktop.WinUI3.Services
             return stackPanel;
         }
     }
-
-
 }
+
+

@@ -113,7 +113,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [RelayCommand]
         private async Task ShowBrowserDeleteContent()
         {
-            await _dialogService.ShowBrowserDeleteContentDialogAsync();
+            await _dialogService.ShowDeleteBrowserContentDialogAsync(autoStart: false);
         }
 
         [RelayCommand]
@@ -121,6 +121,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             await _dialogService.ShowInstallAddOnDialogAsync();
         }
+
+        [RelayCommand]
+        private async Task ShowInstallAddOnInfoDialog()
+        {
+            await _dialogService.ShowInstallAddOnInfoDialogAsync();
+        }
+
+
         #endregion
 
         #region Methods

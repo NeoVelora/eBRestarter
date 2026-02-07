@@ -13,14 +13,18 @@ namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
     {
         Task ShowMessageAsync(string title, string message, DialogIcon icon = DialogIcon.None);
         Task<bool> ShowYesNoDialogAsync(string title, string message, DialogIcon icon = DialogIcon.Question);
+        Task<bool> ShowConfirmationAsync(string title, string message, string yesButtonText = "Ja", string noButtonText = "Nein");
+
 
         Task<AutoLogonDialogResult?> ShowAutoLogonDialogAsync(string defaultUser = null, string defaultDomain = null);
+
         Task ShowAboutDialogAsync();
-        Task ShowBrowserDeleteContentDialogAsync();
         Task ShowInstallAddOnDialogAsync();
+        Task ShowInstallAddOnInfoDialogAsync();
         Task ShowActivateApiDialogAsync();
         Task ShowImportApiDialogAsync();
-        Task<bool> ShowConfirmationAsync(string title, string message, string yesButtonText = "Ja", string noButtonText = "Nein");
+
+        Task ShowDeleteBrowserContentDialogAsync(bool autoStart = false);
     }
 
 
