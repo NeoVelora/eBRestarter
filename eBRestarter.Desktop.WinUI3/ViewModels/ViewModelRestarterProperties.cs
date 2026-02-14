@@ -22,41 +22,42 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelRestarterProperties : ObservableObject
     {
-        #region Fields
+        #region FieldsAndInjectedServices
+
         private readonly AppConfig _currentConfig;
         private readonly IDialogService _dialogService;
         private readonly IEVisitorConfigService _eVisitorConfigService;
         private readonly ILocalizationService _localizationService;
-
         private readonly IOperatingSystemFacade _operatingSystemFacade;
+
         #endregion
 
-        #region Observable Properties
+        #region ObservableProperties
+
         [ObservableProperty] public partial bool CheckBrowserIsAliveIsOn { get; set; } = false;
         [ObservableProperty] public partial int RuntimeHours { get; set; }
         [ObservableProperty] public partial int RuntimePauseSeconds { get; set; }
-
         [ObservableProperty] public partial BrowserCacheDeleteOption SelectedDeleteBrowserCacheOption { get; set; }
         [ObservableProperty] public partial bool StartBrowserWithProgrammStartIs { get; set; } = false;
         [ObservableProperty] private partial string StandardBrowser { get; set; } = string.Empty;
-
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddeVVisitorUsernameCommand))]
         public partial string Username { get; set; } = string.Empty;
+
         #endregion
 
-        #region Properties
-        
-        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList { get; }
+        #region PublicProperties
 
+        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList { get; }
         public int BrowserRuntimeHoursMax { get; init; }
         public int BrowserRuntimeHoursMin { get; init; }
         public int RuntimePauseSecondsMax { get; init; }
         public int RuntimePauseSecondsMin { get; init; }
+
         #endregion
 
-        #region Constructors
-        
+        #region ConstructorAndFinalizer
+
         public ViewModelRestarterProperties(
             IOperatingSystemFacade operatingSystemFacade,
             IEVisitorConfigService eVisitorConfigService,
@@ -74,33 +75,27 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             BrowserRuntimeHoursMin = 1;
             BrowserRuntimeHoursMax = 12;
 
-
             RuntimePauseSeconds = _currentConfig.Browser.RuntimePauseSeconds;
             RuntimeHours = _currentConfig.Browser.RuntimeHours;
-
             StartBrowserWithProgrammStartIs = _currentConfig.Browser.StartBrowserWithProgrammStart;
             CheckBrowserIsAliveIsOn = _currentConfig.Browser.CheckBrowserAliveRoutine;
 
-            var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
             BrowserDeleteCacheOptionList = new ReadOnlyCollection<BrowserCacheDeleteOption>(
-            localizationService.GetBrowserCacheOptions().ToList()
-        );
-
+                localizationService.GetBrowserCacheOptions().ToList());
+            var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
             SelectedDeleteBrowserCacheOption = BrowserDeleteCacheOptionList.FirstOrDefault(x => x.Days == configDays) ?? BrowserDeleteCacheOptionList[0];
         }
+
         #endregion
 
         #region Commands
-        
+
         [RelayCommand(CanExecute = nameof(CanAddUsername))]
         private void AddeVVisitorUsername()
         {
             _currentConfig.Username = Username;
-
             SaveSettings();
-
             WeakReferenceMessenger.Default.Send(new UsernameChangedMessage(Username));
-
             Username = string.Empty;
         }
 
@@ -134,15 +129,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             await _dialogService.ShowTurnOffEdgeStartupBoostDialogAsync();
         }
 
+        #endregion
+
+        #region PublicAndProtectedMethods
+
+        public bool IsIntervalAllowed(int days) => days switch
+        {
+            1 or 3 or 7 or 14 => true,
+            _ => false
+        };
 
         #endregion
 
-        #region Methods
-        
-        private bool CanAddUsername()
-        {
-            return !string.IsNullOrWhiteSpace(Username);
-        }
+        #region PropertyChangeHandlers
 
         partial void OnCheckBrowserIsAliveIsOnChanged(bool value)
         {
@@ -153,13 +152,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         partial void OnRuntimeHoursChanged(int value)
         {
             int clampedValue = Math.Clamp(value, BrowserRuntimeHoursMin, BrowserRuntimeHoursMax);
-
             if (value != clampedValue)
             {
                 RuntimeHours = clampedValue;
                 return;
             }
-
             if (_currentConfig.Browser.RuntimeHours != value)
             {
                 _currentConfig.Browser.RuntimeHours = value;
@@ -170,13 +167,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         partial void OnRuntimePauseSecondsChanged(int value)
         {
             int clampedValue = Math.Clamp(value, RuntimePauseSecondsMin, RuntimePauseSecondsMax);
-
             if (value != clampedValue)
             {
                 RuntimePauseSeconds = clampedValue;
                 return;
             }
-
             if (_currentConfig.Browser.RuntimePauseSeconds != value)
             {
                 _currentConfig.Browser.RuntimePauseSeconds = value;
@@ -191,14 +186,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             if (IsIntervalAllowed(value.Days))
             {
                 DateTime nextDate = DateTime.Today.AddDays(value.Days);
-
                 _currentConfig.Browser.NextBrowserDeleteCacheDate = nextDate;
-
-
                 string formatPattern = _localizationService.GetString("Browser_NextDeleteDate_Format");
-
                 string formattedDateString = string.Format(formatPattern, nextDate);
-
 
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcess(_localizationService.GetString("NextDeletionProcess")));
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(formattedDateString));
@@ -208,22 +198,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             else
             {
                 _currentConfig.Browser.NextBrowserDeleteCacheDate = DateTime.MinValue;
-
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcess(string.Empty));
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(string.Empty));
                 WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.GetString("Disabled")));
                 WeakReferenceMessenger.Default.Send(new DeleteBrowserContentIsActive(false));
             }
-
             SaveSettings();
         }
-
-        public bool IsIntervalAllowed(int days) => days switch
-        {
-            1 or 3 or 7 or 14 => true,
-            _ => false
-        };
-
 
         partial void OnStartBrowserWithProgrammStartIsChanged(bool value)
         {
@@ -232,10 +213,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             SaveSettings();
         }
 
+        #endregion
+
+        #region PrivateHelperMethods
+
+        private bool CanAddUsername() => !string.IsNullOrWhiteSpace(Username);
+
         private void SaveSettings()
         {
             _eVisitorConfigService.SaveConfig(_currentConfig);
         }
+
         #endregion
     }
 }

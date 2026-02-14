@@ -19,17 +19,16 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelBrowserItem : ObservableObject
     {
-        #region Constants
+        #region ConstantsAndStatics
 
         private const string SetForegroundColorGreen = "#7ED422";
         private const string SetForegroundColorRed = "#E40E87";
 
         #endregion
 
-        #region Fields
+        #region FieldsAndInjectedServices
 
         private BrowserInfo _browserInfo;
-
         private readonly AppConfig _currentConfig;
         private readonly IDialogService _dialogService;
         private readonly IBrowserDownloadService _downloadService;
@@ -40,73 +39,50 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Observable Properties
+        #region ObservableProperties
 
-        [ObservableProperty]
-        public partial double DownloadProgressValue { get; set; }
-
-        [ObservableProperty]
-        public partial string DownloadSizeText { get; set; } = string.Empty;
-
+        [ObservableProperty] public partial double DownloadProgressValue { get; set; }
+        [ObservableProperty] public partial string DownloadSizeText { get; set; } = string.Empty;
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(DownloadButtonContent))]
         [NotifyPropertyChangedFor(nameof(DownloadButtonStyleKey))]
         [NotifyPropertyChangedFor(nameof(IsDownloading))]
         [NotifyPropertyChangedFor(nameof(IsNotDownloading))]
         public partial bool IsDownloadActive { get; set; }
-
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNotInstalling))]
         public partial bool IsInstalling { get; set; }
-
-        [ObservableProperty]
-        public partial string BrowserVersionText { get; set; } = string.Empty;
+        [ObservableProperty] public partial string BrowserVersionText { get; set; } = string.Empty;
 
         #endregion
 
-        #region Properties (Computed)
+        #region PublicProperties
 
         public BrowserType BrowserType => _browserInfo.Type;
-
         public string BrowserExist => _browserInfo.IsInstalled ? "✓" : "✘";
-
         public SolidColorBrush BrowserExistTextForground => _browserInfo.IsInstalled
             ? new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorGreen))
             : new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorRed));
-
-
         public string DownloadButtonContent => IsDownloadActive
             ? _localizationService.GetString("General_Cancel")
             : _localizationService.GetString("General_Download");
-
         public string DownloadButtonStyleKey => IsDownloadActive
             ? "DownloadBrowserToggleButtonRed"
             : "DownloadBrowserToggleButton";
-
         public string HeaderImageBrowser => _browserInfo.IconPath;
-
         public string HeaderTitleBrowser => _browserInfo.Name;
-
         public string ImageSizeHeightBrowser => _browserInfo.IconHeight;
-
         public string ImageSizeWidthBrowser => _browserInfo.IconWidth;
-
-
         public bool IsChooseButtonVisible => _browserInfo.IsInstalled;
-
         public bool IsDownloadButtonVisible => !_browserInfo.IsInstalled;
-
         public bool IsDownloadSizeTextVisible => !_browserInfo.IsInstalled;
-
         public bool IsDownloading => IsDownloadActive;
-
         public bool IsNotDownloading => !IsDownloadActive;
-
         public bool IsNotInstalling => !IsInstalling;
 
         #endregion
 
-        #region Constructors
+        #region ConstructorAndFinalizer
 
         public ViewModelBrowserItem(
             BrowserInfo info,
@@ -122,51 +98,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _eVisitorConfigService = eVisitorConfigService;
             _dialogService = dialogService;
             _localizationService = localizationService;
-            
             _currentConfig = _eVisitorConfigService.LoadConfig();
-
             RefreshBrowserVersionText();
-        }
-
-        #endregion
-
-        #region Methods (Update Logic)
-
-        public void Update(BrowserInfo newInfo)
-        {
-            if (_browserInfo.IsInstalled == newInfo.IsInstalled &&
-                _browserInfo.Version == newInfo.Version)
-            {
-                return;
-            }
-
-            _browserInfo = newInfo;
-
-            OnPropertyChanged(nameof(BrowserExist));
-            OnPropertyChanged(nameof(BrowserExistTextForground));
-            RefreshBrowserVersionText();
-            OnPropertyChanged(nameof(IsChooseButtonVisible));
-            OnPropertyChanged(nameof(IsDownloadButtonVisible));
-            OnPropertyChanged(nameof(IsDownloadSizeTextVisible));
-
-            OnPropertyChanged(nameof(DownloadButtonContent));
-        }
-
-        private void RefreshBrowserVersionText()
-        {
-            if (_browserInfo.IsInstalled && IsDownloading is false)
-            {
-                string prefix = _localizationService.GetString("Browser_VersionPrefix");
-                BrowserVersionText = $"{prefix} {_browserInfo.Version}";
-            }
-            else if (IsDownloading is true)
-            {
-                BrowserVersionText = string.Empty;
-            }
-            else
-            {
-                BrowserVersionText = _localizationService.GetString("Browser_NotInstalled");
-            }
         }
 
         #endregion
@@ -185,28 +118,60 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task ToggleDownload()
         {
             if (IsDownloadActive)
-            {
                 CancelDownload();
-            }
             else
-            {
                 await StartDownloadAsync();
-            }
         }
 
         #endregion
 
-        #region Methods (Internal Logic)
+        #region PublicAndProtectedMethods
+
+        public void Update(BrowserInfo newInfo)
+        {
+            if (_browserInfo.IsInstalled == newInfo.IsInstalled && _browserInfo.Version == newInfo.Version)
+                return;
+
+            _browserInfo = newInfo;
+            OnPropertyChanged(nameof(BrowserExist));
+            OnPropertyChanged(nameof(BrowserExistTextForground));
+            RefreshBrowserVersionText();
+            OnPropertyChanged(nameof(IsChooseButtonVisible));
+            OnPropertyChanged(nameof(IsDownloadButtonVisible));
+            OnPropertyChanged(nameof(IsDownloadSizeTextVisible));
+            OnPropertyChanged(nameof(DownloadButtonContent));
+        }
+
+        #endregion
+
+        #region PrivateHelperMethods
+
+        private void RefreshBrowserVersionText()
+        {
+            if (_browserInfo.IsInstalled && IsDownloading is false)
+            {
+                string prefix = _localizationService.GetString("Browser_VersionPrefix");
+                BrowserVersionText = $"{prefix} {_browserInfo.Version}";
+            }
+            else if (IsDownloading is true)
+            {
+                BrowserVersionText = string.Empty;
+            }
+            else
+            {
+                BrowserVersionText = _localizationService.GetString("Browser_NotInstalled");
+            }
+        }
+
         private async Task AskToInstall(string path)
         {
             bool installNow = await _dialogService.ShowYesNoDialogAsync(
-               _localizationService.GetString("Install_DialogTitle"),
-               _localizationService.GetString("Install_DialogQuestion"));
+                _localizationService.GetString("Install_DialogTitle"),
+                _localizationService.GetString("Install_DialogQuestion"));
 
             if (installNow)
             {
                 await _os.WindowsProcessControlService.StartExecutableAsync(path);
-
                 await _dialogService.ShowMessageAsync(
                     _localizationService.GetString("Install_FinishedTitle"),
                     _localizationService.GetString("Install_FinishedMessage"));
@@ -224,9 +189,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             try
             {
                 if (_os.WindowsFileSystemService.FileExists(path))
-                {
                     _os.WindowsFileSystemService.DeleteFile(path);
-                }
             }
             catch (Exception) { }
         }

@@ -10,43 +10,27 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelImportApi : ObservableObject
     {
-        #region Fields (Private Felder OHNE [ObservableProperty])
+        #region FieldsAndInjectedServices
 
         private readonly IApiAuthenticationService _authService;
         private readonly ICredentialStore _credentialStore;
 
         #endregion
 
-        #region Observable Properties (Felder MIT [ObservableProperty])
+        #region ObservableProperties
 
-        [ObservableProperty]
-        public partial string FileStatusIcon { get; set; } = "ms-appx:///Resources/Visuals/Icons/LightTheme/note_light_theme.png";
-
-        [ObservableProperty]
-        public partial string ImportedFileName { get; set; } = string.Empty;
-
+        [ObservableProperty] public partial string FileStatusIcon { get; set; } = "ms-appx:///Resources/Visuals/Icons/LightTheme/note_light_theme.png";
+        [ObservableProperty] public partial string ImportedFileName { get; set; } = string.Empty;
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
         public partial string ImportedFilePath { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial bool IsBusy { get; set; }
-
-        [ObservableProperty]
-        public partial string StatusColor { get; set; } = "Transparent";
-
-        [ObservableProperty]
-        public partial string StatusMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool IsBusy { get; set; }
+        [ObservableProperty] public partial string StatusColor { get; set; } = "Transparent";
+        [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
 
         #endregion
 
-        #region Properties (Explizite get; set; Eigenschaften)
-
-        private bool CanImport => !string.IsNullOrEmpty(ImportedFilePath) && !IsBusy;
-
-        #endregion
-
-        #region Constructors
+        #region ConstructorAndFinalizer
 
         public ViewModelImportApi(
             IApiAuthenticationService authService,
@@ -58,7 +42,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Commands (Methoden MIT [RelayCommand])
+        #region Commands
 
         [RelayCommand(CanExecute = nameof(CanImport))]
         private async Task Import()
@@ -68,7 +52,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             StatusColor = "{ThemeResource SystemFillColorCautionBrush}";
 
             var credentials = _credentialStore.ImportFromLegacyFile(ImportedFilePath);
-
             if (credentials == null)
             {
                 StatusMessage = "Fehler beim Lesen der Datei (Format ungültig).";
@@ -78,13 +61,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
 
             var result = await _authService.VerifyCredentialsAsync(credentials.Username, credentials.ApiKey);
-
             IsBusy = false;
 
             if (result.IsValid)
             {
                 _credentialStore.SaveCredentials(credentials);
-
                 StatusMessage = "Import und Aktivierung erfolgreich!";
                 StatusColor = "#7ED422";
             }
@@ -97,7 +78,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Methods (Restliche Methoden)
+        #region PublicAndProtectedMethods
 
         public void HandleFileDrop(string filePath)
         {
@@ -110,7 +91,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 ImportedFileName = "";
                 return;
             }
-
             ImportedFilePath = filePath;
             ImportedFileName = System.IO.Path.GetFileName(filePath);
             StatusMessage = "Datei erkannt. Bereit zum Import.";
@@ -121,6 +101,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public void HandleFileSelect()
         {
         }
+
+        #endregion
+
+        #region PrivateHelperMethods
+
+        private bool CanImport => !string.IsNullOrEmpty(ImportedFilePath) && !IsBusy;
 
         #endregion
     }

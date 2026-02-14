@@ -15,27 +15,33 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
     {
-        #region Constants
+        #region ConstantsAndStatics
+
         private const string ColorDefault = "#FFFFFF";
         private const string ColorError = "#FF0000";
         private const string ImgCard = "/Resources/Visuals/Icons/LightTheme/network-interface-card_light_theme.png";
         private const string ImgDown = "/Resources/Visuals/Icons/LightTheme/download_light_theme.png";
         private const string ImgUp = "/Resources/Visuals/Icons/LightTheme/send-data-light_theme.png";
+
         #endregion
 
-        #region Fields
+        #region FieldsAndInjectedServices
+
         private readonly DispatcherQueue _dispatcherQueue;
         private readonly IWindowsNetworkInfoService _networkService;
         private readonly ILocalizationService _localizationService;
         private readonly Timer _timer;
+
         #endregion
 
-        #region Properties
+        #region PublicProperties
+
         public ObservableCollection<NetworkCardDisplayModel> NetworkCards { get; } = [];
+
         #endregion
 
-        #region Constructors
-        
+        #region ConstructorAndFinalizer
+
         public ViewModelNetworkTraffic(
             IWindowsNetworkInfoService networkService,
             ILocalizationService localizationService)
@@ -51,14 +57,20 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             System.Threading.Tasks.Task.Run(() => PerformUpdate());
         }
+
         #endregion
 
-        #region Methods
+        #region PublicAndProtectedMethods
+
         public void Dispose()
         {
             _timer?.Stop();
             _timer?.Dispose();
         }
+
+        #endregion
+
+        #region PrivateHelperMethods
 
         private void ApplyDataToUi(bool isNetworkAvailable, IEnumerable<NetworkStats>? stats)
         {
@@ -74,17 +86,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             var activeIds = stats.Select(x => $"{prefixCard}: {x.Name}").ToList();
             var itemsToRemove = NetworkCards.Where(x => !activeIds.Contains(x.AdapterName)).ToList();
-
             foreach (var item in itemsToRemove)
-            {
                 NetworkCards.Remove(item);
-            }
 
             foreach (var stat in stats)
             {
                 string name = $"{prefixCard}: {stat.Name}";
                 var existingItem = NetworkCards.FirstOrDefault(x => x.AdapterName == name);
-
                 string received = $"{prefixRec}: {FormatExtensions.ToSizeSuffix(stat.BytesReceived)}";
                 string sent = $"{prefixSent}: {FormatExtensions.ToSizeSuffix(stat.BytesSent)}";
 
@@ -119,24 +127,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             bool isAvailable = false;
             List<NetworkStats>? currentStats = null;
-
             try
             {
                 isAvailable = _networkService.IsNetworkAvailable();
                 if (isAvailable)
-                {
                     currentStats = _networkService.GetActiveInterfaces().ToList();
-                }
             }
             catch (Exception)
             {
                 isAvailable = false;
             }
-
-            _dispatcherQueue.TryEnqueue(() =>
-            {
-                ApplyDataToUi(isAvailable, currentStats);
-            });
+            _dispatcherQueue.TryEnqueue(() => ApplyDataToUi(isAvailable, currentStats));
         }
 
         private void ShowOfflineState()
@@ -145,7 +146,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             string notAvail = _localizationService.GetString("Network_NotAvailable");
             string prefixRec = _localizationService.GetString("Network_Received");
             string prefixSent = _localizationService.GetString("Network_Sent");
-
             string fullName = $"{prefixCard}: {notAvail}";
 
             if (NetworkCards.Count == 1 && NetworkCards[0].AdapterName == fullName)
@@ -163,6 +163,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 ImagePathSendData = ImgUp
             });
         }
+
         #endregion
     }
 }

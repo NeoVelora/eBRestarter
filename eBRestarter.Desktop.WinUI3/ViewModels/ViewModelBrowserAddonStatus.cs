@@ -12,7 +12,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelBrowserAddonStatus : ObservableObject
     {
-        #region Fields
+        #region FieldsAndInjectedServices
 
         private readonly IBrowser _browser;
         private readonly DispatcherQueue _dispatcherQueue;
@@ -20,24 +20,21 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Observable Properties
+        #region ObservableProperties
 
         [ObservableProperty] public partial string AddonStatusColor { get; set; } = "#000000";
         [ObservableProperty] public partial string AddonStatusIcon { get; set; } = "?";
-
         [ObservableProperty] public partial string AddonStatusText { get; set; }
         [ObservableProperty] public partial string BrowserName { get; set; } = string.Empty;
-
         [ObservableProperty] public partial string ButtonText { get; set; }
         [ObservableProperty] public partial string IconPath { get; set; } = string.Empty;
         [ObservableProperty] public partial string InstallStatusColor { get; set; } = "#000000";
-
         [ObservableProperty] public partial string InstallStatusText { get; set; }
         [ObservableProperty] public partial bool IsButtonEnabled { get; set; } = false;
 
         #endregion
 
-        #region Constructors
+        #region ConstructorAndFinalizer
 
         public ViewModelBrowserAddonStatus(
             IBrowser browser,
@@ -48,9 +45,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             BrowserName = _browser.DisplayName;
-
             IconPath = browser.IconPath.Replace("/Resources/Visuals", "ms-appx:///Assets/Visuals");
-
             AddonStatusText = _localizationService.GetString("Addon_StatusChecking");
             InstallStatusText = _localizationService.GetString("Addon_StatusChecking");
             ButtonText = _localizationService.GetString("Addon_Loading");
@@ -73,7 +68,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #endregion
 
-        #region Methods
+        #region PublicAndProtectedMethods
 
         public void RefreshStatus()
         {
@@ -109,7 +104,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 {
                     InstallStatusText = string.Format(notInstalledFormat, BrowserName);
                     InstallStatusColor = "#BA224D";
-
                     AddonStatusText = "-";
                     AddonStatusIcon = "";
                     IsButtonEnabled = false;

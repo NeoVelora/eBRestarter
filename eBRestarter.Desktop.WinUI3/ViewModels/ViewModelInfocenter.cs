@@ -14,16 +14,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelInfocenter : ObservableObject
     {
-        #region Fields
+        #region FieldsAndInjectedServices
+
         private readonly IDialogService _dialogService;
         private readonly ILocalizationService _localizationService;
-
         private readonly IHardwareInfoService _hardwareService;
         private readonly IOsEditionService _osEditionService;
         private readonly IWindowsSystemInfoService _systemInfoService;
+
         #endregion
 
-        #region Observable Properties
+        #region ObservableProperties
 
         [ObservableProperty] public partial string BrowserText { get; set; }
         [ObservableProperty] public partial string GraphicsText { get; set; }
@@ -32,14 +33,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial string OsVersionText { get; set; }
         [ObservableProperty] public partial string ProcessorText { get; set; }
         [ObservableProperty] public partial string RamText { get; set; }
+
         #endregion
 
-        #region Properties
-        
+        #region PublicProperties
+
         public string Title { get; private set; }
+
         #endregion
 
-        #region Constructors
+        #region ConstructorAndFinalizer
+
         public ViewModelInfocenter(
             IHardwareInfoService hardwareService,
             IOsEditionService osEditionService,
@@ -54,7 +58,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _localizationService = localizationService;
 
             string loading = _localizationService.GetString("Infocenter_Loading");
-
             BrowserText = loading;
             GraphicsText = loading;
             OsBuildText = loading;
@@ -62,14 +65,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             OsVersionText = loading;
             ProcessorText = loading;
             RamText = loading;
-
             Title = _localizationService.GetString("Infocenter_Title");
 
             _ = LoadDataAsync();
         }
+
         #endregion
 
         #region Commands
+
         [RelayCommand]
         public void OpenSupportWebsite(string? url)
         {
@@ -79,7 +83,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 {
                     Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
                 }
-                catch {}
+                catch { }
             }
         }
 
@@ -88,13 +92,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             await _dialogService.ShowAboutDialogAsync();
         }
+
         #endregion
 
-        #region Methods
+        #region PrivateHelperMethods
+
         private async Task LoadDataAsync()
         {
             var hardware = await _hardwareService.GetHardwareInfoAsync();
-
             ProcessorText = $"{_localizationService.GetString("Infocenter_ProcessorPrefix")} {hardware.ProcessorName}";
             GraphicsText = $"{_localizationService.GetString("Infocenter_GraphicsPrefix")} {hardware.GraphicsCardName}";
             RamText = $"{_localizationService.GetString("Infocenter_RamPrefix")} {hardware.InstalledRam}";
@@ -106,6 +111,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             OsBuildText = $"{_localizationService.GetString("Infocenter_BuildPrefix")} {_systemInfoService.GetCurrentOsBuildVersion()}";
             BrowserText = $"{_localizationService.GetString("Infocenter_BrowserPrefix")} {_systemInfoService.GetCurrentStandardBrowserName()}";
         }
+
         #endregion
     }
 }

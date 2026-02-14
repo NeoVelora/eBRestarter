@@ -14,31 +14,34 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelInstalledBrowsers : ObservableObject, IDisposable
     {
-        #region Fields
+        #region FieldsAndInjectedServices
+
         private readonly IBrowserService _browserService;
         private readonly IDialogService _dialogService;
         private readonly IBrowserDownloadService _downloadService;
         private readonly IEVisitorConfigService _eVisitorConfigService;
         private readonly IOperatingSystemFacade _os;
         private readonly ILocalizationService _localizationService;
-
         private readonly DispatcherTimer _refreshTimer;
+
         #endregion
 
-        #region Observable Properties
+        #region ObservableProperties
+
         [ObservableProperty]
         public partial ObservableCollection<ViewModelBrowserItem> Browsers { get; set; } = [];
+
         #endregion
 
-        #region Constructors
+        #region ConstructorAndFinalizer
+
         public ViewModelInstalledBrowsers(
             IBrowserService browserService,
             IBrowserDownloadService downloadService,
             IOperatingSystemFacade os,
             IDialogService dialogService,
             ILocalizationService localizationService,
-            IEVisitorConfigService eVisitorConfigService
-            )
+            IEVisitorConfigService eVisitorConfigService)
         {
             _downloadService = downloadService;
             _os = os;
@@ -47,20 +50,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _localizationService = localizationService;
             _eVisitorConfigService = eVisitorConfigService;
 
-            _refreshTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(2)
-            };
-
+            _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
             _refreshTimer.Tick += async (s, e) => await LoadBrowsersSmartAsync();
-
             _ = LoadBrowsersSmartAsync();
-
             _refreshTimer.Start();
         }
+
         #endregion
 
-        #region Methods
+        #region PublicAndProtectedMethods
 
         public async Task LoadBrowsersSmartAsync()
         {
@@ -83,11 +81,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                         _eVisitorConfigService,
                         _dialogService,
                         _localizationService);
-
                     Browsers.Add(newItem);
                 }
             }
-
         }
 
         public void Dispose()

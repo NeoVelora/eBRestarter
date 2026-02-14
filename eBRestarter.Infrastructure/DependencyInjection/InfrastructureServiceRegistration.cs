@@ -30,11 +30,12 @@ namespace eBRestarter.Infrastructure.DependencyInjection
 {
     public static class InfrastructureServiceRegistration
     {
+        #region PublicAndProtectedMethods
+
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
             services.AddLogging(builder =>
             {
-
                 builder.AddDebug();
             });
 
@@ -94,7 +95,11 @@ namespace eBRestarter.Infrastructure.DependencyInjection
 
             services.AddSingleton<IUpdateService, GitHubUpdateAdapter>();
 
+            services.AddSingleton<ICredentialValidationService, PrincipalContextCredentialValidationService>();
+
             return services;
         }
+
+        #endregion
     }
 }

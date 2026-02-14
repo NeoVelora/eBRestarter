@@ -12,16 +12,21 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelInstallAddOn : ObservableObject, IDisposable
     {
-        #region Fields
+        #region FieldsAndInjectedServices
+
         private readonly IBrowserFactory _browserFactory;
         private readonly Timer _timer;
+
         #endregion
 
-        #region Properties
+        #region PublicProperties
+
         public ObservableCollection<ViewModelBrowserAddonStatus> Browsers { get; } = [];
+
         #endregion
 
-        #region Constructors
+        #region ConstructorAndFinalizer
+
         public ViewModelInstallAddOn(IBrowserFactory browserFactory, ILocalizationService localizationService)
         {
             _browserFactory = browserFactory;
@@ -38,14 +43,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             };
             _timer.Start();
         }
+
         #endregion
 
-        #region Methods
+        #region PublicAndProtectedMethods
+
         public void Dispose()
         {
             _timer?.Stop();
             _timer?.Dispose();
         }
+
         #endregion
     }
 }

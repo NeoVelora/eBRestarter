@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces;
+using eBRestarter.Core.Application.Interfaces.Authentication;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
@@ -15,16 +15,14 @@ using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.DirectoryServices.AccountManagement;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelOptions : ObservableObject
     {
+        #region FieldsAndInjectedServices
 
         private bool _isInitializing = false;
 
@@ -37,12 +35,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IThemeService _themeService;
         private readonly ILanguageService _languageService;
         private readonly ILocalizationService _localizationService;
+        private readonly IRestartCalculationService _restartCalculationService;
+        private readonly ICredentialValidationService _credentialValidationService;
 
+        #endregion
 
-        public ReadOnlyCollection<LanguageOption> LanguageList { get; private set; }
-        public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList { get; }
-        public int ComputerRestartClockTimeMin { get; init; }
-        public int ComputerRestartClockTimeMax { get; init; }
+        #region ObservableProperties
 
         [ObservableProperty] public partial ComputerRestartOption SelectedComputerRestartOption { get; set; }
         [ObservableProperty] public partial LanguageOption SelectedLanguageOption { get; set; }
@@ -55,6 +53,18 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial bool IsUpdateAvailable { get; set; }
         [ObservableProperty] public partial string UpdateMessage { get; set; } = string.Empty;
 
+        #endregion
+
+        #region PublicProperties
+
+        public ReadOnlyCollection<LanguageOption> LanguageList { get; private set; }
+        public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList { get; }
+        public int ComputerRestartClockTimeMin { get; init; }
+        public int ComputerRestartClockTimeMax { get; init; }
+
+        #endregion
+
+        #region ConstructorAndFinalizer
 
         public ViewModelOptions(
             IDialogService dialogService,
@@ -64,7 +74,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IThemeService themeService,
             IEVisitorConfigService eVisitorConfigService,
             ILanguageService languageService,
-            ILocalizationService localizationService)
+            ILocalizationService localizationService,
+            IRestartCalculationService restartCalculationService,
+            ICredentialValidationService credentialValidationService)
         {
             _isInitializing = true;
 
@@ -76,6 +88,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _eVisitorConfigService = eVisitorConfigService;
             _languageService = languageService;
             _localizationService = localizationService;
+            _restartCalculationService = restartCalculationService;
+            _credentialValidationService = credentialValidationService;
 
             ComputerRestartList = new ReadOnlyCollection<ComputerRestartOption>(
                 [.. localizationService.GetComputerRestartOptions()]
@@ -102,6 +116,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _ = InitializeAsync();
         }
 
+        #endregion
+
+        #region Commands
 
         [RelayCommand]
         private async Task CheckForUpdates()
@@ -150,13 +167,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             _themeService.SetTheme("Dark");
             SaveThemeConfig("Dark");
-        }
-
-        private void SaveThemeConfig(string theme)
-        {
-            var config = _eVisitorConfigService.LoadConfig();
-            var newConfig = config with { Settings = config.Settings with { Theme = theme } };
-            _eVisitorConfigService.SaveConfig(newConfig);
         }
 
         [RelayCommand]
@@ -215,7 +225,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     var domain = dialogResult.Credentials.Domain;
                     var pass = dialogResult.Credentials.Password;
 
-                    bool isValid = ValidateCredentials(user, domain, pass);
+                    bool isValid = _credentialValidationService.ValidateCredentials(user, domain, pass);
 
                     if (!isValid)
                     {
@@ -229,6 +239,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                         _localizationService.GetString("Options_AutoLogon_Success"));
                 }
             }
+            catch (InvalidOperationException)
+            {
+                await _dialogService.ShowMessageAsync("Fehler",
+                    _localizationService.GetString("Options_AutoLogon_DomainError"));
+            }
             catch (Exception ex)
             {
                 string errorFormat = _localizationService.GetString("General_UnexpectedError");
@@ -236,6 +251,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
+        #endregion
+
+        #region PropertyChangeHandlers
 
         partial void OnSelectedComputerRestartOptionChanged(ComputerRestartOption value)
         {
@@ -298,6 +316,16 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ToggleAutoStartAsync(value);
         }
 
+        #endregion
+
+        #region PrivateHelperMethods
+
+        private void SaveThemeConfig(string theme)
+        {
+            var config = _eVisitorConfigService.LoadConfig();
+            var newConfig = config with { Settings = config.Settings with { Theme = theme } };
+            _eVisitorConfigService.SaveConfig(newConfig);
+        }
 
         private async Task InitializeAsync()
         {
@@ -346,15 +374,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             int days = _currentConfig.Computer.ComputerRestartIntervalDays;
             int hours = _currentConfig.Computer.RestartClockTime;
-
-            if (days > 0)
-            {
-                _currentConfig.Computer.NextRestartDate = DateTime.Today.AddDays(days).AddHours(hours);
-            }
-            else
-            {
-                _currentConfig.Computer.NextRestartDate = DateTime.MinValue;
-            }
+            _currentConfig.Computer.NextRestartDate = _restartCalculationService.GetNextRestartDate(days, hours);
         }
 
         private async void ToggleAutoStartAsync(bool enable)
@@ -368,35 +388,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             SaveSettings();
         }
 
-        private bool ValidateCredentials(string username, string domain, string password)
-        {
-            try
-            {
-                ContextType contextType = ContextType.Machine;
-
-                if (!string.Equals(domain, Environment.MachineName, StringComparison.OrdinalIgnoreCase))
-                {
-                    contextType = ContextType.Domain;
-                }
-
-                using (var context = new PrincipalContext(contextType, domain))
-                {
-                    return context.ValidateCredentials(username, password);
-                }
-            }
-            catch (PrincipalServerDownException)
-            {
-                throw new Exception(_localizationService.GetString("Options_AutoLogon_DomainError"));
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
         private void SaveSettings()
         {
             _eVisitorConfigService.SaveConfig(_currentConfig);
         }
+
+        #endregion
     }
 }

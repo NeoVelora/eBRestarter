@@ -17,12 +17,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelGeneralOverview : ObservableObject
     {
+        #region FieldsAndInjectedServices
+
         private readonly IEVisitorApiService _apiService;
         private readonly ILocalizationService _localizationService;
         private readonly DispatcherQueue _dispatcherQueue;
         private readonly DispatcherTimer _timer;
         private EarningsData? _cachedEarnings;
+        private readonly ColumnSeries<ObservableValue> _mainColumnSeries;
+        private readonly ObservableCollection<ObservableValue> _chartValues;
 
+        #endregion
+
+        #region ObservableProperties
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(XAxes))]
@@ -31,21 +38,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         [ObservableProperty]
         public partial ObservableCollection<ISeries> Series { get; set; }
-
-        private readonly ColumnSeries<ObservableValue> _mainColumnSeries;
-        private readonly ObservableCollection<ObservableValue> _chartValues;
-
-        public Axis[] YAxes { get; set; }
-
-        public Axis[] XAxes => GetXAxesForCurrentPivot();
-
-        public string ChartTitle => SelectedPivotIndex switch
-        {
-            0 => string.Format(_localizationService.GetString("Chart_TitleHourly"), DateTime.Now.ToString("dd.MM.yyyy")),
-            1 => string.Format(_localizationService.GetString("Chart_TitleDaily"), DateTime.Now.ToString("MMMM")),
-            2 => string.Format(_localizationService.GetString("Chart_TitleYearly"), DateTime.Now.ToString("yyyy")),
-            _ => _localizationService.GetString("Chart_TitleOverview")
-        };
 
         [ObservableProperty] public partial string EarningsThisDaySum { get; set; } = "-";
         [ObservableProperty] public partial string EarningsThisMonthSum { get; set; } = "-";
@@ -59,6 +51,24 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial string Host { get; set; } = "-";
         [ObservableProperty] public partial string CountryCode { get; set; } = "-";
         [ObservableProperty] public partial string CountryName { get; set; } = "-";
+
+        #endregion
+
+        #region PublicProperties
+
+        public Axis[] YAxes { get; set; }
+        public Axis[] XAxes => GetXAxesForCurrentPivot();
+        public string ChartTitle => SelectedPivotIndex switch
+        {
+            0 => string.Format(_localizationService.GetString("Chart_TitleHourly"), DateTime.Now.ToString("dd.MM.yyyy")),
+            1 => string.Format(_localizationService.GetString("Chart_TitleDaily"), DateTime.Now.ToString("MMMM")),
+            2 => string.Format(_localizationService.GetString("Chart_TitleYearly"), DateTime.Now.ToString("yyyy")),
+            _ => _localizationService.GetString("Chart_TitleOverview")
+        };
+
+        #endregion
+
+        #region ConstructorAndFinalizer
 
         public ViewModelGeneralOverview(
             IEVisitorApiService apiService,
@@ -76,10 +86,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 {
                     Name = _localizationService.GetString("Chart_YAxisPoints"),
                     LabelsDensity = 1,
-                    SeparatorsPaint = new SolidColorPaint(new SKColor(200, 200, 200))
-                    {
-                        StrokeThickness = 1,
-                    },
+                    SeparatorsPaint = new SolidColorPaint(new SKColor(200, 200, 200)) { StrokeThickness = 1 },
                     MinStep = 100,
                     TextSize = 12
                 }
@@ -107,6 +114,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             Task.Run(LoadDataAsync);
         }
+
+        #endregion
+
+        #region PropertyChangeHandlers
+
+        partial void OnSelectedPivotIndexChanged(int value)
+        {
+            UpdateChartData();
+        }
+
+        #endregion
+
+        #region PrivateHelperMethods
 
         private async Task LoadDataAsync()
         {
@@ -140,7 +160,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
                     var now = DateTime.Now;
                     var nextRefresh = now.AddMinutes(60 - now.Minute + 5);
-
                     var format = _localizationService.GetString("General_NextRefresh");
                     ClockNextEarningsRefresh = string.Format(format, nextRefresh.ToString("HH:mm"));
                 });
@@ -149,11 +168,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading data: {ex.Message}");
             }
-        }
-
-        partial void OnSelectedPivotIndexChanged(int value)
-        {
-            UpdateChartData();
         }
 
         private void OnTimerTick(object? sender, object e)
@@ -192,19 +206,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             for (int i = 0; i < sourceData.Length; i++)
             {
                 if (_chartValues[i].Value != sourceData[i])
-                {
                     _chartValues[i].Value = sourceData[i];
-                }
             }
         }
 
         private Axis[] GetXAxesForCurrentPivot()
         {
-            var axis = new Axis
-            {
-                TextSize = 12,
-                LabelsRotation = 0
-            };
+            var axis = new Axis { TextSize = 12, LabelsRotation = 0 };
 
             switch (SelectedPivotIndex)
             {
@@ -216,20 +224,16 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     break;
                 case 2:
                     axis.Name = _localizationService.GetString("Chart_XAxisMonth");
-
                     string monthsString = _localizationService.GetString("Chart_MonthsShort");
-                    if (!string.IsNullOrEmpty(monthsString))
-                    {
-                        axis.Labels = monthsString.Split(',');
-                    }
-                    else
-                    {
-                        axis.Labels = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-                    }
+                    axis.Labels = !string.IsNullOrEmpty(monthsString)
+                        ? monthsString.Split(',')
+                        : ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
                     break;
             }
 
             return [axis];
         }
+
+        #endregion
     }
 }

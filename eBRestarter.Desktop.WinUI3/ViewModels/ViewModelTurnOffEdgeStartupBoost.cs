@@ -16,27 +16,27 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelTurnOffEdgeStartupBoost : ObservableObject
     {
+        #region FieldsAndInjectedServices
+
         private readonly IWindowsStartupManagerService _startupService;
         private readonly IBrowserFactory _browserFactory;
         private readonly IDialogService _dialogService;
         private readonly ILocalizationService _localizationService;
-
         private bool _isRevertingState = false;
 
-        [ObservableProperty]
-        public partial bool IsStartupBoostEnabled { get; set; }
+        #endregion
 
-        [ObservableProperty]
-        public partial bool IsInfoBarOpen { get; set; } = false;
+        #region ObservableProperties
 
-        [ObservableProperty]
-        public partial string InfoBarTitle { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool IsStartupBoostEnabled { get; set; }
+        [ObservableProperty] public partial bool IsInfoBarOpen { get; set; } = false;
+        [ObservableProperty] public partial string InfoBarTitle { get; set; } = string.Empty;
+        [ObservableProperty] public partial string InfoBarMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial InfoBarSeverity InfoBarSeverity { get; set; } = InfoBarSeverity.Informational;
 
-        [ObservableProperty]
-        public partial string InfoBarMessage { get; set; } = string.Empty;
+        #endregion
 
-        [ObservableProperty]
-        public partial InfoBarSeverity InfoBarSeverity { get; set; } = InfoBarSeverity.Informational;
+        #region ConstructorAndFinalizer
 
         public ViewModelTurnOffEdgeStartupBoost(
             IWindowsStartupManagerService startupService,
@@ -48,57 +48,26 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _browserFactory = browserFactory;
             _dialogService = dialogService;
             _localizationService = localizationService;
-
             IsStartupBoostEnabled = _startupService.IsEdgeStartupBoostEnabled();
         }
 
-        async partial void OnIsStartupBoostEnabledChanged(bool value)
-        {
-            if (_isRevertingState) return;
+        #endregion
 
-            try
-            {
-                IsInfoBarOpen = false;
-                _startupService.SetEdgeStartupBoost(value);
-
-                InfoBarTitle = _localizationService.GetString("StartupBoostDialog_SuccessTitle");
-
-                InfoBarMessage = value
-                    ? _localizationService.GetString("StartupBoostDialog_SuccessStatus_Activated")
-                    : _localizationService.GetString("StartupBoostDialog_SuccessMessage");
-
-                InfoBarSeverity = InfoBarSeverity.Success;
-                IsInfoBarOpen = true;
-            }
-            catch (Exception ex)
-            {
-                _isRevertingState = true;
-                IsStartupBoostEnabled = !value;
-                _isRevertingState = false;
-
-                InfoBarTitle = _localizationService.GetString("StartupBoostDialog_ErrorTitle");
-                InfoBarMessage = ex.Message;
-                InfoBarSeverity = InfoBarSeverity.Error;
-                IsInfoBarOpen = true;
-            }
-        }
+        #region Commands
 
         [RelayCommand]
         private async Task CopyAndOpenEdge()
         {
             var edge = _browserFactory.Create(BrowserType.Edge);
-
             if (edge.IsInstalled)
             {
                 var dataPackage = new DataPackage();
                 dataPackage.SetText("edge://settings/?search=Startup-Boost");
                 Clipboard.SetContent(dataPackage);
-
                 await _dialogService.ShowMessageAsync(
                     "Edge",
                     _localizationService.GetString("StartupBoostDialog_CopyMessage"),
                     DialogIcon.Information);
-
             }
             else
             {
@@ -108,5 +77,37 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     DialogIcon.Error);
             }
         }
+
+        #endregion
+
+        #region PropertyChangeHandlers
+
+        async partial void OnIsStartupBoostEnabledChanged(bool value)
+        {
+            if (_isRevertingState) return;
+            try
+            {
+                IsInfoBarOpen = false;
+                _startupService.SetEdgeStartupBoost(value);
+                InfoBarTitle = _localizationService.GetString("StartupBoostDialog_SuccessTitle");
+                InfoBarMessage = value
+                    ? _localizationService.GetString("StartupBoostDialog_SuccessStatus_Activated")
+                    : _localizationService.GetString("StartupBoostDialog_SuccessMessage");
+                InfoBarSeverity = InfoBarSeverity.Success;
+                IsInfoBarOpen = true;
+            }
+            catch (Exception ex)
+            {
+                _isRevertingState = true;
+                IsStartupBoostEnabled = !value;
+                _isRevertingState = false;
+                InfoBarTitle = _localizationService.GetString("StartupBoostDialog_ErrorTitle");
+                InfoBarMessage = ex.Message;
+                InfoBarSeverity = InfoBarSeverity.Error;
+                IsInfoBarOpen = true;
+            }
+        }
+
+        #endregion
     }
 }
