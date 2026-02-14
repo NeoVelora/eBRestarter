@@ -38,6 +38,8 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 
             services.AddTransient<ViewModelImportApi>();
 
+            services.AddTransient<ViewModelTurnOffEdgeStartupBoost>();
+
             return services;
         }
     }

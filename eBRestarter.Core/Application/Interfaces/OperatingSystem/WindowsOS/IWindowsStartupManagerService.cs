@@ -14,6 +14,8 @@ namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS
         void DisableAutoStart();
         Dictionary<string, object> GetStartupEntries();
         void SetEdgeStartupBoost(bool enable);
+
+        bool IsEdgeStartupBoostEnabled();
         void SetAutoLogon(bool enable);
     }
 }

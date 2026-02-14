@@ -23,8 +23,9 @@ namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
         Task ShowInstallAddOnInfoDialogAsync();
         Task ShowActivateApiDialogAsync();
         Task ShowImportApiDialogAsync();
-
         Task ShowDeleteBrowserContentDialogAsync(bool autoStart = false);
+
+        Task ShowTurnOffEdgeStartupBoostDialogAsync();
     }
 
 

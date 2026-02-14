@@ -128,6 +128,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             await _dialogService.ShowInstallAddOnInfoDialogAsync();
         }
 
+        [RelayCommand]
+        private async Task OpenStartupBoostDialog()
+        {
+            await _dialogService.ShowTurnOffEdgeStartupBoostDialogAsync();
+        }
+
 
         #endregion
 

@@ -2,9 +2,9 @@ using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using Serilog;
-using System.Diagnostics;
-using System.Runtime.Versioning;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS
@@ -21,9 +21,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
         private const string RegistryPathPasswordLess = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device";
 
         private readonly ILogger<WindowsStartupService> _logger;
-
         private readonly IWindowsRegistryService _registry;
-
         private readonly IProcessInfoService _processInfo;
 
         public WindowsStartupService(
@@ -41,14 +39,12 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             try
             {
                 string exePath = _processInfo.GetCurrentExecutablePath();
-
                 _registry.SetCurrentUserValue(RegistryPathRun, "eBRestarter", exePath);
-
-                _logger.LogInformation("Autostart-Eintrag für 'eBRestarter' erfolgreich erstellt.");
+                _logger.LogInformation("Autostart entry for 'eBRestarter' successfully created.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Setzen des Autostarts in der Registry.");
+                _logger.LogError(ex, "Error setting autostart in registry.");
             }
         }
 
@@ -57,12 +53,11 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             try
             {
                 _registry.DeleteCurrentUserValue(RegistryPathRun, "eBRestarter");
-
-                _logger.LogInformation("Autostart-Eintrag für 'eBRestarter' entfernt.");
+                _logger.LogInformation("Autostart entry for 'eBRestarter' removed.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Entfernen des Autostarts aus der Registry.");
+                _logger.LogError(ex, "Error removing autostart from registry.");
             }
         }
 
@@ -74,7 +69,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehlerbeim Abrufen der Autostart-Einträge.");
+                _logger.LogError(ex, "Error retrieving autostart entries.");
                 return new Dictionary<string, object>();
             }
         }
@@ -84,19 +79,36 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             try
             {
                 int dwordValue = enable ? 1 : 0;
-
                 _registry.SetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled", dwordValue, RegistryValueKind.DWord);
-
-                _logger.LogInformation("Edge Startup Boost auf {State} gesetzt (Wert: {Value}).", enable, dwordValue);
+                _logger.LogInformation("Edge Startup Boost set to {State} (Value: {Value}).", enable, dwordValue);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Zugriff verweigert beim Ändern der Edge-Policies. Bitte als Administrator ausführen.");
+                _logger.LogError(ex, "Access denied when changing Edge policies. Please run as Administrator.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Allgemeiner Fehler beim Setzen von Edge Startup Boost.");
+                _logger.LogError(ex, "General error setting Edge Startup Boost.");
             }
+        }
+
+        public bool IsEdgeStartupBoostEnabled()
+        {
+            try
+            {
+                var value = _registry.GetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled");
+
+                if (value is int intValue)
+                {
+                    return intValue == 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not read Edge Startup Boost status.");
+            }
+
+            return true;
         }
 
         public void SetAutoLogon(bool enable)
@@ -104,18 +116,16 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             try
             {
                 int dwordValue = enable ? 0 : 2;
-
                 _registry.SetLocalMachineValue(RegistryPathPasswordLess, "DevicePasswordLessBuildVersion", dwordValue, RegistryValueKind.DWord);
-
-                _logger.LogInformation("AutoLogon-Einstellung auf {State} gesetzt (RegWert: {Value}).", enable, dwordValue);
+                _logger.LogInformation("AutoLogon setting set to {State} (RegValue: {Value}).", enable, dwordValue);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Zugriff verweigert beim Ändern der PasswordLess-Einstellungen. Bitte als Administrator ausführen.");
+                _logger.LogError(ex, "Access denied when changing PasswordLess settings. Please run as Administrator.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Konfigurieren der AutoLogon-Einstellungen.");
+                _logger.LogError(ex, "Error configuring AutoLogon settings.");
             }
         }
 
@@ -131,18 +141,18 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
                     var newState = await startupTask.RequestEnableAsync();
 
                     if (newState == StartupTaskState.Enabled)
-                        _logger.LogInformation("Autostart erfolgreich aktiviert.");
+                        _logger.LogInformation("Autostart successfully activated.");
                     else
-                        _logger.LogWarning("Autostart Aktivierung fehlgeschlagen (User abgelehnt?).");
+                        _logger.LogWarning("Autostart activation failed (User denied?).");
                 }
                 else
                 {
-                    _logger.LogInformation($"Autostart ist bereits aktiv oder deaktiviert durch User. Status: {startupTask.State}");
+                    _logger.LogInformation($"Autostart is already active or disabled by user. Status: {startupTask.State}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Aktivieren des Autostarts via StartupTask.");
+                _logger.LogError(ex, "Error activating autostart via StartupTask.");
             }
         }
 
@@ -151,14 +161,12 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS
             try
             {
                 var startupTask = await StartupTask.GetAsync(StartupTaskId);
-
                 startupTask.Disable();
-
-                _logger.LogInformation("Autostart erfolgreich deaktiviert.");
+                _logger.LogInformation("Autostart successfully deactivated.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Deaktivieren des Autostarts.");
+                _logger.LogError(ex, "Error deactivating autostart.");
             }
         }
 
