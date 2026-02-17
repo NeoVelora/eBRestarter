@@ -29,13 +29,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region FieldsAndInjectedServices
 
         private BrowserInfo _browserInfo;
+        private CancellationTokenSource? _cts;
         private readonly AppConfig _currentConfig;
         private readonly IDialogService _dialogService;
         private readonly IBrowserDownloadService _downloadService;
         private readonly IEVisitorConfigService _eVisitorConfigService;
-        private readonly IOperatingSystemFacade _os;
         private readonly ILocalizationService _localizationService;
-        private CancellationTokenSource? _cts;
+        private readonly IOperatingSystemFacade _os;
 
         #endregion
 
@@ -60,7 +60,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public BrowserType BrowserType => _browserInfo.Type;
         public string BrowserExist => _browserInfo.IsInstalled ? "✓" : "✘";
-        public SolidColorBrush BrowserExistTextForground => _browserInfo.IsInstalled
+        public SolidColorBrush BrowserExistTextForeground => _browserInfo.IsInstalled
             ? new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorGreen))
             : new SolidColorBrush(CommunityToolkit.WinUI.Helpers.ColorHelper.ToColor(SetForegroundColorRed));
         public string DownloadButtonContent => IsDownloadActive
@@ -85,14 +85,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region ConstructorAndFinalizer
 
         public ViewModelBrowserItem(
-            BrowserInfo info,
+            BrowserInfo browserInfo,
             IBrowserDownloadService downloadService,
             IOperatingSystemFacade os,
             IEVisitorConfigService eVisitorConfigService,
             IDialogService dialogService,
             ILocalizationService localizationService)
         {
-            _browserInfo = info;
+            _browserInfo = browserInfo;
             _downloadService = downloadService;
             _os = os;
             _eVisitorConfigService = eVisitorConfigService;
@@ -134,7 +134,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             _browserInfo = newInfo;
             OnPropertyChanged(nameof(BrowserExist));
-            OnPropertyChanged(nameof(BrowserExistTextForground));
+            OnPropertyChanged(nameof(BrowserExistTextForeground));
             RefreshBrowserVersionText();
             OnPropertyChanged(nameof(IsChooseButtonVisible));
             OnPropertyChanged(nameof(IsDownloadButtonVisible));

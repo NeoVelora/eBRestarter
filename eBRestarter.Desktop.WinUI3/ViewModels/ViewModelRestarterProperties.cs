@@ -41,7 +41,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial bool StartBrowserWithProgrammStartIs { get; set; } = false;
         [ObservableProperty] private partial string StandardBrowser { get; set; } = string.Empty;
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(AddeVVisitorUsernameCommand))]
+        [NotifyCanExecuteChangedFor(nameof(AddEVisitorUsernameCommand))]
         public partial string Username { get; set; } = string.Empty;
 
         #endregion
@@ -83,7 +83,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             BrowserDeleteCacheOptionList = new ReadOnlyCollection<BrowserCacheDeleteOption>(
                 localizationService.GetBrowserCacheOptions().ToList());
             var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
-            SelectedDeleteBrowserCacheOption = BrowserDeleteCacheOptionList.FirstOrDefault(x => x.Days == configDays) ?? BrowserDeleteCacheOptionList[0];
+            SelectedDeleteBrowserCacheOption = BrowserDeleteCacheOptionList.FirstOrDefault(option => option.Days == configDays) ?? BrowserDeleteCacheOptionList[0];
         }
 
         #endregion
@@ -91,7 +91,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region Commands
 
         [RelayCommand(CanExecute = nameof(CanAddUsername))]
-        private void AddeVVisitorUsername()
+        private void AddEVisitorUsername()
         {
             _currentConfig.Username = Username;
             SaveSettings();

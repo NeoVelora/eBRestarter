@@ -21,17 +21,16 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region FieldsAndInjectedServices
 
         private readonly IBrowserFactory _browserFactory;
-        private readonly IEVisitorConfigService _iEVisitorConfigService;
         private readonly IDialogService _dialogService;
+        private readonly IEVisitorConfigService _eVisitorConfigService;
         private readonly IFileDeletionService _fileDeletionService;
-        private readonly IWindowsProcessControlService _processService;
         private readonly ILocalizationService _localizationService;
-
+        private readonly IWindowsProcessControlService _processService;
         private BrowserPaths? _browserPaths;
         private CancellationTokenSource? _cts;
         private IBrowser? _currentBrowser;
-        private string _processName = "";
         private bool _isAutoMode = false;
+        private string _processName = "";
 
         #endregion
 
@@ -69,12 +68,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IBrowserFactory browserFactory,
             IWindowsProcessControlService processService,
             IFileDeletionService fileDeletionService,
-            IEVisitorConfigService iEVisitorConfigService,
+            IEVisitorConfigService eVisitorConfigService,
             IDialogService dialogService,
             ILocalizationService localizationService)
         {
             _browserFactory = browserFactory;
-            _iEVisitorConfigService = iEVisitorConfigService;
+            _eVisitorConfigService = eVisitorConfigService;
             _processService = processService;
             _fileDeletionService = fileDeletionService;
             _dialogService = dialogService;
@@ -83,12 +82,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             BrowserName = _localizationService.GetString("Cleanup_Loading");
             StatusText = _localizationService.GetString("Cleanup_Ready");
 
-            AppConfig config = iEVisitorConfigService.LoadConfig();
-            string selectedBrowserString = config.Browser.Selected;
+            AppConfig appConfig = eVisitorConfigService.LoadConfig();
+            string selectedBrowserString = appConfig.Browser.Selected;
 
-            if (Enum.TryParse(typeof(BrowserType), selectedBrowserString, true, out var result))
+            if (Enum.TryParse(typeof(BrowserType), selectedBrowserString, true, out var parsedResult))
             {
-                var browserType = (BrowserType)result;
+                var browserType = (BrowserType)parsedResult;
                 Initialize(browserType);
             }
             else
@@ -204,11 +203,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 ProgressMaximum = totalFiles > 0 ? totalFiles : 1;
                 ProgressValue = 0;
 
-                var statusProgress = new Progress<string>(msg => StatusText = msg);
-                var valueProgress = new Progress<int>(val =>
+                var statusProgress = new Progress<string>(statusMessage => StatusText = statusMessage);
+                var valueProgress = new Progress<int>(completedFileCount =>
                 {
-                    ProgressValue = val;
-                    if (totalFiles > 0) ProgressText = $"{(val * 100 / totalFiles)} %";
+                    ProgressValue = completedFileCount;
+                    if (totalFiles > 0) ProgressText = $"{(completedFileCount * 100 / totalFiles)} %";
                 });
 
                 await _fileDeletionService.DeleteFilesAsync(directoriesToDelete, statusProgress, valueProgress, _cts.Token);
