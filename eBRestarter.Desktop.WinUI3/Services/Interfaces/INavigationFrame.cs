@@ -7,12 +7,18 @@ namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
 {
     public interface INavigationFrame
     {
-        bool Navigate(Type sourcePageType, object parameter, NavigationTransitionInfo infoOverride);
+        #region PublicProperties
 
         bool CanGoBack { get; }
+        object Content { get; }
+
+        #endregion
+
+        #region PublicMethods
 
         void GoBack();
+        bool Navigate(Type sourcePageType, object parameter, NavigationTransitionInfo infoOverride);
 
-        object Content { get; }
+        #endregion
     }
 }

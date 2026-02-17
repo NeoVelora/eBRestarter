@@ -11,7 +11,7 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 {
     public static class ViewModelServiceExtensions
     {
-        #region PublicAndProtectedMethods
+        #region PublicMethods
 
         public static IServiceCollection AddViewModels(this IServiceCollection services)
         {

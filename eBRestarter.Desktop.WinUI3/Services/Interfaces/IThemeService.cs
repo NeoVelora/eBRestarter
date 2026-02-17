@@ -6,7 +6,16 @@ namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
 {
     public interface IThemeService
     {
-        void SetTheme(string themeName);
+        #region PublicProperties
+
         string CurrentTheme { get; }
+
+        #endregion
+
+        #region PublicMethods
+
+        void SetTheme(string themeName);
+
+        #endregion
     }
 }

@@ -13,23 +13,23 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 {
     public static class NavigationServiceExtensions
     {
+        #region PublicMethods
+
         public static IServiceCollection AddNavigationService(this IServiceCollection services)
         {
-
             services.AddSingleton<INavigationService>(provider =>
             {
                 var navService = new NavigationService();
-
                 navService.RegisterRoute("CommonOverview", typeof(P_CommonOverview));
                 navService.RegisterRoute("RestarterProperties", typeof(P_RestarterProperties));
                 navService.RegisterRoute("Options", typeof(P_Options));
                 navService.RegisterRoute("Infocenter", typeof(P_Infocenter));
                 navService.RegisterRoute("Settings", typeof(P_Settings));
-
                 return navService;
             });
-
             return services;
         }
+
+        #endregion
     }
 }

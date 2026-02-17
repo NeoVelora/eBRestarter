@@ -9,12 +9,22 @@ namespace eBRestarter.Desktop.WinUI3.Services
 {
     public class LocalizationService : ILocalizationService
     {
+        #region FieldsAndInjectedServices
+
         private readonly ResourceLoader _resourceLoader;
+
+        #endregion
+
+        #region ConstructorAndFinalizer
 
         public LocalizationService()
         {
             _resourceLoader = new ResourceLoader();
         }
+
+        #endregion
+
+        #region PublicMethods
 
         public string GetString(string key)
         {
@@ -26,40 +36,35 @@ namespace eBRestarter.Desktop.WinUI3.Services
         {
             string de = GetString("Lang_German");
             string en = GetString("Lang_English");
-
             if (de.StartsWith("[")) de = "Deutsch";
             if (en.StartsWith("[")) en = "English";
-
-            return
-            [
-                new(de, 0),
-                new(en, 1)
-            ];
+            return [new(de, 0), new(en, 1)];
         }
 
         public IEnumerable<ComputerRestartOption> GetComputerRestartOptions()
         {
             return
-    [
-        new(GetString("RestartOption_0"), 0),
-        new(GetString("RestartOption_1"), 1),
-        new(GetString("RestartOption_3"), 3),
-        new(GetString("RestartOption_7"), 7),
-        new(GetString("RestartOption_14"), 14)
-    ];
+            [
+                new(GetString("RestartOption_0"), 0),
+                new(GetString("RestartOption_1"), 1),
+                new(GetString("RestartOption_3"), 3),
+                new(GetString("RestartOption_7"), 7),
+                new(GetString("RestartOption_14"), 14)
+            ];
         }
-
 
         public IEnumerable<BrowserCacheDeleteOption> GetBrowserCacheOptions()
         {
             return
-    [
-        new(GetString("BrowserCacheOption_0"), 0),
-        new(GetString("BrowserCacheOption_1"), 1),
-        new(GetString("BrowserCacheOption_3"), 3),
-        new(GetString("BrowserCacheOption_7"), 7),
-        new(GetString("BrowserCacheOption_14"), 14)
-    ];
+            [
+                new(GetString("BrowserCacheOption_0"), 0),
+                new(GetString("BrowserCacheOption_1"), 1),
+                new(GetString("BrowserCacheOption_3"), 3),
+                new(GetString("BrowserCacheOption_7"), 7),
+                new(GetString("BrowserCacheOption_14"), 14)
+            ];
         }
+
+        #endregion
     }
 }

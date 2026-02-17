@@ -9,13 +9,26 @@ namespace eBRestarter.Desktop.WinUI3.Services
 {
     public class WinUIFrameAdapter : INavigationFrame
     {
+        #region FieldsAndInjectedServices
+
         private readonly Frame _frame;
+
+        #endregion
+
+        #region ConstructorAndFinalizer
 
         public WinUIFrameAdapter(Frame frame) => _frame = frame;
 
-        public bool CanGoBack => _frame.CanGoBack;
+        #endregion
 
+        #region PublicProperties
+
+        public bool CanGoBack => _frame.CanGoBack;
         public object Content => _frame.Content;
+
+        #endregion
+
+        #region PublicMethods
 
         public void GoBack() => _frame.GoBack();
 
@@ -23,5 +36,7 @@ namespace eBRestarter.Desktop.WinUI3.Services
         {
             return _frame.Navigate(sourcePageType, parameter, infoOverride);
         }
+
+        #endregion
     }
 }

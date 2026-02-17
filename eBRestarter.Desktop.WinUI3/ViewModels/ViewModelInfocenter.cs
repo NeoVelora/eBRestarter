@@ -100,11 +100,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task LoadDataAsync()
         {
             var hardware = await _hardwareService.GetHardwareInfoAsync();
+
             ProcessorText = $"{_localizationService.GetString("Infocenter_ProcessorPrefix")} {hardware.ProcessorName}";
             GraphicsText = $"{_localizationService.GetString("Infocenter_GraphicsPrefix")} {hardware.GraphicsCardName}";
             RamText = $"{_localizationService.GetString("Infocenter_RamPrefix")} {hardware.InstalledRam}";
 
             var edition = await _osEditionService.GetOsEditionAsync();
+
             OsEditionText = $"{_localizationService.GetString("Infocenter_EditionPrefix")} {edition}";
 
             OsVersionText = $"{_localizationService.GetString("Infocenter_VersionPrefix")} {_systemInfoService.GetCurrentOsDisplayVersion()}";

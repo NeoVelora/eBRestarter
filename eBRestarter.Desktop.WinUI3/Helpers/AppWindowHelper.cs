@@ -9,6 +9,8 @@ namespace eBRestarter.Desktop.WinUI3.Helpers
 {
     public static class AppWindowHelper
     {
+        #region PublicMethods
+
         public static void ConfigureTitleBarColors(this Window window)
         {
             var appWindow = window.AppWindow;
@@ -22,5 +24,7 @@ namespace eBRestarter.Desktop.WinUI3.Helpers
             window.ExtendsContentIntoTitleBar = true;
             window.SetTitleBar(null);
         }
+
+        #endregion
     }
 }

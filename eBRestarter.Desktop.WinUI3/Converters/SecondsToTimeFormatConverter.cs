@@ -7,6 +7,8 @@ namespace eBRestarter.Desktop.WinUI3.Converters
 {
     public class SecondsToTimeFormatConverter : IValueConverter
     {
+        #region PublicMethods
+
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value is int seconds)
@@ -15,26 +17,25 @@ namespace eBRestarter.Desktop.WinUI3.Converters
                 TimeSpan time = TimeSpan.FromSeconds(seconds);
                 return FormatTimeSpan(time);
             }
-
             if (value is TimeSpan timeSpan)
-            {
                 return FormatTimeSpan(timeSpan);
-            }
-
             return "00:00:00";
-        }
-
-        private string FormatTimeSpan(TimeSpan time)
-        {
-            if (time.TotalHours >= 1)
-                return time.ToString(@"hh\:mm\:ss");
-
-            return time.ToString(@"hh\:mm\:ss");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
             throw new NotImplementedException();
         }
+
+        #endregion
+
+        #region PrivateHelperMethods
+
+        private string FormatTimeSpan(TimeSpan time)
+        {
+            return time.ToString(@"hh\:mm\:ss");
+        }
+
+        #endregion
     }
 }

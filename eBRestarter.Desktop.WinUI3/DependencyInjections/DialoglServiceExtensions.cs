@@ -12,10 +12,14 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 {
     public static class DialoglServiceExtensions
     {
+        #region PublicMethods
+
         public static IServiceCollection AddDialoglServiceExtensions(this IServiceCollection services)
         {
             services.AddTransient<IDialogService, DialogService>();
             return services;
         }
+
+        #endregion
     }
 }

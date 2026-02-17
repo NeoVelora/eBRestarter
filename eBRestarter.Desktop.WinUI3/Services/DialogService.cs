@@ -16,20 +16,13 @@ namespace eBRestarter.Desktop.WinUI3.Services
 {
     public class DialogService : IDialogService
     {
+        #region FieldsAndInjectedServices
+
         private XamlRoot XamlRoot => App.MainWindoweBRestarter!.Content.XamlRoot;
 
-        private async Task<ContentDialogResult> ShowDialogInternalAsync<T>(Action<T>? configure = null) where T : ContentDialog, new()
-        {
-            var dialog = new T
-            {
-                XamlRoot = XamlRoot
-            };
+        #endregion
 
-            configure?.Invoke(dialog);
-
-            return await dialog.ShowAsync();
-        }
-
+        #region PublicMethods
 
         public async Task<bool> ShowConfirmationAsync(string title, string message, string yesButtonText = "Ja", string noButtonText = "Nein")
         {
@@ -44,9 +37,7 @@ namespace eBRestarter.Desktop.WinUI3.Services
                     XamlRoot = element.XamlRoot,
                     DefaultButton = ContentDialogButton.Primary
                 };
-
                 var result = await dialog.ShowAsync();
-
                 return result == ContentDialogResult.Primary;
             }
             return false;
@@ -62,7 +53,6 @@ namespace eBRestarter.Desktop.WinUI3.Services
                 CloseButtonText = "Schließen",
                 DefaultButton = ContentDialogButton.Close
             };
-
             await dialog.ShowAsync();
         }
 
@@ -77,22 +67,15 @@ namespace eBRestarter.Desktop.WinUI3.Services
                 CloseButtonText = "Nein",
                 DefaultButton = ContentDialogButton.Primary
             };
-
             var result = await dialog.ShowAsync();
             return result == ContentDialogResult.Primary;
         }
 
-
         public async Task ShowAboutDialogAsync() => await ShowDialogInternalAsync<AboutDialog>();
-
         public async Task ShowInstallAddOnDialogAsync() => await ShowDialogInternalAsync<InstallAddOnDialog>();
-
         public async Task ShowInstallAddOnInfoDialogAsync() => await ShowDialogInternalAsync<InstallAddOnInfoDialog>();
-
         public async Task ShowActivateApiDialogAsync() => await ShowDialogInternalAsync<ActivateApiDialog>();
-
         public async Task ShowImportApiDialogAsync() => await ShowDialogInternalAsync<ImportApiDialog>();
-
         public async Task ShowTurnOffEdgeStartupBoostDialogAsync() => await ShowDialogInternalAsync<TurnOffEdgeStartupBoostDialog>();
 
         public async Task ShowDeleteBrowserContentDialogAsync(bool autoStart = false)
@@ -104,9 +87,7 @@ namespace eBRestarter.Desktop.WinUI3.Services
                     dialog.Opened += async (s, e) =>
                     {
                         if (dialog.ViewModelDeleteBrowserContent != null)
-                        {
                             await dialog.ViewModelDeleteBrowserContent.RunAutoSequenceAsync();
-                        }
                     };
                 }
             });
@@ -115,23 +96,27 @@ namespace eBRestarter.Desktop.WinUI3.Services
         public async Task<AutoLogonDialogResult?> ShowAutoLogonDialogAsync(string defaultUser = null, string defaultDomain = null)
         {
             AutoLogonDialog dialogInstance = null!;
-
             var result = await ShowDialogInternalAsync<AutoLogonDialog>(d =>
             {
                 dialogInstance = d;
                 d.SetDefaults(defaultUser, defaultDomain);
             });
-
             if (result == ContentDialogResult.Primary)
-            {
                 return AutoLogonDialogResult.Save(dialogInstance.GetCredentials());
-            }
-            else if (result == ContentDialogResult.Secondary)
-            {
+            if (result == ContentDialogResult.Secondary)
                 return AutoLogonDialogResult.Deactivate();
-            }
-
             return null;
+        }
+
+        #endregion
+
+        #region PrivateHelperMethods
+
+        private async Task<ContentDialogResult> ShowDialogInternalAsync<T>(Action<T>? configure = null) where T : ContentDialog, new()
+        {
+            var dialog = new T { XamlRoot = XamlRoot };
+            configure?.Invoke(dialog);
+            return await dialog.ShowAsync();
         }
 
         private object CreateTitleContent(string title, DialogIcon icon)
@@ -144,14 +129,12 @@ namespace eBRestarter.Desktop.WinUI3.Services
                 Spacing = 12,
                 VerticalAlignment = VerticalAlignment.Center
             };
-
             var fontIcon = new FontIcon
             {
                 FontFamily = new FontFamily("Segoe Fluent Icons"),
                 FontSize = 24,
                 VerticalAlignment = VerticalAlignment.Center
             };
-
             switch (icon)
             {
                 case DialogIcon.Error:
@@ -174,7 +157,6 @@ namespace eBRestarter.Desktop.WinUI3.Services
                     fontIcon.Glyph = "\uE9CE";
                     break;
             }
-
             var textBlock = new TextBlock
             {
                 Text = title,
@@ -182,13 +164,11 @@ namespace eBRestarter.Desktop.WinUI3.Services
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
                 VerticalAlignment = VerticalAlignment.Center
             };
-
             stackPanel.Children.Add(fontIcon);
             stackPanel.Children.Add(textBlock);
-
             return stackPanel;
         }
+
+        #endregion
     }
 }
-
-

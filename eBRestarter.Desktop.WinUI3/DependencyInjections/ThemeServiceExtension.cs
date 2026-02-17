@@ -10,11 +10,14 @@ namespace eBRestarter.Desktop.WinUI3.DependencyInjections
 {
     public static class ThemeServiceExtension
     {
+        #region PublicMethods
+
         public static IServiceCollection AddThemeService(this IServiceCollection services)
         {
             services.AddTransient<IThemeService, ThemeService>();
-         
             return services;
         }
+
+        #endregion
     }
 }

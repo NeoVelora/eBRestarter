@@ -8,16 +8,15 @@ namespace eBRestarter.Desktop.WinUI3.Converters
 {
     public class StringKeyToStyleConverter : IValueConverter
     {
+        #region PublicMethods
+
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value is string styleKey && !string.IsNullOrEmpty(styleKey))
             {
                 if (Application.Current.Resources.TryGetValue(styleKey, out object styleResource))
-                {
                     return styleResource as Style;
-                }
             }
-
             return null;
         }
 
@@ -25,5 +24,7 @@ namespace eBRestarter.Desktop.WinUI3.Converters
         {
             throw new NotImplementedException();
         }
+
+        #endregion
     }
 }
