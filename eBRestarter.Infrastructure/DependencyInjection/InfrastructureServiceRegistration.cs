@@ -70,6 +70,7 @@ namespace eBRestarter.Infrastructure.DependencyInjection
             services.AddTransient<FirefoxBrowser>();
             services.AddTransient<EdgeBrowser>();
             services.AddTransient<BraveBrowser>();
+            services.AddTransient<VivaldiBrowser>();
 
             services.AddSingleton<IBrowserFactory, BrowserFactory>();
 

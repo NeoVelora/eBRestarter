@@ -9,6 +9,7 @@ namespace eBRestarter.Core.Domain.Enums
         Brave,
         Chrome,
         Edge,
-        Firefox
+        Firefox,
+        Vivaldi
     }
 }
