@@ -1,7 +1,9 @@
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Desktop.WinUI3.Helpers;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ViewModels;
 using eBRestarter.Desktop.WinUI3.Views.Pages;
+using eBRestarter.Infrastructure.Services;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -29,9 +31,11 @@ namespace eBRestarter.Desktop.WinUI3
     {
         private readonly INavigationService _navigationService;
 
+        private readonly IAppVersionInfoService _iAppVersionInfoService;
+
         private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
-        public EBRestarter(INavigationService navigationService, MainViewModel mainViewModel)
+        public EBRestarter(INavigationService navigationService, IAppVersionInfoService iAppVersionInfoService, MainViewModel mainViewModel)
         {
             InitializeComponent();
 
@@ -40,6 +44,8 @@ namespace eBRestarter.Desktop.WinUI3
             NavigationFrame.CacheSize = 10;
 
             _navigationService = navigationService;
+
+            _iAppVersionInfoService = iAppVersionInfoService;
 
             _navigationService.AttachFrame(NavigationFrame);
 
@@ -62,6 +68,8 @@ namespace eBRestarter.Desktop.WinUI3
             {
                 presenter.Maximize();
             }
+
+            TxbVersion.Text = "v" + _iAppVersionInfoService?.GetAppVersion();
 
 
         }
