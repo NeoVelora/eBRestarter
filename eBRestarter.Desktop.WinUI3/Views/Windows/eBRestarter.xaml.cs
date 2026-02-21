@@ -51,6 +51,13 @@ namespace eBRestarter.Desktop.WinUI3
             Microsoft.UI.WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
             AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
 
+            string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "eB Restarter.ico");
+
+            if (File.Exists(iconPath))
+            {
+                appWindow.SetIcon(iconPath);
+            }
+
             if (appWindow.Presenter is OverlappedPresenter presenter)
             {
                 presenter.Maximize();
