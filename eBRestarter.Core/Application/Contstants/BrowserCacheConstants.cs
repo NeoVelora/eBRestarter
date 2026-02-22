@@ -1,11 +1,8 @@
 using eBRestarter.Core.Domain.Models.Records;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 
-namespace eBRestarter.Core.Application.Contstants
-{
+namespace eBRestarter.Core.Application.Contstants;
+
     public static class BrowserCacheConstants
     {
         public static readonly ReadOnlyCollection<BrowserCacheDeleteOption> Options = new(
@@ -17,4 +14,4 @@ namespace eBRestarter.Core.Application.Contstants
             new("Cache und Cookies alle 14 Tage löschen", 14)
         ]);
     }
-}
+

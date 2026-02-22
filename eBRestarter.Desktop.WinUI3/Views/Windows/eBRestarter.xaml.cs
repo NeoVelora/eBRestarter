@@ -31,7 +31,7 @@ namespace eBRestarter.Desktop.WinUI3
     {
         private readonly INavigationService _navigationService;
 
-        private readonly IAppVersionInfoService _iAppVersionInfoService;
+        private readonly IAppVersionInfoService? _iAppVersionInfoService;
 
         private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
@@ -100,7 +100,7 @@ namespace eBRestarter.Desktop.WinUI3
             {
                 _navigationService.NavigateTo(
                     tag,
-                    parameter: null,
+                    parameter: null!,
                     transitionInfo: _defaultTransition
                 );
             }

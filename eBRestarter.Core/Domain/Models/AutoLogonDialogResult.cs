@@ -1,17 +1,13 @@
 using eBRestarter.Core.Domain.Models.Records;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Core.Domain.Models
+namespace eBRestarter.Core.Domain.Models;
+
+public class AutoLogonDialogResult
 {
-    public class AutoLogonDialogResult
-    {
-        public bool IsDeactivateAction { get; set; }
-        public AutoLogonCredentials? Credentials { get; set; }
+    public bool IsDeactivateAction { get; set; }
+    public AutoLogonCredentials? Credentials { get; set; }
 
-        public static AutoLogonDialogResult Deactivate() => new() { IsDeactivateAction = true };
-        public static AutoLogonDialogResult Save(AutoLogonCredentials creds) => new() { IsDeactivateAction = false, Credentials = creds };
-        public static AutoLogonDialogResult Cancel() => null;
-    }
+    public static AutoLogonDialogResult Deactivate() => new() { IsDeactivateAction = true };
+    public static AutoLogonDialogResult Save(AutoLogonCredentials creds) => new() { IsDeactivateAction = false, Credentials = creds };
+    public static AutoLogonDialogResult Cancel() => null;
 }

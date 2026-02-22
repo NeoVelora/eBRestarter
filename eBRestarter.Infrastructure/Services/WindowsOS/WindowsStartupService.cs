@@ -2,185 +2,181 @@ using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Windows.ApplicationModel;
 
-namespace eBRestarter.Infrastructure.Services.WindowsOS
+namespace eBRestarter.Infrastructure.Services.WindowsOS;
+
+public class WindowsStartupService : IWindowsStartupManagerService
 {
-    public class WindowsStartupService : IWindowsStartupManagerService
+    private const string StartupTaskId = "eBRestarterAutoStart";
+
+
+    private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+
+    private const string RegistryPathEdgePolicies = @"SOFTWARE\Policies\Microsoft\Edge";
+
+    private const string RegistryPathPasswordLess = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device";
+
+    private readonly ILogger<WindowsStartupService> _logger;
+    private readonly IWindowsRegistryService _registry;
+    private readonly IProcessInfoService _processInfo;
+
+    public WindowsStartupService(
+        ILogger<WindowsStartupService> logger,
+        IWindowsRegistryService registry,
+        IProcessInfoService processInfo)
     {
-        private const string StartupTaskId = "eBRestarterAutoStart";
+        _logger = logger;
+        _registry = registry;
+        _processInfo = processInfo;
+    }
 
-
-        private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
-
-        private const string RegistryPathEdgePolicies = @"SOFTWARE\Policies\Microsoft\Edge";
-
-        private const string RegistryPathPasswordLess = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device";
-
-        private readonly ILogger<WindowsStartupService> _logger;
-        private readonly IWindowsRegistryService _registry;
-        private readonly IProcessInfoService _processInfo;
-
-        public WindowsStartupService(
-            ILogger<WindowsStartupService> logger,
-            IWindowsRegistryService registry,
-            IProcessInfoService processInfo)
+    public void EnableAutoStart()
+    {
+        try
         {
-            _logger = logger;
-            _registry = registry;
-            _processInfo = processInfo;
+            string exePath = _processInfo.GetCurrentExecutablePath();
+            _registry.SetCurrentUserValue(RegistryPathRun, "eBRestarter", exePath);
+            _logger.LogInformation("Autostart entry for 'eBRestarter' successfully created.");
         }
-
-        public void EnableAutoStart()
+        catch (Exception ex)
         {
-            try
-            {
-                string exePath = _processInfo.GetCurrentExecutablePath();
-                _registry.SetCurrentUserValue(RegistryPathRun, "eBRestarter", exePath);
-                _logger.LogInformation("Autostart entry for 'eBRestarter' successfully created.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error setting autostart in registry.");
-            }
+            _logger.LogError(ex, "Error setting autostart in registry.");
         }
+    }
 
-        public void DisableAutoStart()
+    public void DisableAutoStart()
+    {
+        try
         {
-            try
-            {
-                _registry.DeleteCurrentUserValue(RegistryPathRun, "eBRestarter");
-                _logger.LogInformation("Autostart entry for 'eBRestarter' removed.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error removing autostart from registry.");
-            }
+            _registry.DeleteCurrentUserValue(RegistryPathRun, "eBRestarter");
+            _logger.LogInformation("Autostart entry for 'eBRestarter' removed.");
         }
-
-        public Dictionary<string, object> GetStartupEntries()
+        catch (Exception ex)
         {
-            try
-            {
-                return _registry.GetCurrentUserValues(RegistryPathRun);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving autostart entries.");
-                return new Dictionary<string, object>();
-            }
+            _logger.LogError(ex, "Error removing autostart from registry.");
         }
+    }
 
-        public void SetEdgeStartupBoost(bool enable)
+    public Dictionary<string, object> GetStartupEntries()
+    {
+        try
         {
-            try
+            return _registry.GetCurrentUserValues(RegistryPathRun);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving autostart entries.");
+            return new Dictionary<string, object>();
+        }
+    }
+
+    public void SetEdgeStartupBoost(bool enable)
+    {
+        try
+        {
+            int dwordValue = enable ? 1 : 0;
+            _registry.SetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled", dwordValue, RegistryValueKind.DWord);
+            _logger.LogInformation("Edge Startup Boost set to {State} (Value: {Value}).", enable, dwordValue);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogError(ex, "Access denied when changing Edge policies. Please run as Administrator.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "General error setting Edge Startup Boost.");
+        }
+    }
+
+    public bool IsEdgeStartupBoostEnabled()
+    {
+        try
+        {
+            var value = _registry.GetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled");
+
+            if (value is int intValue)
             {
-                int dwordValue = enable ? 1 : 0;
-                _registry.SetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled", dwordValue, RegistryValueKind.DWord);
-                _logger.LogInformation("Edge Startup Boost set to {State} (Value: {Value}).", enable, dwordValue);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogError(ex, "Access denied when changing Edge policies. Please run as Administrator.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "General error setting Edge Startup Boost.");
+                return intValue == 1;
             }
         }
-
-        public bool IsEdgeStartupBoostEnabled()
+        catch (Exception ex)
         {
-            try
-            {
-                var value = _registry.GetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled");
-
-                if (value is int intValue)
-                {
-                    return intValue == 1;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Could not read Edge Startup Boost status.");
-            }
-
-            return true;
+            _logger.LogWarning(ex, "Could not read Edge Startup Boost status.");
         }
 
-        public void SetAutoLogon(bool enable)
+        return true;
+    }
+
+    public void SetAutoLogon(bool enable)
+    {
+        try
         {
-            try
-            {
-                int dwordValue = enable ? 0 : 2;
-                _registry.SetLocalMachineValue(RegistryPathPasswordLess, "DevicePasswordLessBuildVersion", dwordValue, RegistryValueKind.DWord);
-                _logger.LogInformation("AutoLogon setting set to {State} (RegValue: {Value}).", enable, dwordValue);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogError(ex, "Access denied when changing PasswordLess settings. Please run as Administrator.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error configuring AutoLogon settings.");
-            }
+            int dwordValue = enable ? 0 : 2;
+            _registry.SetLocalMachineValue(RegistryPathPasswordLess, "DevicePasswordLessBuildVersion", dwordValue, RegistryValueKind.DWord);
+            _logger.LogInformation("AutoLogon setting set to {State} (RegValue: {Value}).", enable, dwordValue);
         }
-
-
-        public async Task EnableAutoStartAsync()
+        catch (UnauthorizedAccessException ex)
         {
-            try
+            _logger.LogError(ex, "Access denied when changing PasswordLess settings. Please run as Administrator.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error configuring AutoLogon settings.");
+        }
+    }
+
+
+    public async Task EnableAutoStartAsync()
+    {
+        try
+        {
+            var startupTask = await StartupTask.GetAsync(StartupTaskId);
+
+            if (startupTask.State == StartupTaskState.Disabled)
             {
-                var startupTask = await StartupTask.GetAsync(StartupTaskId);
+                var newState = await startupTask.RequestEnableAsync();
 
-                if (startupTask.State == StartupTaskState.Disabled)
-                {
-                    var newState = await startupTask.RequestEnableAsync();
-
-                    if (newState == StartupTaskState.Enabled)
-                        _logger.LogInformation("Autostart successfully activated.");
-                    else
-                        _logger.LogWarning("Autostart activation failed (User denied?).");
-                }
+                if (newState == StartupTaskState.Enabled)
+                    _logger.LogInformation("Autostart successfully activated.");
                 else
-                {
-                    _logger.LogInformation($"Autostart is already active or disabled by user. Status: {startupTask.State}");
-                }
+                    _logger.LogWarning("Autostart activation failed (User denied?).");
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Error activating autostart via StartupTask.");
+                _logger.LogInformation($"Autostart is already active or disabled by user. Status: {startupTask.State}");
             }
         }
-
-        public async Task DisableAutoStartAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                var startupTask = await StartupTask.GetAsync(StartupTaskId);
-                startupTask.Disable();
-                _logger.LogInformation("Autostart successfully deactivated.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deactivating autostart.");
-            }
+            _logger.LogError(ex, "Error activating autostart via StartupTask.");
         }
+    }
 
-        public async Task<bool> IsAutoStartEnabledAsync()
+    public async Task DisableAutoStartAsync()
+    {
+        try
         {
-            try
-            {
-                var startupTask = await StartupTask.GetAsync(StartupTaskId);
-                return startupTask.State == StartupTaskState.Enabled;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            var startupTask = await StartupTask.GetAsync(StartupTaskId);
+            startupTask.Disable();
+            _logger.LogInformation("Autostart successfully deactivated.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deactivating autostart.");
+        }
+    }
+
+    public async Task<bool> IsAutoStartEnabledAsync()
+    {
+        try
+        {
+            var startupTask = await StartupTask.GetAsync(StartupTaskId);
+            return startupTask.State == StartupTaskState.Enabled;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 }

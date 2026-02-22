@@ -1,24 +1,21 @@
 using Microsoft.UI.Xaml.Media.Animation;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
+namespace eBRestarter.Desktop.WinUI3.Services.Interfaces;
+
+public interface INavigationFrame
 {
-    public interface INavigationFrame
-    {
-        #region PublicProperties
+    #region PublicProperties
 
-        bool CanGoBack { get; }
-        object Content { get; }
+    bool CanGoBack { get; }
+    object Content { get; }
 
-        #endregion
+    #endregion
 
-        #region PublicMethods
+    #region PublicMethods
 
-        void GoBack();
-        bool Navigate(Type sourcePageType, object parameter, NavigationTransitionInfo infoOverride);
+    void GoBack();
+    bool Navigate(Type sourcePageType, object parameter, NavigationTransitionInfo infoOverride);
 
-        #endregion
-    }
+    #endregion
 }

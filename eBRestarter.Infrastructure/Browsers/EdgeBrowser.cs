@@ -4,79 +4,75 @@ using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Infrastructure.Browsers.Abstract;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Infrastructure.Browsers
+namespace eBRestarter.Infrastructure.Browsers;
+
+public class EdgeBrowser : ChromiumBrowserBase
 {
-    public class EdgeBrowser : ChromiumBrowserBase
+    public override string DisplayName => "Edge";
+    public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_edge.png";
+    public override string DownloadUrl => WebLinks.EdgeDownloadLinkDE;
+
+    public override BrowserType Type => BrowserType.Edge;
+
+    protected override string ProcessName => "msedge";
+
+    protected override string RegistryKeyVersion => @"Software\Microsoft\Edge\BLBeacon";
+
+    protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
+    public override string ExtensionInstallUrl => WebLinks.EdgeEVisitorAddOnLink;
+
+    public EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger) : base(os, logger) { }
+
+    protected override string ExeFileName => "msedge.exe";
+
+    protected override string BrowserRegistryName => "Microsoft Edge";
+
+    protected override string UninstallSubKey => "Microsoft Edge";
+
+    protected override string ProgramFilesSubPath => @"Microsoft\Edge\Application";
+
+    public override BrowserPaths GetPaths()
     {
-        public override string DisplayName => "Edge";
-        public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_edge.png";
-        public override string DownloadUrl => WebLinks.EdgeDownloadLinkDE;
+        var localAppData = _os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData");
 
-        public override BrowserType Type => BrowserType.Edge;
+        var userDataRoot = _os.WindowsFileSystemService.CombinePaths(localAppData, "Microsoft", "Edge", "User Data");
 
-        protected override string ProcessName => "msedge";
+        var cacheDirs = new List<string>();
+        var cookiesDirs = new List<string>();
+        var extensionsDirs = new List<string>();
 
-        protected override string RegistryKeyVersion => @"Software\Microsoft\Edge\BLBeacon";
+        var allProfileFolders = new List<string>();
 
-        protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
-        public override string ExtensionInstallUrl => WebLinks.EdgeEVisitorAddOnLink;
+        var defaultPath = _os.WindowsFileSystemService.CombinePaths(userDataRoot, "Default");
+        if (_os.WindowsFileSystemService.DirectoryExists(defaultPath))
+            allProfileFolders.Add(defaultPath);
 
-        public EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger) : base(os, logger) { }
-
-        protected override string ExeFileName => "msedge.exe";
-
-        protected override string BrowserRegistryName => "Microsoft Edge";
-
-        protected override string UninstallSubKey => "Microsoft Edge";
-
-        protected override string ProgramFilesSubPath => @"Microsoft\Edge\Application";
-
-        public override BrowserPaths GetPaths()
+        try
         {
-            var localAppData = _os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData");
+            var dirs = System.IO.Directory.GetDirectories(userDataRoot, "Profile *");
+            allProfileFolders.AddRange(dirs);
+        }
+        catch { }
 
-            var userDataRoot = _os.WindowsFileSystemService.CombinePaths(localAppData, "Microsoft", "Edge", "User Data");
+        foreach (var profilePath in allProfileFolders)
+        {
+            cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Cache", "Cache_Data"));
+            cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Service Worker"));
 
-            var cacheDirs = new List<string>();
-            var cookiesDirs = new List<string>();
-            var extensionsDirs = new List<string>();
+            cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Code Cache"));
+            cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "GPUCache"));
 
-            var allProfileFolders = new List<string>();
+            cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "IndexedDB"));
+            cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Network"));
 
-            var defaultPath = _os.WindowsFileSystemService.CombinePaths(userDataRoot, "Default");
-            if (_os.WindowsFileSystemService.DirectoryExists(defaultPath))
-                allProfileFolders.Add(defaultPath);
+            cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Local Storage"));
+            cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Session Storage"));
 
-            try
-            {
-                var dirs = System.IO.Directory.GetDirectories(userDataRoot, "Profile *");
-                allProfileFolders.AddRange(dirs);
-            }
-            catch { }
-
-            foreach (var profilePath in allProfileFolders)
-            {
-                cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Cache", "Cache_Data"));
-                cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Service Worker"));
-
-                cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Code Cache"));
-                cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "GPUCache"));
-
-                cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "IndexedDB"));
-                cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Network"));
-
-                cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Local Storage"));
-                cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Session Storage"));
-
-                extensionsDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Extensions", ExtensionId));
-            }
-
-            return new BrowserPaths(cacheDirs, cookiesDirs, extensionsDirs);
+            extensionsDirs.Add(_os.WindowsFileSystemService.CombinePaths(profilePath, "Extensions", ExtensionId));
         }
 
+        return new BrowserPaths(cacheDirs, cookiesDirs, extensionsDirs);
     }
+
 }

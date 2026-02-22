@@ -57,11 +57,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task CopyAndOpenEdge()
         {
             var edge = _browserFactory.Create(BrowserType.Edge);
+
             if (edge.IsInstalled)
             {
                 var dataPackage = new DataPackage();
                 dataPackage.SetText("edge://settings/?search=Startup-Boost");
                 Clipboard.SetContent(dataPackage);
+
                 await _dialogService.ShowMessageAsync(
                     "Edge",
                     _localizationService.GetString("StartupBoostDialog_CopyMessage"),
@@ -83,6 +85,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         async partial void OnIsStartupBoostEnabledChanged(bool value)
         {
             if (_isRevertingState) return;
+
             try
             {
                 IsInfoBarOpen = false;

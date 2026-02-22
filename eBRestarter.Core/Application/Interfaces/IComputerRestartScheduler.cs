@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace eBRestarter.Core.Application.Interfaces;
 
-namespace eBRestarter.Core.Application.Interfaces
+public interface IComputerRestartScheduler
 {
-    public interface IComputerRestartScheduler
-    {
-        void StartScheduler();
+    void StartScheduler();
 
-        Task StopSchedulerAsync();
-    }
+    Task StopSchedulerAsync();
 }

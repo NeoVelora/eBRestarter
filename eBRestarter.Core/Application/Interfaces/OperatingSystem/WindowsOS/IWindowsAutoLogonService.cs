@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 
-namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS
+public interface IWindowsAutoLogonService
 {
-    public interface IWindowsAutoLogonService
-    {
-        void EnableAutoLogon(string username, string domain, string password);
+    void EnableAutoLogon(string username, string domain, string password);
 
-        void DisableAutoLogon();
+    void DisableAutoLogon();
 
-        bool IsAutoLogonEnabled();
-    }
+    bool IsAutoLogonEnabled();
 }

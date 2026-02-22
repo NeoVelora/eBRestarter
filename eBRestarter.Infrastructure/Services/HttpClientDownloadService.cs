@@ -1,60 +1,56 @@
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Domain.Models.Records;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
-namespace eBRestarter.Infrastructure.Services
+namespace eBRestarter.Infrastructure.Services;
+
+public class HttpClientDownloadService : IBrowserDownloadService
 {
-    public class HttpClientDownloadService : IBrowserDownloadService
+    private readonly HttpClient _httpClient;
+
+    public HttpClientDownloadService()
     {
-        private readonly HttpClient _httpClient;
+        _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36");
 
-        public HttpClientDownloadService()
+    }
+
+    public async Task DownloadFileAsync(string url, string destinationPath, IProgress<DownloadProgressStatus> progress, CancellationToken cancellationToken)
+    {
+        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+        var canReportProgress = totalBytes != -1;
+
+        using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+        var buffer = new byte[8192];
+        long totalRead = 0;
+        int bytesRead;
+
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        long lastUpdateTicks = 0;
+        long updateIntervalTicks = Stopwatch.Frequency / 10;
+
+        while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36");
+            await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+            totalRead += bytesRead;
 
-        }
-
-        public async Task DownloadFileAsync(string url, string destinationPath, IProgress<DownloadProgressStatus> progress, CancellationToken cancellationToken)
-        {
-            using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            var totalBytes = response.Content.Headers.ContentLength ?? -1L;
-            var canReportProgress = totalBytes != -1;
-
-            using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-
-            using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
-
-            var buffer = new byte[8192];
-            long totalRead = 0;
-            int bytesRead;
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            long lastUpdateTicks = 0;
-            long updateIntervalTicks = Stopwatch.Frequency / 10;
-
-            while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
+            if (canReportProgress && progress != null)
             {
-                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
-                totalRead += bytesRead;
+                long currentTicks = stopwatch.ElapsedTicks;
 
-                if (canReportProgress && progress != null)
+                if (currentTicks - lastUpdateTicks > updateIntervalTicks || totalRead == totalBytes)
                 {
-                    long currentTicks = stopwatch.ElapsedTicks;
+                    lastUpdateTicks = currentTicks;
 
-                    if (currentTicks - lastUpdateTicks > updateIntervalTicks || totalRead == totalBytes)
-                    {
-                        lastUpdateTicks = currentTicks;
-
-                        var percentage = (double)totalRead / totalBytes * 100;
-                        progress.Report(new DownloadProgressStatus(totalRead, totalBytes, percentage));
-                    }
+                    var percentage = (double)totalRead / totalBytes * 100;
+                    progress.Report(new DownloadProgressStatus(totalRead, totalBytes, percentage));
                 }
             }
         }

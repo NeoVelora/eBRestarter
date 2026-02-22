@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
@@ -30,7 +29,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private CancellationTokenSource? _cts;
         private IBrowser? _currentBrowser;
         private bool _isAutoMode = false;
-        private string _processName = "";
+        private string _processName = string.Empty;
 
         #endregion
 
@@ -181,8 +180,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task ExecuteCleaningLogic()
         {
             var directoriesToDelete = new List<string>();
+
             if (IsDeleteInternetCacheChecked && _browserPaths!.CacheDirs != null && _browserPaths.CacheDirs.Count > 0)
                 directoriesToDelete.AddRange(_browserPaths.CacheDirs);
+
             if (IsDeleteCookiesChecked && _browserPaths!.CookiesDirs != null && _browserPaths.CookiesDirs.Count > 0)
                 directoriesToDelete.AddRange(_browserPaths.CookiesDirs);
 
@@ -239,7 +240,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 BrowserType.Firefox => "firefox",
                 BrowserType.Edge => "msedge",
                 BrowserType.Brave => "brave",
-                _ => ""
+                BrowserType.Vivaldi => "vivaldi",
+                _ => string.Empty
             };
         }
 

@@ -2,36 +2,31 @@ using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using LiveChartsCore;
 using Microsoft.UI.Xaml;
 using LiveChartsCore.SkiaSharpView;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace eBRestarter.Desktop.WinUI3.Services
+namespace eBRestarter.Desktop.WinUI3.Services;
+
+public class ThemeService : IThemeService
 {
-    public class ThemeService : IThemeService
+    #region PublicProperties
+
+    public string CurrentTheme { get; private set; } = "Light";
+
+    #endregion
+
+    #region PublicMethods
+
+    public void SetTheme(string themeName)
     {
-        #region PublicProperties
+        if (App.MainWindoweBRestarter?.Content is FrameworkElement rootElement)
+            rootElement.RequestedTheme = themeName == "Dark" ? ElementTheme.Dark : ElementTheme.Light;
 
-        public string CurrentTheme { get; private set; } = "Light";
+        if (themeName == "Dark")
+            LiveCharts.Configure(config => config.AddDarkTheme());
+        else
+            LiveCharts.Configure(config => config.AddLightTheme());
 
-        #endregion
-
-        #region PublicMethods
-
-        public void SetTheme(string themeName)
-        {
-            if (App.MainWindoweBRestarter?.Content is FrameworkElement rootElement)
-                rootElement.RequestedTheme = themeName == "Dark" ? ElementTheme.Dark : ElementTheme.Light;
-
-            if (themeName == "Dark")
-                LiveCharts.Configure(config => config.AddDarkTheme());
-            else
-                LiveCharts.Configure(config => config.AddLightTheme());
-
-            CurrentTheme = themeName;
-        }
-
-        #endregion
+        CurrentTheme = themeName;
     }
+
+    #endregion
 }

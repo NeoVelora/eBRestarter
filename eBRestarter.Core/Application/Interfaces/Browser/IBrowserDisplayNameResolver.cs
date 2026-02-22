@@ -1,13 +1,12 @@
 using eBRestarter.Core.Domain.Enums;
 
-namespace eBRestarter.Core.Application.Interfaces.Browser
+namespace eBRestarter.Core.Application.Interfaces.Browser;
+
+public interface IBrowserDisplayNameResolver
 {
-    public interface IBrowserDisplayNameResolver
-    {
-        #region PublicMethods
+    #region PublicMethods
 
-        BrowserType GetBrowserTypeFromDisplayName(string displayName, string defaultDisplayText);
+    BrowserType GetBrowserTypeFromDisplayName(string displayName, string defaultDisplayText);
 
-        #endregion
-    }
+    #endregion
 }

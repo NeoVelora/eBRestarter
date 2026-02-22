@@ -1,28 +1,24 @@
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Core.Application.Interfaces.Browser
+namespace eBRestarter.Core.Application.Interfaces.Browser;
+
+public interface IBrowser
 {
-    public interface IBrowser
-    {
-        string DisplayName { get; }
-        string IconPath { get; }
-        string DownloadUrl { get; }
+    string DisplayName { get; }
+    string IconPath { get; }
+    string DownloadUrl { get; }
 
-        BrowserType Type { get; }
-        string BrowserVersion { get; }
-        bool IsInstalled { get; }
-        void Start(string url, string arguments = "");
-        void Close();
+    BrowserType Type { get; }
+    string BrowserVersion { get; }
+    bool IsInstalled { get; }
+    void Start(string url, string arguments = "");
+    void Close();
 
-        BrowserPaths GetPaths();
+    BrowserPaths GetPaths();
 
-        bool IsExtensionInstalled(string extensionId);
-        string ExtensionInstallUrl { get; }
+    bool IsExtensionInstalled(string extensionId);
+    string ExtensionInstallUrl { get; }
 
 
-    }
 }

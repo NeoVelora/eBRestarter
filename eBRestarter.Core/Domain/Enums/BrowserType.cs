@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace eBRestarter.Core.Domain.Enums;
 
-namespace eBRestarter.Core.Domain.Enums
+public enum BrowserType
 {
-    public enum BrowserType
-    {
-        Brave,
-        Chrome,
-        Edge,
-        Firefox,
-        Vivaldi
-    }
+    Brave,
+    Chrome,
+    Edge,
+    Firefox,
+    Vivaldi
 }

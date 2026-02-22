@@ -1,9 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using eBRestarter.Core.Application.Interfaces.Authentication;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
@@ -52,6 +49,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             StatusColor = "{ThemeResource SystemFillColorCautionBrush}";
 
             var credentials = _credentialStore.ImportFromLegacyFile(ImportedFilePath);
+
             if (credentials == null)
             {
                 StatusMessage = "Fehler beim Lesen der Datei (Format ungültig).";
@@ -96,10 +94,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             StatusMessage = "Datei erkannt. Bereit zum Import.";
             StatusColor = "{ThemeResource TextFillColorPrimaryBrush}";
             FileStatusIcon = "ms-appx:///Resources/Visuals/Icons/Intersection/approval.png";
-        }
-
-        public void HandleFileSelect()
-        {
         }
 
         #endregion

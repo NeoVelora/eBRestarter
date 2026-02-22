@@ -1,26 +1,22 @@
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.Windows.Globalization;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Desktop.WinUI3.Services
+namespace eBRestarter.Desktop.WinUI3.Services;
+
+public class LanguageService : ILanguageService
 {
-    public class LanguageService : ILanguageService
+    #region PublicProperties
+
+    public string CurrentLanguageCode => ApplicationLanguages.PrimaryLanguageOverride;
+
+    #endregion
+
+    #region PublicMethods
+
+    public void SetLanguage(string languageCode)
     {
-        #region PublicProperties
-
-        public string CurrentLanguageCode => ApplicationLanguages.PrimaryLanguageOverride;
-
-        #endregion
-
-        #region PublicMethods
-
-        public void SetLanguage(string languageCode)
-        {
-            ApplicationLanguages.PrimaryLanguageOverride = languageCode;
-        }
-
-        #endregion
+        ApplicationLanguages.PrimaryLanguageOverride = languageCode;
     }
+
+    #endregion
 }

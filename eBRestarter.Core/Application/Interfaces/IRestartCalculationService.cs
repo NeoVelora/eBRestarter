@@ -1,13 +1,10 @@
-using System;
+namespace eBRestarter.Core.Application.Interfaces;
 
-namespace eBRestarter.Core.Application.Interfaces
+public interface IRestartCalculationService
 {
-    public interface IRestartCalculationService
-    {
-        #region PublicMethods
+    #region PublicMethods
 
-        DateTime GetNextRestartDate(int intervalDays, int restartClockTime);
+    DateTime GetNextRestartDate(int intervalDays, int restartClockTime);
 
-        #endregion
-    }
+    #endregion
 }

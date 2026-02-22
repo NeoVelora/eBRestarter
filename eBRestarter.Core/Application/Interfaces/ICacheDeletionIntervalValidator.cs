@@ -1,11 +1,10 @@
-namespace eBRestarter.Core.Application.Interfaces
+namespace eBRestarter.Core.Application.Interfaces;
+
+public interface ICacheDeletionIntervalValidator
 {
-    public interface ICacheDeletionIntervalValidator
-    {
-        #region PublicMethods
+    #region PublicMethods
 
-        bool IsValidIntervalDays(int days);
+    bool IsValidIntervalDays(int days);
 
-        #endregion
-    }
+    #endregion
 }

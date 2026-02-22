@@ -1,11 +1,10 @@
-namespace eBRestarter.Core.Application.Interfaces.Authentication
+namespace eBRestarter.Core.Application.Interfaces.Authentication;
+
+public interface ICredentialValidationService
 {
-    public interface ICredentialValidationService
-    {
-        #region PublicMethods
+    #region PublicMethods
 
-        bool ValidateCredentials(string username, string domain, string password);
+    bool ValidateCredentials(string username, string domain, string password);
 
-        #endregion
-    }
+    #endregion
 }

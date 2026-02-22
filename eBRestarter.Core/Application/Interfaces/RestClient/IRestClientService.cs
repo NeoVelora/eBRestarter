@@ -1,14 +1,10 @@
 using eBRestarter.Core.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Core.Application.Interfaces.RestClient
+namespace eBRestarter.Core.Application.Interfaces.RestClient;
+
+public interface IRestClientService
 {
-    public interface IRestClientService
-    {
-        Task<ApiResponse> ExecuteGetAsync(ApiRequest request);
+    Task<ApiResponse> ExecuteGetAsync(ApiRequest request);
 
-        ApiResponse ExecuteGet(ApiRequest request);
-    }
+    ApiResponse ExecuteGet(ApiRequest request);
 }

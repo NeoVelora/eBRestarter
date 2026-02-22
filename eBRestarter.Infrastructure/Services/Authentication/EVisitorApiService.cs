@@ -3,45 +3,41 @@ using eBRestarter.Core.Application.Interfaces.RestClient;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models;
 using eBRestarter.Infrastructure.Constants;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Infrastructure.Services.Authentication
+namespace eBRestarter.Infrastructure.Services.Authentication;
+
+public class EVisitorApiService : IApiAuthenticationService
 {
-    public class EVisitorApiService : IApiAuthenticationService
+    private readonly IRestClientService _restClient;
+
+    public EVisitorApiService(IRestClientService restClient)
     {
-        private readonly IRestClientService _restClient;
+        _restClient = restClient;
+    }
 
-        public EVisitorApiService(IRestClientService restClient)
+    public async Task<(bool IsValid, string Message)> VerifyCredentialsAsync(string username, string apiKey)
+    {
+        var request = new ApiRequest
         {
-            _restClient = restClient;
+            Url = ApiWebLinks.HourlyEarnings,
+            Username = username,
+            Password = apiKey,
+            TimeoutSeconds = 10
+        };
+
+        var response = await _restClient.ExecuteGetAsync(request);
+
+        if (response.IsSuccess)
+        {
+            return (true, "Verbindung erfolgreich!");
         }
-
-        public async Task<(bool IsValid, string Message)> VerifyCredentialsAsync(string username, string apiKey)
+        else if (response.StatusCode == ResponseCode.HttpRE401)
         {
-            var request = new ApiRequest
-            {
-                Url = ApiWebLinks.HourlyEarnings,
-                Username = username,
-                Password = apiKey,
-                TimeoutSeconds = 10
-            };
-
-            var response = await _restClient.ExecuteGetAsync(request);
-
-            if (response.IsSuccess)
-            {
-                return (true, "Verbindung erfolgreich!");
-            }
-            else if (response.StatusCode == ResponseCode.HttpRE401)
-            {
-                return (false, "Benutzername oder API-Schlüssel falsch.");
-            }
-            else
-            {
-                return (false, $"Fehler: {response.ErrorMessage}");
-            }
+            return (false, "Benutzername oder API-Schlüssel falsch.");
+        }
+        else
+        {
+            return (false, $"Fehler: {response.ErrorMessage}");
         }
     }
 }

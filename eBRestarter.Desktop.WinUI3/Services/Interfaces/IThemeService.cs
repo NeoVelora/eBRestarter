@@ -1,21 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace eBRestarter.Desktop.WinUI3.Services.Interfaces;
 
-namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
+public interface IThemeService
 {
-    public interface IThemeService
-    {
-        #region PublicProperties
+    #region PublicProperties
 
-        string CurrentTheme { get; }
+    string CurrentTheme { get; }
 
-        #endregion
+    #endregion
 
-        #region PublicMethods
+    #region PublicMethods
 
-        void SetTheme(string themeName);
+    void SetTheme(string themeName);
 
-        #endregion
-    }
+    #endregion
 }

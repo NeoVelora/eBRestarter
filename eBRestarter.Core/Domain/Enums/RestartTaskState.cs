@@ -1,14 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace eBRestarter.Core.Domain.Enums;
 
-namespace eBRestarter.Core.Domain.Enums
+public enum RestartTaskState
 {
-    public enum RestartTaskState
-    {
-        Idle,
-        InitialDelay,
-        Running,
-        Cooldown
-    }
+    Idle,
+    InitialDelay,
+    Running,
+    Cooldown
 }

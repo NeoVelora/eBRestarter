@@ -1,21 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace eBRestarter.Desktop.WinUI3.Services.Interfaces;
 
-namespace eBRestarter.Desktop.WinUI3.Services.Interfaces
+public interface ILanguageService
 {
-    public interface ILanguageService
-    {
-        #region PublicProperties
+    #region PublicProperties
 
-        string CurrentLanguageCode { get; }
+    string CurrentLanguageCode { get; }
 
-        #endregion
+    #endregion
 
-        #region PublicMethods
+    #region PublicMethods
 
-        void SetLanguage(string languageCode);
+    void SetLanguage(string languageCode);
 
-        #endregion
-    }
+    #endregion
 }

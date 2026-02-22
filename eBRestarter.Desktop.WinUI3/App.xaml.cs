@@ -41,15 +41,16 @@ namespace eBRestarter.Desktop.WinUI3
                  services.AddApplicationServices();
                  services.AddNavigationService();
                  services.AddDialoglServiceExtensions();
+                 services.AddThemeService();
                  services.AddViewModels();
 
-                 services.AddSingleton<IThemeService, ThemeService>();
                  services.AddSingleton<ILanguageService, LanguageService>();
                  services.AddSingleton<ILocalizationService, LocalizationService>();
              });
 
-        protected override void OnLaunched(LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
+
             MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
 
             AppDispatcherQueue = MainWindoweBRestarter.DispatcherQueue;

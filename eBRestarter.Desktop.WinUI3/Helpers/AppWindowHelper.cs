@@ -1,30 +1,24 @@
 using Microsoft.UI.Xaml;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace eBRestarter.Desktop.WinUI3.Helpers
+namespace eBRestarter.Desktop.WinUI3.Helpers;
+
+public static class AppWindowHelper
 {
-    public static class AppWindowHelper
+    #region PublicMethods
+
+    public static void ConfigureTitleBarColors(this Window window)
     {
-        #region PublicMethods
+        var appWindow = window.AppWindow;
+        var titleBar = appWindow.TitleBar;
 
-        public static void ConfigureTitleBarColors(this Window window)
-        {
-            var appWindow = window.AppWindow;
-            var titleBar = appWindow.TitleBar;
+        var bg = Microsoft.UI.ColorHelper.FromArgb(255, 32, 37, 54);
 
-            var bg = Microsoft.UI.ColorHelper.FromArgb(255, 32, 37, 54);
+        titleBar.ExtendsContentIntoTitleBar = true;
+        titleBar.BackgroundColor = bg;
 
-            titleBar.ExtendsContentIntoTitleBar = true;
-            titleBar.BackgroundColor = bg;
-
-            window.ExtendsContentIntoTitleBar = true;
-            window.SetTitleBar(null);
-        }
-
-        #endregion
+        window.ExtendsContentIntoTitleBar = true;
+        window.SetTitleBar(null);
     }
+
+    #endregion
 }

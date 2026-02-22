@@ -1,49 +1,46 @@
 using eBRestarter.Core.Application.Interfaces.Security;
-using System;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace eBRestarter.Infrastructure.Services.WindowsOS.Security
+namespace eBRestarter.Infrastructure.Services.WindowsOS.Security;
+
+public class WindowsEncryptionService : IEncryptionService
 {
-    public class WindowsEncryptionService : IEncryptionService
+    private static readonly byte[] _entropy = Encoding.UTF8.GetBytes("eBRestarter_Secure_Entropy_2024");
+
+    public string Encrypt(string plainText)
     {
-        private static readonly byte[] _entropy = Encoding.UTF8.GetBytes("eBRestarter_Secure_Entropy_2024");
+        if (string.IsNullOrEmpty(plainText)) return string.Empty;
 
-        public string Encrypt(string plainText)
+        try
         {
-            if (string.IsNullOrEmpty(plainText)) return string.Empty;
+            var plainBytes = Encoding.UTF8.GetBytes(plainText);
 
-            try
-            {
-                var plainBytes = Encoding.UTF8.GetBytes(plainText);
+            var encryptedBytes = ProtectedData.Protect(plainBytes, _entropy, DataProtectionScope.CurrentUser);
 
-                var encryptedBytes = ProtectedData.Protect(plainBytes, _entropy, DataProtectionScope.CurrentUser);
-
-                return Convert.ToBase64String(encryptedBytes);
-            }
-            catch
-            {
-                return string.Empty;
-            }
+            return Convert.ToBase64String(encryptedBytes);
         }
-
-        public string Decrypt(string cipherText)
+        catch
         {
-            if (string.IsNullOrEmpty(cipherText)) return string.Empty;
+            return string.Empty;
+        }
+    }
 
-            try
-            {
-                var encryptedBytes = Convert.FromBase64String(cipherText);
+    public string Decrypt(string cipherText)
+    {
+        if (string.IsNullOrEmpty(cipherText)) return string.Empty;
 
-                var plainBytes = ProtectedData.Unprotect(encryptedBytes, _entropy, DataProtectionScope.CurrentUser);
+        try
+        {
+            var encryptedBytes = Convert.FromBase64String(cipherText);
 
-                return Encoding.UTF8.GetString(plainBytes);
-            }
-            catch
-            {
-                return string.Empty;
-            }
+            var plainBytes = ProtectedData.Unprotect(encryptedBytes, _entropy, DataProtectionScope.CurrentUser);
+
+            return Encoding.UTF8.GetString(plainBytes);
+        }
+        catch
+        {
+            return string.Empty;
         }
     }
 }

@@ -1,58 +1,56 @@
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 
-namespace eBRestarter.Infrastructure.Services.WindowsOS
+namespace eBRestarter.Infrastructure.Services.WindowsOS;
+
+public class WindowsBrowserService : IBrowserService
 {
-    public class WindowsBrowserService : IBrowserService
+    private readonly IBrowserFactory _browserFactory;
+
+    public WindowsBrowserService(IBrowserFactory browserFactory)
     {
-        private readonly IBrowserFactory _browserFactory;
+        _browserFactory = browserFactory ?? throw new ArgumentNullException(nameof(browserFactory));
+    }
 
-        public WindowsBrowserService(IBrowserFactory browserFactory)
+    public async Task<IEnumerable<BrowserInfo>> GetInstalledBrowsersAsync()
+    {
+        var browsers = new List<BrowserInfo>();
+
+        foreach (BrowserType type in Enum.GetValues<BrowserType>())
         {
-            _browserFactory = browserFactory ?? throw new ArgumentNullException(nameof(browserFactory));
-        }
-
-        public async Task<IEnumerable<BrowserInfo>> GetInstalledBrowsersAsync()
-        {
-            var browsers = new List<BrowserInfo>();
-
-            foreach (BrowserType type in Enum.GetValues<BrowserType>())
+            try
             {
-                try
-                {
-                    IBrowser browserLogic = _browserFactory.Create(type);
+                IBrowser browserLogic = _browserFactory.Create(type);
 
-                    bool isInstalled = browserLogic.IsInstalled;
-                    string version = isInstalled ? browserLogic.BrowserVersion : "Nicht installiert";
-                    string displayName = browserLogic.DisplayName;
-                    string iconPath = browserLogic.IconPath;
-                    string downloadUrl = browserLogic.DownloadUrl;
-                    var browserInfo = new BrowserInfo
-                    {
-                        Type = type,
-                        Name = displayName,
-                        IsInstalled = isInstalled,
-                        Version = version,
-                        IconPath = iconPath,
-                        DownloadUrl = downloadUrl,
-                    };
+                bool isInstalled = browserLogic.IsInstalled;
+                string version = isInstalled ? browserLogic.BrowserVersion : "Nicht installiert";
+                string displayName = browserLogic.DisplayName;
+                string iconPath = browserLogic.IconPath;
+                string downloadUrl = browserLogic.DownloadUrl;
+                var browserInfo = new BrowserInfo
+                {
+                    Type = type,
+                    Name = displayName,
+                    IsInstalled = isInstalled,
+                    Version = version,
+                    IconPath = iconPath,
+                    DownloadUrl = downloadUrl,
+                };
 
-                    browsers.Add(browserInfo);
-                }
-                catch (NotSupportedException)
-                {
-                    continue;
-                }
-                catch (Exception ex)
-                {
-                }
+                browsers.Add(browserInfo);
             }
-
-            return await Task.FromResult(browsers);
+            catch (NotSupportedException)
+            {
+                continue;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
         }
+
+        return await Task.FromResult(browsers);
     }
 }

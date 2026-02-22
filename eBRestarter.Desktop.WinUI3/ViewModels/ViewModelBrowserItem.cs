@@ -12,6 +12,7 @@ using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Xaml.Media;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -148,12 +149,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private void RefreshBrowserVersionText()
         {
-            if (_browserInfo.IsInstalled && IsDownloading is false)
+            if (_browserInfo.IsInstalled && !IsDownloading)
             {
                 string prefix = _localizationService.GetString("Browser_VersionPrefix");
                 BrowserVersionText = $"{prefix} {_browserInfo.Version}";
             }
-            else if (IsDownloading is true)
+            else if (IsDownloading)
             {
                 BrowserVersionText = string.Empty;
             }
@@ -191,7 +192,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 if (_os.WindowsFileSystemService.FileExists(path))
                     _os.WindowsFileSystemService.DeleteFile(path);
             }
-            catch (Exception) { }
+            catch (Exception ex) { Debug.WriteLine(ex); }
         }
 
         private async Task ResetDownloadState()

@@ -1,21 +1,17 @@
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS
+namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+
+public interface IWindowsRegistryService
 {
-    public interface IWindowsRegistryService
-    {
-        void SetCurrentUserValue(string subKey, string name, object value);
-        void DeleteCurrentUserValue(string subKey, string name);
-        void SetLocalMachineValue(string subKey, string name, object value, RegistryValueKind kind);
+    void SetCurrentUserValue(string subKey, string name, object value);
+    void DeleteCurrentUserValue(string subKey, string name);
+    void SetLocalMachineValue(string subKey, string name, object value, RegistryValueKind kind);
 
 
-        object? GetCurrentUserValue(string subKey, string valueName);
+    object? GetCurrentUserValue(string subKey, string valueName);
 
-        Dictionary<string, object> GetCurrentUserValues(string subKey);
+    Dictionary<string, object> GetCurrentUserValues(string subKey);
 
-        object? GetLocalMachineValue(string subKey, string valueName);
-    }
+    object? GetLocalMachineValue(string subKey, string valueName);
 }

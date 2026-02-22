@@ -85,9 +85,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             string prefixSent = _localizationService.GetString("Network_Sent");
 
             var activeIds = stats.Select(networkStat => $"{prefixCard}: {networkStat.Name}").ToList();
+
             var cardsToRemove = NetworkCards.Where(card => !activeIds.Contains(card.AdapterName)).ToList();
+
             foreach (var cardToRemove in cardsToRemove)
+            {
                 NetworkCards.Remove(cardToRemove);
+            }
 
             foreach (var stat in stats)
             {
@@ -127,16 +131,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             bool isAvailable = false;
             List<NetworkStats>? currentStats = null;
+
             try
             {
                 isAvailable = _networkService.IsNetworkAvailable();
+
                 if (isAvailable)
-                    currentStats = _networkService.GetActiveInterfaces().ToList();
+                    currentStats = [.. _networkService.GetActiveInterfaces()];
             }
             catch (Exception)
             {
                 isAvailable = false;
             }
+
             _dispatcherQueue.TryEnqueue(() => ApplyDataToUi(isAvailable, currentStats));
         }
 
@@ -146,12 +153,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             string notAvail = _localizationService.GetString("Network_NotAvailable");
             string prefixRec = _localizationService.GetString("Network_Received");
             string prefixSent = _localizationService.GetString("Network_Sent");
+
             string fullName = $"{prefixCard}: {notAvail}";
 
             if (NetworkCards.Count == 1 && NetworkCards[0].AdapterName == fullName)
                 return;
 
             NetworkCards.Clear();
+
             NetworkCards.Add(new NetworkCardDisplayModel
             {
                 AdapterName = fullName,

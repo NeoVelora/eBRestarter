@@ -1,16 +1,14 @@
 using eBRestarter.Core.Domain.Models.Records.Config;
-using System;
 
-namespace eBRestarter.Core.Application.Interfaces
+namespace eBRestarter.Core.Application.Interfaces;
+
+public interface IBrowserCleanupScheduleService
 {
-    public interface IBrowserCleanupScheduleService
-    {
-        #region PublicMethods
+    #region PublicMethods
 
-        bool ShouldRunCleanupNow(AppConfig config);
+    bool ShouldRunCleanupNow(AppConfig config);
 
-        DateTime GetNextCleanupDateAfterRun(DateTime fromDate, int intervalDays);
+    DateTime GetNextCleanupDateAfterRun(DateTime fromDate, int intervalDays);
 
-        #endregion
-    }
+    #endregion
 }

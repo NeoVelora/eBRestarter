@@ -4,16 +4,15 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
-namespace eBRestarter.Core.Application.Interfaces.Authentication
+namespace eBRestarter.Core.Application.Interfaces.Authentication;
+
+public interface ICredentialStore
 {
-    public interface ICredentialStore
-    {
-        void SaveCredentials(ApiCredentials credentials);
+    void SaveCredentials(ApiCredentials credentials);
 
-        ApiCredentials? LoadCredentials();
+    ApiCredentials? LoadCredentials();
 
-        void ClearCredentials();
+    void ClearCredentials();
 
-        ApiCredentials? ImportFromLegacyFile(string filePath);
-    }
+    ApiCredentials? ImportFromLegacyFile(string filePath);
 }
