@@ -41,7 +41,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IRestartTaskDisplayStateService _restartTaskDisplayStateService;
         private IBrowser? _currentBrowser;
         private RestartTaskState _currentState = RestartTaskState.Idle;
-        private readonly bool _isTestMode = true;
         private int _pauseSeconds = 20;
         private int _runtimeSeconds = 3600;
         private readonly int _testRuntimeSeconds = 20;
@@ -86,7 +85,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ChosenBrowser = _localizationService.GetString("Task_DefaultBrowser");
             StatusInfoText = _localizationService.GetString("Task_StatusReady");
 
-            LoadInitialData();
+            LoadInitialConfigData();
             WeakReferenceMessenger.Default.RegisterAll(this);
         }
 
@@ -101,7 +100,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             if (IsActive)
             {
-                LoadInitialData();
+                LoadInitialConfigData();
                 StartLoop();
             }
             else
@@ -134,24 +133,37 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private BrowserType GetBrowserTypeFromString(string browserName)
         {
             string defaultText = _localizationService.GetString("Task_DefaultBrowser");
+
             return _browserDisplayNameResolver.GetBrowserTypeFromDisplayName(browserName, defaultText);
         }
 
-        private async void HandleStateTransition()
+        private async Task HandleStateTransitionAsync()
         {
             switch (_currentState)
             {
                 case RestartTaskState.InitialDelay:
+
                     SwitchState(RestartTaskState.Running);
+
                     break;
 
                 case RestartTaskState.Running:
-                    await CheckAndExecuteBrowserCleanup();
+
+#if DEBUG
+                    // Wird nur ausgeführt, wenn du in Visual Studio auf "Debug" stellst
+                    await CheckAndExecuteBrowserCleanupTest();
+#else
+            
+            await CheckAndExecuteBrowserCleanup();
+#endif
+
                     SwitchState(RestartTaskState.Cooldown);
                     break;
 
                 case RestartTaskState.Cooldown:
+
                     SwitchState(RestartTaskState.Running);
+
                     break;
             }
         }
@@ -175,7 +187,18 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             _configService.SaveConfig(appConfig);
 
-            LoadInitialData();
+            LoadInitialConfigData();
+        }
+
+        private async Task CheckAndExecuteBrowserCleanupTest()
+        {
+
+            CloseCurrentBrowser();
+
+            await Task.Delay(1000);
+
+            await _dialogService.ShowDeleteBrowserContentDialogAsync(autoStart: true);
+
         }
 
         private void LaunchBrowser()
@@ -200,35 +223,33 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        private void LoadInitialData()
+        private void LoadInitialConfigData()
         {
             var appConfig = _configService.LoadConfig();
 
-            var state = _restartTaskDisplayStateService.GetInitialState(appConfig);
+            var currentConfigState = _restartTaskDisplayStateService.GetInitialState(appConfig);
 
-            Username = state.Username;
+            Username = currentConfigState.Username;
+            ChosenBrowser = currentConfigState.ChoosenBrowser;
 
-            ChosenBrowser = state.ChoosenBrowser;
+            _pauseSeconds = currentConfigState.PauseSeconds;
 
-            if (_isTestMode)
-            {
-                _runtimeSeconds = _testRuntimeSeconds;
-                _pauseSeconds = 5;
-                StatusInfoText = $"[TEST] Runtime: {_runtimeSeconds}s";
-            }
-            else
-            {
-                _runtimeSeconds = state.RuntimeSeconds;
-                _pauseSeconds = state.PauseSeconds;
-            }
+#if DEBUG
+            // Dieser Code wird NUR kompiliert, wenn du oben in Visual Studio "Debug" ausgewählt hast
+            _runtimeSeconds = _testRuntimeSeconds;
+            StatusInfoText = $"[TEST] Runtime: {_runtimeSeconds}s";
+#else
+    
+    _runtimeSeconds = currentConfigState.RuntimeSeconds;
+#endif
 
-            DeleteBrowserContentIsActive = state.DeleteBrowserContentIsActive;
-            DeleteIsActivatedMessage = state.DeleteIsActivatedMessage;
-            NextDeletionProcessMessage = state.NextDeletionProcessMessage;
-            NextDeletionProcessDateMessage = state.NextDeletionProcessDateMessage;
+            DeleteBrowserContentIsActive = currentConfigState.DeleteBrowserContentIsActive;
+            DeleteIsActivatedMessage = currentConfigState.DeleteIsActivatedMessage;
+            NextDeletionProcessMessage = currentConfigState.NextDeletionProcessMessage;
+            NextDeletionProcessDateMessage = currentConfigState.NextDeletionProcessDateMessage;
         }
 
-        private void OnTimerTick(object? sender, object e)
+        private async void OnTimerTick(object? sender, object e)
         {
             if (SecondsRemaining > 0)
             {
@@ -237,7 +258,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             else
             {
-                HandleStateTransition();
+                _uiTimer?.Stop();
+
+                await HandleStateTransitionAsync();
+
+                _uiTimer?.Start();
             }
         }
 
@@ -253,7 +278,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 _uiTimer.Tick += OnTimerTick;
             }
 
+
             SwitchState(RestartTaskState.InitialDelay);
+
             _uiTimer.Start();
         }
 
@@ -276,6 +303,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             switch (_currentState)
             {
+
                 case RestartTaskState.Idle:
                     StatusInfoText = _localizationService.GetString("Task_StatusStopped");
                     SecondsRemaining = 0;

@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Domain.Models.Records;
-using Windows.ApplicationModel.Resources;
+using Microsoft.Windows.ApplicationModel.Resources;
 using System.Collections.Generic;
 
 namespace eBRestarter.Desktop.WinUI3.Services;
@@ -9,7 +9,9 @@ public class LocalizationService : ILocalizationService
 {
     #region FieldsAndInjectedServices
 
-    private readonly ResourceLoader _resourceLoader;
+    private readonly ResourceManager _resourceManager;
+    private readonly ResourceContext _resourceContext;
+    private readonly ResourceMap _resourceMap;
 
     #endregion
 
@@ -17,7 +19,19 @@ public class LocalizationService : ILocalizationService
 
     public LocalizationService()
     {
-        _resourceLoader = new ResourceLoader();
+        _resourceManager = new ResourceManager();
+        
+        _resourceContext = _resourceManager.CreateResourceContext();
+        
+        string currentLanguage = Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride;
+        if (string.IsNullOrEmpty(currentLanguage))
+        {
+            currentLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
+        }
+        
+        _resourceContext.QualifierValues["Language"] = currentLanguage;
+
+        _resourceMap = _resourceManager.MainResourceMap;
     }
 
     #endregion
@@ -26,8 +40,15 @@ public class LocalizationService : ILocalizationService
 
     public string GetString(string key)
     {
-        var result = _resourceLoader.GetString(key);
-        return string.IsNullOrEmpty(result) ? $"[{key}]" : result;
+        try
+        {
+            var result = _resourceMap.GetValue($"Resources/{key}", _resourceContext);
+            return result?.ValueAsString ?? $"[{key}]";
+        }
+        catch
+        {
+            return $"[{key}]";
+        }
     }
 
     public IEnumerable<LanguageOption> GetAvailableLanguages()

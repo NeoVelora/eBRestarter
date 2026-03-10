@@ -3,7 +3,10 @@ using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.Security;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using Microsoft.Extensions.Logging;
+using System;
+using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace eBRestarter.Infrastructure.Services.Config;
 
@@ -16,7 +19,8 @@ public class EVisitorConfigService : IEVisitorConfigService
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        TypeInfoResolver = AppConfigJsonContext.Default
     };
 
     public EVisitorConfigService(IPathService pathService, IEncryptionService encryptionService, ILogger<EVisitorConfigService> logger)
@@ -110,4 +114,9 @@ public class EVisitorConfigService : IEVisitorConfigService
         var defaultConfig = new AppConfig();
         SaveConfig(defaultConfig);
     }
+}
+
+[JsonSerializable(typeof(AppConfig))]
+internal partial class AppConfigJsonContext : JsonSerializerContext
+{
 }

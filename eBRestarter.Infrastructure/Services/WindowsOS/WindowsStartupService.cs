@@ -2,7 +2,9 @@ using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using Windows.ApplicationModel;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS;
 
@@ -127,56 +129,33 @@ public class WindowsStartupService : IWindowsStartupManagerService
     }
 
 
-    public async Task EnableAutoStartAsync()
+    public Task EnableAutoStartAsync()
+    {
+        EnableAutoStart();
+        return Task.CompletedTask;
+    }
+
+    public Task DisableAutoStartAsync()
+    {
+        DisableAutoStart();
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> IsAutoStartEnabledAsync()
     {
         try
         {
-            var startupTask = await StartupTask.GetAsync(StartupTaskId);
+            var entries = GetStartupEntries();
+            bool isEnabled = entries.ContainsKey("eBRestarter");
 
-            if (startupTask.State == StartupTaskState.Disabled)
-            {
-                var newState = await startupTask.RequestEnableAsync();
-
-                if (newState == StartupTaskState.Enabled)
-                    _logger.LogInformation("Autostart successfully activated.");
-                else
-                    _logger.LogWarning("Autostart activation failed (User denied?).");
-            }
-            else
-            {
-                _logger.LogInformation($"Autostart is already active or disabled by user. Status: {startupTask.State}");
-            }
+            return Task.FromResult(isEnabled);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error activating autostart via StartupTask.");
-        }
-    }
-
-    public async Task DisableAutoStartAsync()
-    {
-        try
-        {
-            var startupTask = await StartupTask.GetAsync(StartupTaskId);
-            startupTask.Disable();
-            _logger.LogInformation("Autostart successfully deactivated.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deactivating autostart.");
-        }
-    }
-
-    public async Task<bool> IsAutoStartEnabledAsync()
-    {
-        try
-        {
-            var startupTask = await StartupTask.GetAsync(StartupTaskId);
-            return startupTask.State == StartupTaskState.Enabled;
-        }
-        catch (Exception)
-        {
-            return false;
+            _logger.LogError(ex, "Fehler beim Prüfen des Autostart-Status.");
+            return Task.FromResult(false);
         }
     }
 }
+
+

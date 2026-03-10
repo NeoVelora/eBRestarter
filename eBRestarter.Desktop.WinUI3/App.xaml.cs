@@ -6,12 +6,14 @@ using eBRestarter.Desktop.WinUI3.Services;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.Views;
 using eBRestarter.Infrastructure.DependencyInjection;
+using eBRestarter.Infrastructure.Services.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.Globalization;
 using System;
+
 
 namespace eBRestarter.Desktop.WinUI3
 {
@@ -35,7 +37,7 @@ namespace eBRestarter.Desktop.WinUI3
                  cfg.SetBasePath(AppContext.BaseDirectory);
                  cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
              })
-             .ConfigureServices((ctx, services) =>
+             .ConfigureServices((_, services) =>
              {
                  services.AddInfrastructureServices();
                  services.AddApplicationServices();
@@ -50,20 +52,34 @@ namespace eBRestarter.Desktop.WinUI3
 
         protected override async void OnLaunched(LaunchActivatedEventArgs args)
         {
-
-            MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
-
-            AppDispatcherQueue = MainWindoweBRestarter.DispatcherQueue;
+            if (await WinUI3XamlPreview.Preview.IsXamlPreviewLaunched())
+            {
+                return;
+            }
 
             try
             {
                 var configService = AppHost.Services.GetRequiredService<IEVisitorConfigService>();
-
                 var config = configService.LoadConfig();
+
+                int intervalDays = config.Browser?.DeleteBrowserCacheIntervalDays ?? 0;
+                DateTime nextDate = config.Browser?.NextBrowserDeleteCacheDate ?? DateTime.MinValue;
+
+                if (nextDate == DateTime.Today && intervalDays > 0)
+                    nextDate = DateTime.Today.AddDays(intervalDays);
+
+                config.Browser?.NextBrowserDeleteCacheDate = nextDate;
+                configService.SaveConfig(config);
 
                 string languageCode = config.Settings.Language == 0 ? "de-DE" : "en-US";
 
                 ApplicationLanguages.PrimaryLanguageOverride = languageCode;
+
+                System.Globalization.CultureInfo culture = new System.Globalization.CultureInfo(languageCode);
+                System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+                System.Threading.Thread.CurrentThread.CurrentUICulture = culture;
+                System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+                System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
             }
             catch (Exception)
             {
@@ -74,17 +90,18 @@ namespace eBRestarter.Desktop.WinUI3
             {
                 var configService = AppHost.Services.GetRequiredService<IEVisitorConfigService>();
                 var themeService = AppHost.Services.GetRequiredService<IThemeService>();
-
                 var config = configService.LoadConfig();
 
                 string themeToSet = string.IsNullOrEmpty(config.Settings.Theme) ? "Light" : config.Settings.Theme;
-
                 themeService.SetTheme(themeToSet);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Fehler beim Laden des Themes: {ex.Message}");
             }
+
+            MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
+            AppDispatcherQueue = MainWindoweBRestarter.DispatcherQueue;
 
             MainWindoweBRestarter.Activate();
         }
