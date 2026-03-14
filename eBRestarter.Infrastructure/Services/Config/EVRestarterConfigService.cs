@@ -13,6 +13,7 @@ namespace eBRestarter.Infrastructure.Services.Config;
 public class EVisitorConfigService : IEVisitorConfigService
 {
     private readonly IPathService _pathService;
+    private readonly IPathProvider _pathProvider;
     private readonly IEncryptionService _encryptionService;
     private readonly ILogger<EVisitorConfigService> _logger;
 
@@ -23,10 +24,11 @@ public class EVisitorConfigService : IEVisitorConfigService
         TypeInfoResolver = AppConfigJsonContext.Default
     };
 
-    public EVisitorConfigService(IPathService pathService, IEncryptionService encryptionService, ILogger<EVisitorConfigService> logger)
+    public EVisitorConfigService(IPathService pathService, IPathProvider pathProvider, IEncryptionService encryptionService, ILogger<EVisitorConfigService> logger)
     {
         _encryptionService = encryptionService;
         _pathService = pathService;
+        _pathProvider = pathProvider;
         _logger = logger;
     }
 

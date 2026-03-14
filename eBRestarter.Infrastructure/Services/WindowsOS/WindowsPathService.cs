@@ -6,18 +6,24 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS;
 [SupportedOSPlatform("windows")]
 public class WindowsPathService : IPathService
 {
+    private readonly IPathProvider _pathProvider;
     private const string AppFolderName = "eBRestarter";
     private const string ConfigFileName = "eBRestarterConfig.json";
 
+    public WindowsPathService(IPathProvider pathProvider)
+    {
+        _pathProvider = pathProvider;
+    }
+
     public string GetAppDataPath()
     {
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string localAppData = _pathProvider.GetLocalAppDataDirectory();
         return Path.Combine(localAppData, "Skylar", AppFolderName);
     }
 
     public string GetDownloadsPath()
     {
-        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        return Path.Combine(_pathProvider.GetUserProfileDirectory(), "Downloads");
     }
 
     public string GetConfigFilePath()

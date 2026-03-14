@@ -1,6 +1,8 @@
+using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Authentication;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Models.Records;
+using System.IO;
 using System.Text.Json;
 
 namespace eBRestarter.Infrastructure.Services.Authentication;
@@ -8,13 +10,15 @@ namespace eBRestarter.Infrastructure.Services.Authentication;
 public class JsonCredentialStore : ICredentialStore
 {
     private readonly IWindowsFileSystemService _fileSystem;
+    private readonly IPathProvider _pathProvider;
     private readonly string _storagePath;
 
-    public JsonCredentialStore(IWindowsFileSystemService fileSystem)
+    public JsonCredentialStore(IWindowsFileSystemService fileSystem, IPathProvider pathProvider)
     {
         _fileSystem = fileSystem;
+        _pathProvider = pathProvider;
 
-        var appData = fileSystem.GetEnvironmentPath("LocalAppData");
+        var appData = _pathProvider.GetLocalAppDataDirectory();
 
         _storagePath = Path.Combine(appData, "Skylar", "eBRestarter", "eBRestarterConfig.json");
     }

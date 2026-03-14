@@ -47,8 +47,10 @@ public static class InfrastructureServiceRegistration
         services.AddSingleton<IWindowsStartupManagerService, WindowsStartupService>();
 
         services.AddSingleton<IWindowsAutoLogonService, WindowsAutoLogonService>();
-
         services.AddSingleton<IEncryptionService, WindowsEncryptionService>();
+        services.AddSingleton<IPathProvider, WindowsPathProvider>();
+        services.AddSingleton<IApplicationLifetime, WindowsApplicationLifetime>();
+        services.AddSingleton(TimeProvider.System);
 
 #pragma warning restore CA1416 // Plattformkompatibilität überprüfen
 

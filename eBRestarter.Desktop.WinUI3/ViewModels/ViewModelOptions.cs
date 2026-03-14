@@ -6,6 +6,10 @@ using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.Interfaces.Update;
+using eBRestarter.Core.Application.UseCases.ConfigureAutoLogon;
+using eBRestarter.Core.Application.UseCases.ManageApplicationUpdates;
+using eBRestarter.Core.Application.UseCases.RemoveApiCredentials;
+using eBRestarter.Core.Application.UseCases.ToggleAppAutoStart;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
@@ -24,8 +28,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
     {
         #region FieldsAndInjectedServices
 
-        private readonly IWindowsAutoLogonService _autoLogonService;
-        private readonly ICredentialValidationService _credentialValidationService;
+        private readonly IConfigureAutoLogonUseCase _configureAutoLogonUseCase;
+        private readonly IToggleAppAutoStartUseCase _toggleAppAutoStartUseCase;
+        private readonly IManageApplicationUpdatesUseCase _manageApplicationUpdatesUseCase;
+        private readonly IRemoveApiCredentialsUseCase _removeApiCredentialsUseCase;
         private readonly AppConfig _currentConfig;
         private readonly IDialogService _dialogService;
         private readonly IEVisitorConfigService _eVisitorConfigService;
@@ -35,7 +41,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IOperatingSystemFacade _os;
         private readonly IRestartCalculationService _restartCalculationService;
         private readonly IThemeService _themeService;
-        private readonly IUpdateService _updateService;
 
         #endregion
 
@@ -67,28 +72,30 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public ViewModelOptions(
             IDialogService dialogService,
-            IWindowsAutoLogonService autoLogonService,
+            IConfigureAutoLogonUseCase configureAutoLogonUseCase,
+            IToggleAppAutoStartUseCase toggleAppAutoStartUseCase,
+            IManageApplicationUpdatesUseCase manageApplicationUpdatesUseCase,
+            IRemoveApiCredentialsUseCase removeApiCredentialsUseCase,
             IOperatingSystemFacade os,
-            IUpdateService updateService,
             IThemeService themeService,
             IEVisitorConfigService eVisitorConfigService,
             ILanguageService languageService,
             ILocalizationService localizationService,
-            IRestartCalculationService restartCalculationService,
-            ICredentialValidationService credentialValidationService)
+            IRestartCalculationService restartCalculationService)
         {
             _isInitializing = true;
 
             _dialogService = dialogService;
-            _autoLogonService = autoLogonService;
+            _configureAutoLogonUseCase = configureAutoLogonUseCase;
+            _toggleAppAutoStartUseCase = toggleAppAutoStartUseCase;
+            _manageApplicationUpdatesUseCase = manageApplicationUpdatesUseCase;
+            _removeApiCredentialsUseCase = removeApiCredentialsUseCase;
             _os = os;
-            _updateService = updateService;
             _themeService = themeService;
             _eVisitorConfigService = eVisitorConfigService;
             _languageService = languageService;
             _localizationService = localizationService;
             _restartCalculationService = restartCalculationService;
-            _credentialValidationService = credentialValidationService;
 
             ComputerRestartList = new ReadOnlyCollection<ComputerRestartOption>([.. localizationService.GetComputerRestartOptions()]);
 
@@ -120,13 +127,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             try
             {
-                var updateInfo = await _updateService.CheckForUpdateAsync();
+                var response = await _manageApplicationUpdatesUseCase.CheckForUpdatesAsync();
 
-                if (updateInfo.IsUpdateAvailable)
+                if (response.IsUpdateAvailable)
                 {
                     IsUpdateAvailable = true;
                     string messageFormat = _localizationService.GetString("Options_UpdateAvailable");
-                    UpdateMessage = string.Format(messageFormat, updateInfo.LatestVersion);
+                    UpdateMessage = string.Format(messageFormat, response.LatestVersion);
                 }
             }
             catch (Exception ex) { Debug.WriteLine(ex); }
@@ -135,12 +142,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [RelayCommand]
         private async Task PerformUpdate()
         {
-            var updateInfo = await _updateService.CheckForUpdateAsync();
-
-            if (updateInfo.IsUpdateAvailable)
-            {
-                await _updateService.DownloadAndInstallAsync(updateInfo);
-            }
+            await _manageApplicationUpdatesUseCase.PerformUpdateAsync();
         }
 
         [RelayCommand]
@@ -178,18 +180,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [RelayCommand]
         private async Task RemoveAPICredentials()
         {
-            var currentConfig = _eVisitorConfigService.LoadConfig();
+            _removeApiCredentialsUseCase.Execute();
 
-            var newConfig = currentConfig with
-            {
-                Settings = currentConfig.Settings with
-                {
-                    ApiUsername = string.Empty,
-                    ApiKey = string.Empty
-                }
-            };
-
-            _eVisitorConfigService.SaveConfig(newConfig);
+            _currentConfig.Settings.ApiUsername = string.Empty;
+            _currentConfig.Settings.ApiKey = string.Empty;
 
             await _dialogService.ShowMessageAsync(
                 _localizationService.GetString("Options_RemoveCreds_Title"),
@@ -207,46 +201,41 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             if (dialogResult == null) return;
 
-            try
+            var request = new ConfigureAutoLogonRequest(
+                IsDeactivateAction: dialogResult.IsDeactivateAction,
+                Username: dialogResult.Credentials?.Username,
+                Domain: dialogResult.Credentials?.Domain,
+                Password: dialogResult.Credentials?.Password
+            );
+
+            var response = _configureAutoLogonUseCase.Execute(request);
+
+            if (response.Success)
             {
-                if (dialogResult.IsDeactivateAction)
+                if (response.Status == AutoLogonResultStatus.Deactivated)
                 {
-                    _autoLogonService.DisableAutoLogon();
-
-                    await _dialogService.ShowMessageAsync("Info",
-                        _localizationService.GetString("Options_AutoLogon_Deactivated"));
+                    await _dialogService.ShowMessageAsync("Info", _localizationService.GetString("Options_AutoLogon_Deactivated"));
                 }
-                else if (dialogResult.Credentials != null)
+                else if (response.Status == AutoLogonResultStatus.Activated)
                 {
-                    var user = dialogResult.Credentials.Username;
-                    var domain = dialogResult.Credentials.Domain;
-                    var pass = dialogResult.Credentials.Password;
-
-                    bool isValid = _credentialValidationService.ValidateCredentials(user, domain, pass);
-
-                    if (!isValid)
-                    {
-                        await _dialogService.ShowMessageAsync("Fehler",
-                            _localizationService.GetString("Options_AutoLogon_ValidationError"));
-
-                        return;
-                    }
-
-                    _autoLogonService.EnableAutoLogon(user, domain, pass);
-
-                    await _dialogService.ShowMessageAsync("Erfolg",
-                        _localizationService.GetString("Options_AutoLogon_Success"));
+                    await _dialogService.ShowMessageAsync("Erfolg", _localizationService.GetString("Options_AutoLogon_Success"));
                 }
             }
-            catch (InvalidOperationException)
+            else
             {
-                await _dialogService.ShowMessageAsync("Fehler",
-                    _localizationService.GetString("Options_AutoLogon_DomainError"));
-            }
-            catch (Exception ex)
-            {
-                string errorFormat = _localizationService.GetString("General_UnexpectedError");
-                await _dialogService.ShowMessageAsync("Fehler", string.Format(errorFormat, ex.Message));
+                if (response.Status == AutoLogonResultStatus.ValidationError)
+                {
+                    await _dialogService.ShowMessageAsync("Fehler", _localizationService.GetString("Options_AutoLogon_ValidationError"));
+                }
+                else if (response.Status == AutoLogonResultStatus.DomainError)
+                {
+                    await _dialogService.ShowMessageAsync("Fehler", _localizationService.GetString("Options_AutoLogon_DomainError"));
+                }
+                else
+                {
+                    string errorFormat = _localizationService.GetString("General_UnexpectedError");
+                    await _dialogService.ShowMessageAsync("Fehler", string.Format(errorFormat, response.ErrorMessage));
+                }
             }
         }
 
@@ -336,12 +325,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             try
             {
-                StartWithWindows = await _os.WindowsStartupManagerService.IsAutoStartEnabledAsync();
-
-                if (_currentConfig.Settings.StartWithWindows && !StartWithWindows)
-                {
-                    await _os.WindowsStartupManagerService.EnableAutoStartAsync();
-                }
+                StartWithWindows = await _toggleAppAutoStartUseCase.InitializeAndGetStateAsync();
             }
             finally
             {
@@ -384,17 +368,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private async void ToggleAutoStartAsync(bool enable)
         {
-            if (enable)
-            {
-                await _os.WindowsStartupManagerService.EnableAutoStartAsync();
-            }
-            else {
-
-                await _os.WindowsStartupManagerService.DisableAutoStartAsync();
-            }
-
+            await _toggleAppAutoStartUseCase.ToggleAsync(enable);
+            
             _currentConfig.Settings.StartWithWindows = enable;
-            SaveSettings();
         }
 
         private void SaveSettings()

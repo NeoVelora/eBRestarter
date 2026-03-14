@@ -5,6 +5,7 @@ using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.UseCases.ScheduleBrowserCleanup;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
@@ -20,6 +21,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
     {
         #region FieldsAndInjectedServices
 
+        private readonly IScheduleBrowserCleanupUseCase _scheduleBrowserCleanupUseCase;
         private readonly AppConfig _currentConfig;
         private readonly IDialogService _dialogService;
         private readonly IEVisitorConfigService _eVisitorConfigService;
@@ -56,11 +58,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region ConstructorAndFinalizer
 
         public ViewModelRestarterProperties(
+            IScheduleBrowserCleanupUseCase scheduleBrowserCleanupUseCase,
             IOperatingSystemFacade operatingSystemFacade,
             IEVisitorConfigService eVisitorConfigService,
             ILocalizationService localizationService,
             IDialogService dialogService)
         {
+            _scheduleBrowserCleanupUseCase = scheduleBrowserCleanupUseCase;
             _operatingSystemFacade = operatingSystemFacade;
             _eVisitorConfigService = eVisitorConfigService;
             _dialogService = dialogService;
@@ -134,16 +138,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #region PublicAndProtectedMethods
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Member als statisch markieren", Justification = "<Ausstehend>")]
-        public bool IsIntervalAllowed(int days)
-        {
-            return days switch
-            {
-                1 or 3 or 7 or 14 => true,
-                _ => false
-            };
-        }
-
         #endregion
 
         #region PropertyChangeHandlers
@@ -192,14 +186,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         partial void OnSelectedDeleteBrowserCacheOptionChanged(BrowserCacheDeleteOption value)
         {
-            _currentConfig.Browser.DeleteBrowserCacheIntervalDays = value.Days;
+            var response = _scheduleBrowserCleanupUseCase.UpdateSchedule(new ScheduleBrowserCleanupRequest(value.Days));
 
-            if (IsIntervalAllowed(value.Days))
+            _currentConfig.Browser.DeleteBrowserCacheIntervalDays = value.Days;
+            _currentConfig.Browser.NextBrowserDeleteCacheDate = response.NextDate ?? DateTime.MinValue;
+
+            if (response.IsActive && response.NextDate.HasValue)
             {
-                DateTime nextDate = DateTime.Today.AddDays(value.Days);
-                _currentConfig.Browser.NextBrowserDeleteCacheDate = nextDate;
                 string formatPattern = _localizationService.GetString("Browser_NextDeleteDate_Format");
-                string formattedDateString = string.Format(formatPattern, nextDate);
+                string formattedDateString = string.Format(formatPattern, response.NextDate.Value);
 
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcess(_localizationService.GetString("NextDeletionProcess")));
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(formattedDateString));
@@ -208,13 +203,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             else
             {
-                _currentConfig.Browser.NextBrowserDeleteCacheDate = DateTime.MinValue;
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcess(string.Empty));
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(string.Empty));
                 WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.GetString("Disabled")));
                 WeakReferenceMessenger.Default.Send(new DeleteBrowserContentIsActive(false));
             }
-            SaveSettings();
         }
 
         partial void OnStartBrowserWithProgrammStartIsChanged(bool value)

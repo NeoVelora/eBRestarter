@@ -9,6 +9,8 @@ public class ComputerRestartScheduler : IComputerRestartScheduler, IDisposable
 {
     private readonly IEVisitorConfigService _configService;
     private readonly IWindowsProcessControlService _processService;
+    private readonly IApplicationLifetime _applicationLifetime;
+    private readonly TimeProvider _timeProvider;
     private readonly ILogger<ComputerRestartScheduler> _logger;
 
     private PeriodicTimer? _timer;
@@ -18,10 +20,14 @@ public class ComputerRestartScheduler : IComputerRestartScheduler, IDisposable
     public ComputerRestartScheduler(
         IEVisitorConfigService configService,
         IWindowsProcessControlService processService,
+        IApplicationLifetime applicationLifetime,
+        TimeProvider timeProvider,
         ILogger<ComputerRestartScheduler> logger)
     {
         _configService = configService;
         _processService = processService;
+        _applicationLifetime = applicationLifetime;
+        _timeProvider = timeProvider;
         _logger = logger;
     }
 
@@ -87,8 +93,8 @@ public class ComputerRestartScheduler : IComputerRestartScheduler, IDisposable
             return;
         }
 
-        var today = DateTime.Today;
-        var now = DateTime.Now;
+        var now = _timeProvider.GetLocalNow();
+        var today = now.Date;
         var restartDate = config.Computer.NextRestartDate.Value.Date;
 
 
@@ -115,7 +121,7 @@ public class ComputerRestartScheduler : IComputerRestartScheduler, IDisposable
             _logger.LogInformation("Fahre System herunter...");
             _processService.ShutdownComputer();
 
-            Environment.Exit(0);
+            _applicationLifetime.ExitApplication(0);
         }
         catch (Exception ex)
         {
