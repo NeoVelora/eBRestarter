@@ -20,6 +20,7 @@ namespace eBRestarter.Infrastructure.Services.RestSharp
         public async Task<ApiResponse> ExecuteGetAsync(ApiRequest requestModel)
         {
             using var client = CreateClient(requestModel);
+
             var request = new RestRequest();
 
             try
@@ -37,6 +38,7 @@ namespace eBRestarter.Infrastructure.Services.RestSharp
         public ApiResponse ExecuteGet(ApiRequest requestModel)
         {
             using var client = CreateClient(requestModel);
+
             var request = new RestRequest();
 
             try

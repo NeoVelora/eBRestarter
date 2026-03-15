@@ -118,7 +118,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             {
                 SecondsRemaining = e.SecondsRemaining;
                 StatusInfoText = e.StatusMessage;
-                
+
                 if (e.State == RestartTaskState.Idle && IsActive)
                 {
                     IsActive = false;
@@ -138,7 +138,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _ = _manageRestarterCycleUseCase.StartAsync(request, async () =>
             {
                 var tcs = new TaskCompletionSource();
-                
+
                 _dispatcherQueue.TryEnqueue(async () =>
                 {
                     try

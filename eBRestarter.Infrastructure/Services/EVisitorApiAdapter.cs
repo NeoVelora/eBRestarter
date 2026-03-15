@@ -125,24 +125,25 @@ public class EVisitorApiAdapter : IEVisitorApiService
             using var doc = JsonDocument.Parse(response.Content);
             var root = doc.RootElement;
 
-            double[] hourly;
+            double[] hourly = new double[24];
 
-            if (root.ValueKind == JsonValueKind.Array)
+            if (root.ValueKind == JsonValueKind.Object)
             {
-                hourly = root.EnumerateArray()
-                             .Select(element => element.TryGetDouble(out double val) ? val : 0.0)
-                             .ToArray();
+                foreach (var property in root.EnumerateObject())
+                {
+                    if (int.TryParse(property.Name, out int hour) && hour >= 1 && hour <= 24)
+                    {
+                        hourly[hour - 1] = property.Value.TryGetDouble(out double val) ? val : 0.0;
+                    }
+                }
             }
-            else
+            else if (root.ValueKind == JsonValueKind.Array)
             {
-                hourly = new double[24];
-            }
+                var parsedArray = root.EnumerateArray()
+                                      .Select(element => element.TryGetDouble(out double val) ? val : 0.0)
+                                      .ToArray();
 
-            if (hourly.Length < 24)
-            {
-                var temp = new double[24];
-                Array.Copy(hourly, temp, hourly.Length);
-                hourly = temp;
+                Array.Copy(parsedArray, hourly, Math.Min(parsedArray.Length, 24));
             }
 
             return hourly;
@@ -189,12 +190,13 @@ public class EVisitorApiAdapter : IEVisitorApiService
                     if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
                     {
                         string dateStr = dateProp.GetString() ?? "";
-                        if (DateTime.TryParseExact(dateStr, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+
+                        if (DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime date))
                         {
                             int dayIndex = date.Day - 1;
                             if (dayIndex >= 0 && dayIndex < daysInMonth)
                             {
-                                dailyEarnings[dayIndex] = GetValueSafe(item);
+                                dailyEarnings[dayIndex] += GetValueSafe(item);
                             }
                         }
                     }
@@ -204,7 +206,7 @@ public class EVisitorApiAdapter : IEVisitorApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Fehler beim Parsen der Daily Earnings.");
+            _logger.LogError(ex, "Fehler beim Parsen der Daily Earnings.");
             return dailyEarnings;
         }
     }
@@ -243,7 +245,8 @@ public class EVisitorApiAdapter : IEVisitorApiService
                     if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
                     {
                         string dateStr = dateProp.GetString() ?? "";
-                        if (DateTime.TryParseExact(dateStr, "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
+
+                        if (DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime date))
                         {
                             int monthIndex = date.Month - 1;
                             if (monthIndex >= 0 && monthIndex < 12)
@@ -258,7 +261,7 @@ public class EVisitorApiAdapter : IEVisitorApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Fehler beim Parsen der Monthly Earnings.");
+            _logger.LogError(ex, "Fehler beim Parsen der Monthly Earnings.");
             return monthlyEarnings;
         }
     }
@@ -268,10 +271,14 @@ public class EVisitorApiAdapter : IEVisitorApiService
         if (item.TryGetProperty("value", out JsonElement valProp))
         {
             if (valProp.ValueKind == JsonValueKind.Number)
+            {
                 return valProp.GetDouble();
+            }
             else if (valProp.ValueKind == JsonValueKind.String &&
                      double.TryParse(valProp.GetString()?.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double dVal))
+            {
                 return dVal;
+            }
         }
         return 0.0;
     }
