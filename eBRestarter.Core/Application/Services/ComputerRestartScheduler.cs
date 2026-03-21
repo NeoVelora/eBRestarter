@@ -5,31 +5,24 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Core.Application.Services;
 
-public class ComputerRestartScheduler : IComputerRestartScheduler, IDisposable
+public class ComputerRestartScheduler(
+    IEVisitorConfigService configService,
+    IWindowsProcessControlService processService,
+    IApplicationLifetime applicationLifetime,
+    TimeProvider timeProvider,
+    ILogger<ComputerRestartScheduler> logger) : IComputerRestartScheduler, IDisposable
 {
-    private readonly IEVisitorConfigService _configService;
-    private readonly IWindowsProcessControlService _processService;
-    private readonly IApplicationLifetime _applicationLifetime;
-    private readonly TimeProvider _timeProvider;
-    private readonly ILogger<ComputerRestartScheduler> _logger;
+    private readonly IEVisitorConfigService _configService = configService;
+    private readonly IWindowsProcessControlService _processService = processService;
+    private readonly IApplicationLifetime _applicationLifetime = applicationLifetime;
+    private readonly TimeProvider _timeProvider = timeProvider;
+    private readonly ILogger<ComputerRestartScheduler> _logger = logger;
 
     private PeriodicTimer? _timer;
     private Task? _backgroundTask;
     private CancellationTokenSource? _cts;
 
-    public ComputerRestartScheduler(
-        IEVisitorConfigService configService,
-        IWindowsProcessControlService processService,
-        IApplicationLifetime applicationLifetime,
-        TimeProvider timeProvider,
-        ILogger<ComputerRestartScheduler> logger)
-    {
-        _configService = configService;
-        _processService = processService;
-        _applicationLifetime = applicationLifetime;
-        _timeProvider = timeProvider;
-        _logger = logger;
-    }
+    public event EventHandler<DateTime?>? OnNextRestartDateChanged;
 
     public void StartScheduler()
     {
@@ -88,22 +81,47 @@ public class ComputerRestartScheduler : IComputerRestartScheduler, IDisposable
     {
         var config = _configService.LoadConfig();
 
-        if (config.Computer.NextRestartDate == null)
+        if (config.Computer.NextRestartDate == null || config.Computer.ComputerRestartIntervalDays <= 0)
         {
             return;
         }
 
         var now = _timeProvider.GetLocalNow();
+        var targetDateTime = config.Computer.NextRestartDate.Value.Date.AddHours(config.Computer.RestartClockTime);
         var today = now.Date;
-        var restartDate = config.Computer.NextRestartDate.Value.Date;
 
-
-        bool isCorrectDay = restartDate == today;
-
-        bool isCorrectTime = now.Hour == config.Computer.RestartClockTime && now.Minute == 0;
-
-        if (isCorrectDay && isCorrectTime)
+        if (now >= targetDateTime)
         {
+            if (now > targetDateTime.AddMinutes(5))
+            {
+                _logger.LogWarning("Geplanter Neustart am {Target} wurde verpasst. Berechne neuen Termin...", targetDateTime);
+
+                DateTime newTargetDate = today;
+
+                if (now.Hour >= config.Computer.RestartClockTime)
+                {
+                    newTargetDate = today.AddDays(config.Computer.ComputerRestartIntervalDays);
+                }
+                else
+                {
+                    newTargetDate = today;
+                }
+
+                config.Computer.NextRestartDate = newTargetDate;
+                _configService.SaveConfig(config);
+
+                OnNextRestartDateChanged?.Invoke(this, newTargetDate);
+                return;
+            }
+
+            var restartDate = config.Computer.NextRestartDate.Value.Date;
+            bool isCorrectDay = restartDate == today;
+            bool isCorrectTime = now.Hour == config.Computer.RestartClockTime;
+
+            if (isCorrectDay && isCorrectTime)
+            {
+                ExecuteRestartSequence();
+            }
         }
     }
 

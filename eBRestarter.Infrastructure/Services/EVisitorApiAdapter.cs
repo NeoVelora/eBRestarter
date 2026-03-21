@@ -133,14 +133,14 @@ public class EVisitorApiAdapter : IEVisitorApiService
                 {
                     if (int.TryParse(property.Name, out int hour) && hour >= 1 && hour <= 24)
                     {
-                        hourly[hour - 1] = property.Value.TryGetDouble(out double val) ? val : 0.0;
+                        hourly[hour - 1] = property.Value.TryGetDouble(out double val) ? Math.Round(val, 2) : 0.0;
                     }
                 }
             }
             else if (root.ValueKind == JsonValueKind.Array)
             {
                 var parsedArray = root.EnumerateArray()
-                                      .Select(element => element.TryGetDouble(out double val) ? val : 0.0)
+                                      .Select(element => element.TryGetDouble(out double val) ? Math.Round(val, 2) : 0.0)
                                       .ToArray();
 
                 Array.Copy(parsedArray, hourly, Math.Min(parsedArray.Length, 24));
@@ -202,6 +202,12 @@ public class EVisitorApiAdapter : IEVisitorApiService
                     }
                 }
             }
+
+            for (int i = 0; i < dailyEarnings.Length; i++)
+            {
+                dailyEarnings[i] = Math.Round(dailyEarnings[i], 2);
+            }
+
             return dailyEarnings;
         }
         catch (Exception ex)
@@ -257,6 +263,12 @@ public class EVisitorApiAdapter : IEVisitorApiService
                     }
                 }
             }
+
+            for (int i = 0; i < monthlyEarnings.Length; i++)
+            {
+                monthlyEarnings[i] = Math.Round(monthlyEarnings[i], 2);
+            }
+
             return monthlyEarnings;
         }
         catch (Exception ex)

@@ -89,11 +89,6 @@ namespace eBRestarter.Desktop.WinUI3
 
         private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            if (args.IsSettingsInvoked)
-            {
-                _navigationService.NavigateTo("Settings", transitionInfo: _defaultTransition);
-                return;
-            }
 
             if (args.InvokedItemContainer is NavigationViewItem nvi
                 && nvi.Tag is string tag)

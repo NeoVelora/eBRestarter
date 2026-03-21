@@ -4,27 +4,19 @@ using eBRestarter.Core.Domain.Models.Records.Config;
 
 namespace eBRestarter.Core.Application.Services;
 
-public class RestartTaskDisplayStateService : IRestartTaskDisplayStateService
+public class RestartTaskDisplayStateService(
+    ILocalizationService localizationService,
+    ICacheDeletionIntervalValidator intervalValidator,
+    TimeProvider timeProvider) : IRestartTaskDisplayStateService
 {
     #region FieldsAndInjectedServices
 
-    private readonly ILocalizationService _localizationService;
-    private readonly ICacheDeletionIntervalValidator _intervalValidator;
-    private readonly TimeProvider _timeProvider;
+    private readonly ILocalizationService _localizationService = localizationService;
+    private readonly ICacheDeletionIntervalValidator _intervalValidator = intervalValidator;
+    private readonly TimeProvider _timeProvider = timeProvider;
 
     #endregion
-
     #region ConstructorAndFinalizer
-
-    public RestartTaskDisplayStateService(
-        ILocalizationService localizationService,
-        ICacheDeletionIntervalValidator intervalValidator,
-        TimeProvider timeProvider)
-    {
-        _localizationService = localizationService;
-        _intervalValidator = intervalValidator;
-        _timeProvider = timeProvider;
-    }
 
     #endregion
 

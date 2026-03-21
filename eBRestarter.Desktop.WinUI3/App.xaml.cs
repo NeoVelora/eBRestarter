@@ -100,6 +100,16 @@ namespace eBRestarter.Desktop.WinUI3
                 System.Diagnostics.Debug.WriteLine($"Fehler beim Laden des Themes: {ex.Message}");
             }
 
+            try
+            {
+                var restartScheduler = AppHost.Services.GetRequiredService<IComputerRestartScheduler>();
+                restartScheduler.StartScheduler();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Fehler beim Starten des ComputerRestartSchedulers: {ex.Message}");
+            }
+
             MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
             AppDispatcherQueue = MainWindoweBRestarter.DispatcherQueue;
 

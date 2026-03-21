@@ -26,7 +26,7 @@ public static class ApplicationServiceExtensions
         services.AddSingleton<IBrowserDisplayNameResolver, BrowserDisplayNameResolverService>();
         services.AddSingleton<IBrowserCleanupScheduleService, BrowserCleanupScheduleService>();
         services.AddSingleton<IRestartTaskDisplayStateService, RestartTaskDisplayStateService>();
-        
+
         services.AddTransient<IDeleteBrowserContentUseCase, DeleteBrowserContentService>();
         services.AddTransient<IManageRestarterCycleUseCase, ManageRestarterCycleService>();
         services.AddTransient<IConfigureAutoLogonUseCase, ConfigureAutoLogonService>();
@@ -36,7 +36,7 @@ public static class ApplicationServiceExtensions
         services.AddTransient<IScheduleBrowserCleanupUseCase, ScheduleBrowserCleanupService>();
         services.AddTransient<IGetSystemInformationUseCase, GetSystemInformationService>();
         services.AddTransient<IRemoveApiCredentialsUseCase, RemoveApiCredentialsService>();
-        
+
         return services;
     }
 

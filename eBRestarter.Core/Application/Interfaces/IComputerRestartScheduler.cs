@@ -5,4 +5,6 @@ public interface IComputerRestartScheduler
     void StartScheduler();
 
     Task StopSchedulerAsync();
+
+    event EventHandler<DateTime?>? OnNextRestartDateChanged;
 }
