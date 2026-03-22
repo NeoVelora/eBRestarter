@@ -7,16 +7,11 @@ using System.Runtime.Versioning;
 namespace eBRestarter.Infrastructure.Services.WindowsOS.Security;
 
 [SupportedOSPlatform("windows")]
-public class WindowsAutoLogonService : IWindowsAutoLogonService
+public class WindowsAutoLogonService(ILogger<WindowsAutoLogonService> logger) : IWindowsAutoLogonService
 {
     private const string WinLogonPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon";
     private const string DefaultPasswordKey = "DefaultPassword";
-    private readonly ILogger<WindowsAutoLogonService> _logger;
-
-    public WindowsAutoLogonService(ILogger<WindowsAutoLogonService> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<WindowsAutoLogonService> _logger = logger;
 
     public void EnableAutoLogon(string username, string domain, string password)
     {
@@ -51,10 +46,7 @@ public class WindowsAutoLogonService : IWindowsAutoLogonService
         try
         {
             using var key = Registry.LocalMachine.OpenSubKey(WinLogonPath, true);
-            if (key != null)
-            {
-                key.SetValue("AutoAdminLogon", "0", RegistryValueKind.String);
-            }
+            key?.SetValue("AutoAdminLogon", "0", RegistryValueKind.String);
 
             SetLsaSecret(DefaultPasswordKey, null);
 
@@ -74,7 +66,7 @@ public class WindowsAutoLogonService : IWindowsAutoLogonService
     }
 
 
-    private void SetLsaSecret(string keyName, string value)
+    private void SetLsaSecret(string keyName, string? value)
     {
         var objectAttributes = new LSA_OBJECT_ATTRIBUTES();
 

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Browsers;
 
-public class VivaldiBrowser : ChromiumBrowserBase
+public class VivaldiBrowser(IOperatingSystemFacade os, ILogger<VivaldiBrowser> logger) : ChromiumBrowserBase(os, logger)
 {
     protected override string ExeFileName => "vivaldi.exe";
     protected override string BrowserRegistryName => "Vivaldi";
@@ -49,8 +49,6 @@ public class VivaldiBrowser : ChromiumBrowserBase
             return base.BrowserVersion;
         }
     }
-
-    public VivaldiBrowser(IOperatingSystemFacade os, ILogger<VivaldiBrowser> logger) : base(os, logger) { }
 
     public override BrowserPaths GetPaths()
     {

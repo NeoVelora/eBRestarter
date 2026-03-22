@@ -1,4 +1,4 @@
-namespace eBRestarter.Core.Domain.Enums;
+﻿namespace eBRestarter.Core.Domain.Enums;
 
 public enum BrowserType
 {

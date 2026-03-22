@@ -3,7 +3,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Converters;
 
-public class SecondsToTimeFormatConverter : IValueConverter
+public partial class SecondsToTimeFormatConverter : IValueConverter
 {
     #region PublicMethods
 

@@ -5,17 +5,11 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Services;
 
-public class WinUIFrameAdapter : INavigationFrame
+public class WinUIFrameAdapter(Frame frame) : INavigationFrame
 {
     #region FieldsAndInjectedServices
 
-    private readonly Frame _frame;
-
-    #endregion
-
-    #region ConstructorAndFinalizer
-
-    public WinUIFrameAdapter(Frame frame) => _frame = frame;
+    private readonly Frame _frame = frame;
 
     #endregion
 

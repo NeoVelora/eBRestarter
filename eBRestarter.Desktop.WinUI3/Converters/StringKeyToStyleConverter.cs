@@ -4,7 +4,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Converters;
 
-public class StringKeyToStyleConverter : IValueConverter
+public partial class StringKeyToStyleConverter : IValueConverter
 {
     #region PublicMethods
 

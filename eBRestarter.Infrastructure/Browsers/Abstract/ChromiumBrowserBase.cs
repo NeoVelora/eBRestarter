@@ -2,9 +2,8 @@ using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Browsers.Abstract;
-public abstract class ChromiumBrowserBase : BrowserBase
+public abstract class ChromiumBrowserBase(IOperatingSystemFacade os, ILogger logger) : BrowserBase(os, logger)
 {
-    protected ChromiumBrowserBase(IOperatingSystemFacade os, ILogger logger) : base(os, logger) { }
 
     protected abstract string ExeFileName { get; }
     protected abstract string BrowserRegistryName { get; }
@@ -34,6 +33,7 @@ public abstract class ChromiumBrowserBase : BrowserBase
             }
 
             var fullExtensionPath = _os.WindowsFileSystemService.CombinePaths(extensionsDir, idToCheck);
+
             if (_os.WindowsFileSystemService.DirectoryExists(fullExtensionPath))
             {
                 return true;

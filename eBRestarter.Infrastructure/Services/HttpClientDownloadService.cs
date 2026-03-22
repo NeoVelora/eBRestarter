@@ -11,6 +11,7 @@ public class HttpClientDownloadService : IBrowserDownloadService
     public HttpClientDownloadService()
     {
         _httpClient = new HttpClient();
+
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36");
 
     }
@@ -23,9 +24,9 @@ public class HttpClientDownloadService : IBrowserDownloadService
         var totalBytes = response.Content.Headers.ContentLength ?? -1L;
         var canReportProgress = totalBytes != -1;
 
-        using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
-        using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+        await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
 
         var buffer = new byte[8192];
         long totalRead = 0;

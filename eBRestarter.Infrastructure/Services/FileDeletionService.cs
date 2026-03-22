@@ -29,7 +29,7 @@ public class FileDeletionService : IFileDeletionService
         await Task.Run(() =>
         {
             int deletedCount = 0;
-            int reportInterval = 10;
+            const int reportInterval = 10;
             int updateCounter = 0;
 
             foreach (var dir in directories)
@@ -37,7 +37,9 @@ public class FileDeletionService : IFileDeletionService
                 if (!Directory.Exists(dir)) continue;
 
                 string[] files;
+
                 try { files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories); }
+
                 catch { continue; }
 
                 foreach (var file in files)
@@ -63,6 +65,7 @@ public class FileDeletionService : IFileDeletionService
                 }
 
                 if (token.IsCancellationRequested) return;
+
                 try { Directory.Delete(dir, true); } catch { }
             }
 

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Browsers;
 
-public class FirefoxBrowser : BrowserBase
+public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> logger) : BrowserBase(os, logger)
 {
     private const string EbesucherAddOnNameForFirefox = "{fef425dc-a60f-4484-954d-71ecf2544846}.xpi";
 
@@ -18,9 +18,6 @@ public class FirefoxBrowser : BrowserBase
     public override BrowserType Type => BrowserType.Firefox;
     protected override string ProcessName => "firefox";
     protected override string RegistryKeyVersion => @"Software\Mozilla\Mozilla Firefox";
-
-    public FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> logger)
-        : base(os, logger) { }
 
     public override bool IsExtensionInstalled(string? extensionId = null)
     {

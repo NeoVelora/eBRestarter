@@ -32,7 +32,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #region PublicProperties
 
-        public string Title { get; private set; }
+        public string? Title { get; private set; }
 
         #endregion
 

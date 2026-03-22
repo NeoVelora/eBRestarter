@@ -4,7 +4,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Converters;
 
-public class BoolToImageConverter : IValueConverter
+public partial class BoolToImageConverter : IValueConverter
 {
     #region PublicProperties
 

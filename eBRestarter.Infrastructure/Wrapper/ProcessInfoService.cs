@@ -7,6 +7,6 @@ public class ProcessInfoService : IProcessInfoService
 {
     public string GetCurrentExecutablePath()
     {
-        return Process.GetCurrentProcess().MainModule!.FileName;
+        return Environment.ProcessPath!;
     }
 }

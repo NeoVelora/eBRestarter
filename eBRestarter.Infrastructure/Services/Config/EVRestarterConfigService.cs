@@ -3,19 +3,16 @@ using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.Security;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace eBRestarter.Infrastructure.Services.Config;
 
-public class EVisitorConfigService : IEVisitorConfigService
+public class EVisitorConfigService(IPathService pathService, IEncryptionService encryptionService, ILogger<EVisitorConfigService> logger) : IEVisitorConfigService
 {
-    private readonly IPathService _pathService;
-    private readonly IPathProvider _pathProvider;
-    private readonly IEncryptionService _encryptionService;
-    private readonly ILogger<EVisitorConfigService> _logger;
+    private readonly IPathService _pathService = pathService;
+    private readonly IEncryptionService _encryptionService = encryptionService;
+    private readonly ILogger<EVisitorConfigService> _logger = logger;
 
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -23,14 +20,6 @@ public class EVisitorConfigService : IEVisitorConfigService
         PropertyNameCaseInsensitive = true,
         TypeInfoResolver = AppConfigJsonContext.Default
     };
-
-    public EVisitorConfigService(IPathService pathService, IPathProvider pathProvider, IEncryptionService encryptionService, ILogger<EVisitorConfigService> logger)
-    {
-        _encryptionService = encryptionService;
-        _pathService = pathService;
-        _pathProvider = pathProvider;
-        _logger = logger;
-    }
 
     public AppConfig LoadConfig()
     {

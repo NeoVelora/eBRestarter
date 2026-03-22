@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-    public partial class ViewModelImportApi : ObservableObject
+    public partial class ViewModelImportApi(
+        IApiAuthenticationService authService,
+        ICredentialStore credentialStore) : ObservableObject
     {
         #region FieldsAndInjectedServices
 
-        private readonly IApiAuthenticationService _authService;
-        private readonly ICredentialStore _credentialStore;
+        private readonly IApiAuthenticationService _authService = authService;
+        private readonly ICredentialStore _credentialStore = credentialStore;
 
         #endregion
 
@@ -24,18 +26,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial bool IsBusy { get; set; }
         [ObservableProperty] public partial string StatusColor { get; set; } = "Transparent";
         [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
-
-        #endregion
-
-        #region ConstructorAndFinalizer
-
-        public ViewModelImportApi(
-            IApiAuthenticationService authService,
-            ICredentialStore credentialStore)
-        {
-            _authService = authService;
-            _credentialStore = credentialStore;
-        }
 
         #endregion
 
@@ -58,10 +48,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 return;
             }
 
-            var result = await _authService.VerifyCredentialsAsync(credentials.Username, credentials.ApiKey);
+            var (IsValid, Message) = await _authService.VerifyCredentialsAsync(credentials.Username, credentials.ApiKey);
+
             IsBusy = false;
 
-            if (result.IsValid)
+            if (IsValid)
             {
                 _credentialStore.SaveCredentials(credentials);
                 StatusMessage = "Import und Aktivierung erfolgreich!";
@@ -69,7 +60,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             else
             {
-                StatusMessage = $"Import fehlgeschlagen: {result.Message}";
+                StatusMessage = $"Import fehlgeschlagen: {Message}";
                 StatusColor = "#E40E87";
             }
         }

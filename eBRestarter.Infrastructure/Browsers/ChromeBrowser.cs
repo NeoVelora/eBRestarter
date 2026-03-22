@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Browsers;
 
-public class ChromeBrowser : ChromiumBrowserBase
+public class ChromeBrowser(IOperatingSystemFacade os, ILogger<ChromeBrowser> logger) : ChromiumBrowserBase(os, logger)
 {
 
     protected override string ExeFileName => "chrome.exe";
@@ -23,7 +23,6 @@ public class ChromeBrowser : ChromiumBrowserBase
     protected override string RegistryKeyVersion => @"Software\Google\Chrome\BLBeacon";
     protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
     public override string ExtensionInstallUrl => WebLinks.ChromeEVisitorAddOnLink;
-    public ChromeBrowser(IOperatingSystemFacade os, ILogger<ChromeBrowser> logger) : base(os, logger) { }
 
 
     public override BrowserPaths GetPaths()

@@ -3,7 +3,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Converters;
 
-public class TimerStateToTextConverter : IValueConverter
+public partial class TimerStateToTextConverter : IValueConverter
 {
     #region PublicMethods
 

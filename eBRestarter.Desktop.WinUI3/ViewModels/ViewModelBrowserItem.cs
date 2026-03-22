@@ -199,7 +199,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             IsDownloadActive = false;
             DownloadProgressValue = 0;
-            DownloadSizeText = "";
+            DownloadSizeText = string.Empty;
             RefreshBrowserVersionText();
             _cts = null;
         }

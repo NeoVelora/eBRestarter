@@ -2,7 +2,6 @@ using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Authentication;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Models.Records;
-using System.IO;
 using System.Text.Json;
 
 namespace eBRestarter.Infrastructure.Services.Authentication;
@@ -11,6 +10,7 @@ public class JsonCredentialStore : ICredentialStore
 {
     private readonly IWindowsFileSystemService _fileSystem;
     private readonly IPathProvider _pathProvider;
+
     private readonly string _storagePath;
 
     public JsonCredentialStore(IWindowsFileSystemService fileSystem, IPathProvider pathProvider)

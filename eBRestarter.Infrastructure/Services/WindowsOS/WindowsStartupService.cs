@@ -2,9 +2,6 @@ using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Infrastructure.Wrapper.Interface;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS;
 
@@ -157,5 +154,3 @@ public class WindowsStartupService : IWindowsStartupManagerService
         }
     }
 }
-
-

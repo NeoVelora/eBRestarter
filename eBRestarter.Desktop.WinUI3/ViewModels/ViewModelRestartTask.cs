@@ -75,6 +75,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _manageRestarterCycleUseCase.ProgressChanged += OnCycleProgressChanged;
 
             LoadInitialConfigData();
+
             WeakReferenceMessenger.Default.RegisterAll(this);
 
             var appConfig = _configService.LoadConfig();
@@ -97,6 +98,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             if (string.IsNullOrEmpty(appConfig.Username))
             {
                 _localizationService.GetString("Task_DefaultBrowser");
+
                 _dialogService.ShowMessageAsync(_localizationService.GetString("Task_Username"), _localizationService.GetString("Task_NoUsernameFound"), DialogIcon.Error);
 
                 IsActive = false;
@@ -110,6 +112,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             if (IsActive)
             {
                 LoadInitialConfigData();
+
                 StartLoop();
             }
             else
@@ -178,6 +181,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 });
 
                 await tcs.Task;
+
             }).Forget();
         }
 

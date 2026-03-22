@@ -20,15 +20,15 @@ public class LocalizationService : ILocalizationService
     public LocalizationService()
     {
         _resourceManager = new ResourceManager();
-        
+
         _resourceContext = _resourceManager.CreateResourceContext();
-        
+
         string currentLanguage = Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride;
         if (string.IsNullOrEmpty(currentLanguage))
         {
             currentLanguage = System.Globalization.CultureInfo.CurrentUICulture.Name;
         }
-        
+
         _resourceContext.QualifierValues["Language"] = currentLanguage;
 
         _resourceMap = _resourceManager.MainResourceMap;

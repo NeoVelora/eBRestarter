@@ -9,5 +9,5 @@ public class AutoLogonDialogResult
 
     public static AutoLogonDialogResult Deactivate() => new() { IsDeactivateAction = true };
     public static AutoLogonDialogResult Save(AutoLogonCredentials creds) => new() { IsDeactivateAction = false, Credentials = creds };
-    public static AutoLogonDialogResult Cancel() => null;
+    public static AutoLogonDialogResult? Cancel() => null;
 }
