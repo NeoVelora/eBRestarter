@@ -210,8 +210,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             for (int i = 0; i < sourceData.Length; i++)
             {
-                if (_chartValues[i].Value != sourceData[i])
+                double currentValue = _chartValues[i].Value ?? 0.0;
+
+                if (Math.Abs(currentValue - sourceData[i]) > 0.0001)
+                {
                     _chartValues[i].Value = sourceData[i];
+                }
             }
         }
 

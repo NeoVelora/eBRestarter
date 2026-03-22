@@ -44,10 +44,12 @@ namespace eBRestarter.Infrastructure.Services
             try
             {
                 using var searcher = new ManagementObjectSearcher($"SELECT {property} FROM {wmiClass}");
+                using var collection = searcher.Get();
+                using var enumerator = collection.GetEnumerator();
 
-                foreach (var obj in searcher.Get())
+                if (enumerator.MoveNext())
                 {
-                    return obj[property]?.ToString();
+                    return enumerator.Current[property]?.ToString();
                 }
             }
             catch (Exception ex)

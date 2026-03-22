@@ -6,6 +6,7 @@ using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Domain.Enums;
+using eBRestarter.Core.Domain.Extensions;
 using eBRestarter.Core.Domain.Models;
 using eBRestarter.Core.Domain.Models.Records;
 using eBRestarter.Core.Domain.Models.Records.Config;
@@ -182,7 +183,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private void CancelDownload()
         {
             _cts?.Cancel();
-            _ = ResetDownloadState();
+            ResetDownloadState().Forget();
         }
 
         private void CleanupPartialFile(string path)
@@ -211,7 +212,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private async Task StartDownloadAsync()
         {
+            _cts?.Dispose();
             _cts = new CancellationTokenSource();
+
             IsDownloadActive = true;
             RefreshBrowserVersionText();
 
@@ -229,17 +232,22 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             {
                 await _downloadService.DownloadFileAsync(_browserInfo.DownloadUrl, downloadPath, progressHandler, _cts.Token);
                 await AskToInstall(downloadPath);
-                await ResetDownloadState();
             }
             catch (OperationCanceledException)
             {
                 CleanupPartialFile(downloadPath);
-                await ResetDownloadState();
             }
             catch (Exception)
             {
                 CleanupPartialFile(downloadPath);
+            }
+            finally
+            {
+
                 await ResetDownloadState();
+
+                _cts?.Dispose();
+                _cts = null;
             }
         }
 

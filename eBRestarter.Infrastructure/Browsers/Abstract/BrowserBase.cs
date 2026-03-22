@@ -84,11 +84,22 @@ public abstract class BrowserBase(IOperatingSystemFacade os, ILogger logger) : I
 
         var cleanRaw = raw.Trim();
 
-        var match = System.Text.RegularExpressions.Regex.Match(cleanRaw, @"^[\d\.]+");
-
-        if (match.Success)
+        try
         {
-            return match.Value;
+            var match = System.Text.RegularExpressions.Regex.Match(
+                cleanRaw,
+                @"^[\d\.]+",
+                System.Text.RegularExpressions.RegexOptions.NonBacktracking,
+                TimeSpan.FromMilliseconds(100));
+
+            if (match.Success)
+            {
+                return match.Value;
+            }
+        }
+        catch (System.Text.RegularExpressions.RegexMatchTimeoutException)
+        {
+            return "Unknown";
         }
 
         return raw;

@@ -39,9 +39,12 @@ public class WindowsProcessService : IWindowsProcessControlService
 
     public void StartMsiFile(string path)
     {
+        string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+        string msiExecPath = Path.Combine(systemFolder, "msiexec.exe");
+
         var startInfo = new ProcessStartInfo
         {
-            FileName = "msiexec.exe",
+            FileName = msiExecPath,
             Arguments = $"/i \"{path}\"",
 
             UseShellExecute = false,
@@ -107,7 +110,11 @@ public class WindowsProcessService : IWindowsProcessControlService
         try
         {
             _logger.LogInformation("Fahre Computer herunter (Neustart)...");
-            _processWrapper.Start(new ProcessStartInfo("shutdown", "/r /f /t 0") { UseShellExecute = true });
+
+            string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            string shutdownPath = Path.Combine(systemFolder, "shutdown.exe");
+
+            _processWrapper.Start(new ProcessStartInfo(shutdownPath, "/r /f /t 0") { UseShellExecute = true });
         }
         catch (Exception ex)
         {
@@ -207,9 +214,12 @@ public class WindowsProcessService : IWindowsProcessControlService
         {
             string args = $"\"{folderPath}\"";
 
+            string windowsFolder = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            string explorerPath = Path.Combine(windowsFolder, "explorer.exe");
+
             _processWrapper.Start(new ProcessStartInfo
             {
-                FileName = "explorer.exe",
+                FileName = explorerPath,
                 Arguments = args,
                 UseShellExecute = true
             });

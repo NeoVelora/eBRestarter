@@ -155,6 +155,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task ExecuteCleaningLogic(bool forceClose)
         {
             IsBusy = true;
+            _cts?.Dispose();
             _cts = new CancellationTokenSource();
 
             try

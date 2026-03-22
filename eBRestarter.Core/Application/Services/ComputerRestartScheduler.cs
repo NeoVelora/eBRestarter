@@ -40,7 +40,7 @@ public class ComputerRestartScheduler(
     {
         if (_cts != null)
         {
-            _cts.Cancel();
+            await _cts.CancelAsync();
             _cts.Dispose();
             _cts = null;
         }
@@ -96,7 +96,7 @@ public class ComputerRestartScheduler(
             {
                 _logger.LogWarning("Geplanter Neustart am {Target} wurde verpasst. Berechne neuen Termin...", targetDateTime);
 
-                DateTime newTargetDate = today;
+                DateTime newTargetDate;
 
                 if (now.Hour >= config.Computer.RestartClockTime)
                 {
@@ -107,10 +107,10 @@ public class ComputerRestartScheduler(
                     newTargetDate = today;
                 }
 
-                config.Computer.NextRestartDate = newTargetDate;
+                config.Computer.NextRestartDate = today;
                 _configService.SaveConfig(config);
 
-                OnNextRestartDateChanged?.Invoke(this, newTargetDate);
+                OnNextRestartDateChanged?.Invoke(this, today);
                 return;
             }
 
@@ -147,9 +147,27 @@ public class ComputerRestartScheduler(
         }
     }
 
+
+    private bool _disposed;
+
     public void Dispose()
     {
-        _timer?.Dispose();
-        _cts?.Dispose();
+        Dispose(true);
+
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _timer?.Dispose();
+                _cts?.Dispose();
+            }
+
+            _disposed = true;
+        }
     }
 }
