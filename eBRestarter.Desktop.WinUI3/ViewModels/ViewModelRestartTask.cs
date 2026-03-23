@@ -35,6 +35,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private int _pauseSeconds = 20;
         private int _runtimeSeconds = 3600;
         private readonly int _testRuntimeSeconds = 20;
+        private bool _checkBrowserAliveRoutine;
 
         #endregion
 
@@ -156,7 +157,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 BrowserDisplayName: ChosenBrowser,
                 Username: Username,
                 RuntimeSeconds: _runtimeSeconds,
-                PauseSeconds: _pauseSeconds
+                PauseSeconds: _pauseSeconds,
+                CheckBrowserAliveRoutine: _checkBrowserAliveRoutine
             );
 
             _manageRestarterCycleUseCase.StartAsync(request, async () =>
@@ -198,11 +200,13 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             Username = currentConfigState.Username;
             ChosenBrowser = currentConfigState.ChoosenBrowser;
-
+            _checkBrowserAliveRoutine = currentConfigState.CheckBrowserAliveRoutine;
             _pauseSeconds = currentConfigState.PauseSeconds;
 
 #if DEBUG
-            _runtimeSeconds = _testRuntimeSeconds;
+            //_runtimeSeconds = _testRuntimeSeconds;
+
+            _runtimeSeconds = currentConfigState.RuntimeSeconds;
 #else
             _runtimeSeconds = currentConfigState.RuntimeSeconds;
 #endif

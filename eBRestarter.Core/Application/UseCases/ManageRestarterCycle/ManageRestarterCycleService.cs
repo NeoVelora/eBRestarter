@@ -1,7 +1,9 @@
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Enums;
+using System.Diagnostics;
 
 namespace eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
 
@@ -11,7 +13,8 @@ public class ManageRestarterCycleService(
     IBrowserDisplayNameResolver browserDisplayNameResolver,
     IEVisitorConfigService configService,
     IBrowserCleanupScheduleService browserCleanupScheduleService,
-    TimeProvider timeProvider) : IManageRestarterCycleUseCase
+    TimeProvider timeProvider,
+    IWindowsProcessControlService processService) : IManageRestarterCycleUseCase
 {
     private const string BaseUrl = "https://www.ebesucher.com/surfbar/";
     private const int InitialDelaySeconds = 5;
@@ -22,6 +25,7 @@ public class ManageRestarterCycleService(
     private readonly IEVisitorConfigService _configService = configService;
     private readonly IBrowserCleanupScheduleService _browserCleanupScheduleService = browserCleanupScheduleService;
     private readonly TimeProvider _timeProvider = timeProvider;
+    private readonly IWindowsProcessControlService _processService = processService;
 
     private CancellationTokenSource? _cts;
     private IBrowser? _currentBrowser;
@@ -64,14 +68,75 @@ public class ManageRestarterCycleService(
 
         while (!token.IsCancellationRequested)
         {
+            var appConfig = _configService.LoadConfig();
+
+            request = request with
+            {
+                BrowserDisplayName = string.IsNullOrWhiteSpace(appConfig.Browser?.Selected) ? request.BrowserDisplayName : appConfig.Browser.Selected,
+                Username = string.IsNullOrWhiteSpace(appConfig.Username) ? request.Username : appConfig.Username,
+                RuntimeSeconds = appConfig.Browser != null ? appConfig.Browser.RuntimeHours * 3600 : request.RuntimeSeconds,
+                PauseSeconds = appConfig.Browser?.RuntimePauseSeconds ?? request.PauseSeconds,
+                CheckBrowserAliveRoutine = appConfig.Browser?.CheckBrowserAliveRoutine ?? request.CheckBrowserAliveRoutine
+            };
+
             LaunchBrowser(request);
-            await RunDelayPhaseAsync(RestartTaskState.Running, request.RuntimeSeconds, token);
+
+            var phaseResult = await RunBrowserPhaseAsync(request, token);
+
+            if (phaseResult == BrowserPhaseResult.BrowserClosed)
+            {
+                CloseCurrentBrowser();
+
+                for (int countdown = 5; countdown > 0; countdown--)
+                {
+                    token.ThrowIfCancellationRequested();
+                    ReportProgress(RestartTaskState.Cooldown, countdown, $"Der Browser wurde geschlossen, Starte Restarter in {countdown}...");
+                    await Task.Delay(TimeSpan.FromMilliseconds(1000), _timeProvider, token);
+                }
+                continue;
+            }
 
             await CheckAndExecuteBrowserCleanupAsync(performCleanupCallback, token);
 
             CloseCurrentBrowser();
             await RunDelayPhaseAsync(RestartTaskState.Cooldown, request.PauseSeconds, token);
         }
+    }
+
+    private async Task<BrowserPhaseResult> RunBrowserPhaseAsync(ManageRestarterCycleRequest request, CancellationToken token)
+    {
+        string processName = GetProcessNameFromDisplayName(request.BrowserDisplayName);
+
+        var appConfig = _configService.LoadConfig();
+        bool isCleanupActive = appConfig.Browser != null && appConfig.Browser.DeleteBrowserCacheIntervalDays > 0;
+        DateTime nextCleanupDate = appConfig.Browser?.NextBrowserDeleteCacheDate ?? DateTime.MaxValue;
+
+        for (int secondsRemaining = request.RuntimeSeconds; secondsRemaining >= 0; secondsRemaining--)
+        {
+            token.ThrowIfCancellationRequested();
+
+            if (request.CheckBrowserAliveRoutine && secondsRemaining < request.RuntimeSeconds - 2)
+            {
+                if (!_processService.IsProcessAlive(processName))
+                {
+                    return BrowserPhaseResult.BrowserClosed;
+                }
+            }
+
+            if (isCleanupActive && _timeProvider.GetLocalNow().DateTime >= nextCleanupDate)
+            {
+                return BrowserPhaseResult.CleanupDue;
+            }
+
+            ReportProgress(RestartTaskState.Running, secondsRemaining);
+
+            if (secondsRemaining > 0)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(1000), _timeProvider, token);
+            }
+        }
+
+        return BrowserPhaseResult.Completed;
     }
 
     private async Task RunDelayPhaseAsync(RestartTaskState state, int totalSeconds, CancellationToken token)
@@ -130,6 +195,7 @@ public class ManageRestarterCycleService(
 
         var today = _timeProvider.GetLocalNow().Date;
         var newDate = _browserCleanupScheduleService.GetNextCleanupDateAfterRun(today, appConfig.Browser.DeleteBrowserCacheIntervalDays);
+
         appConfig.Browser.NextBrowserDeleteCacheDate = newDate;
         _configService.SaveConfig(appConfig);
     }
@@ -150,5 +216,20 @@ public class ManageRestarterCycleService(
             RestartTaskState.Cooldown => string.Format(_localizationService.GetString("Task_StatusRestartIn"), secondsRemaining),
             _ => string.Empty
         };
+    }
+
+    private string GetProcessNameFromDisplayName(string displayName)
+    {
+        if (string.IsNullOrEmpty(displayName)) return "";
+        var lower = displayName.ToLowerInvariant();
+
+        if (lower.Contains("firefox")) return "firefox";
+        if (lower.Contains("chrome")) return "chrome";
+        if (lower.Contains("edge")) return "msedge";
+        if (lower.Contains("vivaldi")) return "vivaldi";
+        if (lower.Contains("brave")) return "brave";
+        if (lower.Contains("opera")) return "opera";
+
+        return lower;
     }
 }
