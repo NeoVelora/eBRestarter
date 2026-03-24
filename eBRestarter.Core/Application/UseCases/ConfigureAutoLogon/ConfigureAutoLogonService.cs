@@ -26,6 +26,12 @@ public class ConfigureAutoLogonService : IConfigureAutoLogonUseCase
                 return new ConfigureAutoLogonResponse(true, AutoLogonResultStatus.Deactivated);
             }
 
+            if (_autoLogonService.IsWindowsHelloPasswordlessEnabled())
+            {
+                return new ConfigureAutoLogonResponse(false, AutoLogonResultStatus.WindowsHelloBlockActive,
+                    "Windows Hello Passwordless Mode ist aktiv. AutoLogon nicht möglich.");
+            }
+
             if (!string.IsNullOrWhiteSpace(request.Username) && request.Password != null)
             {
                 string domain = request.Domain ?? string.Empty;

@@ -231,7 +231,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             else
             {
-                if (response.Status == AutoLogonResultStatus.ValidationError)
+                if (response.Status == AutoLogonResultStatus.WindowsHelloBlockActive)
+                {
+                    string title = _localizationService.GetString("Options_AutoLogon_WindowsHelloErrorTitle");
+                    string message = _localizationService.GetString("Options_AutoLogon_WindowsHelloErrorMessage");
+
+                    await _dialogService.ShowMessageAsync(title, message, DialogIcon.Error);
+                }
+                else if (response.Status == AutoLogonResultStatus.ValidationError)
                 {
                     await _dialogService.ShowMessageAsync("Fehler", _localizationService.GetString("Options_AutoLogon_ValidationError"));
                 }

@@ -2,6 +2,7 @@ using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Domain.Models.Records;
 using Microsoft.Windows.ApplicationModel.Resources;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace eBRestarter.Desktop.WinUI3.Services;
 
@@ -42,6 +43,7 @@ public class LocalizationService : ILocalizationService
     {
         try
         {
+
             var result = _resourceMap.GetValue($"Resources/{key}", _resourceContext);
             return result?.ValueAsString ?? $"[{key}]";
         }

@@ -58,6 +58,30 @@ public class WindowsAutoLogonService(ILogger<WindowsAutoLogonService> logger) : 
         }
     }
 
+    public bool IsWindowsHelloPasswordlessEnabled()
+    {
+        try
+        {
+            using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device", false);
+
+            if (key != null)
+            {
+                var val = key.GetValue("DevicePasswordLessBuildVersion");
+
+                if (val is int intValue && intValue == 2)
+                {
+                    return true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Fehler beim Lesen des PasswordLess Registry-Keys.");
+        }
+
+        return false;
+    }
+
     public bool IsAutoLogonEnabled()
     {
         using var key = Registry.LocalMachine.OpenSubKey(WinLogonPath, false);
