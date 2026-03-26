@@ -59,6 +59,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial bool IsUpdateAvailable { get; set; }
         [ObservableProperty] public partial string UpdateMessage { get; set; } = string.Empty;
 
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand))]
+        public partial bool IsCheckingForUpdates { get; set; } = false;
+
         #endregion
 
         #region PublicProperties
@@ -130,9 +134,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #region Commands
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
         private async Task CheckForUpdates()
         {
+            IsCheckingForUpdates = true;
+
             try
             {
                 var response = await _manageApplicationUpdatesUseCase.CheckForUpdatesAsync();
@@ -140,17 +146,84 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 if (response.IsUpdateAvailable)
                 {
                     IsUpdateAvailable = true;
+
                     string messageFormat = _localizationService.GetString("Options_UpdateAvailable");
                     UpdateMessage = string.Format(messageFormat, response.LatestVersion);
+
+                    string title = _localizationService.GetString("Options_UpdateAvailable_Title");
+
+                    string promptFormat = _localizationService.GetString("Options_UpdatePrompt_Message");
+                    string dialogMessage = string.Format(promptFormat, UpdateMessage);
+
+                    bool userWantsUpdate = await _dialogService.ShowConfirmationAsync(
+                        title,
+                        dialogMessage,
+                        _localizationService.GetString("General_Yes"),
+                        _localizationService.GetString("General_No")
+                    );
+
+                    if (userWantsUpdate)
+                    {
+                        await PerformUpdate();
+                    }
+                }
+                else
+                {
+                    IsUpdateAvailable = false;
+                    UpdateMessage = string.Empty;
+
+                    await _dialogService.ShowMessageAsync(
+                        _localizationService.GetString("Options_UpdateNoUpdate_Title"),
+                        _localizationService.GetString("Options_UpdateNoUpdate_Message"),
+                        DialogIcon.Information
+                    );
                 }
             }
-            catch (Exception ex) { Debug.WriteLine(ex); }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+
+                string errorFormat = _localizationService.GetString("Options_UpdateCheckError_Message");
+                string errorMessage = string.Format(errorFormat, ex.Message);
+
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.GetString("Options_UpdateError_Title"),
+                    errorMessage,
+                    DialogIcon.Error
+                );
+            }
+            finally
+            {
+                IsCheckingForUpdates = false;
+            }
         }
 
         [RelayCommand]
         private async Task PerformUpdate()
         {
-            await _manageApplicationUpdatesUseCase.PerformUpdateAsync();
+            IsCheckingForUpdates = true;
+
+            try
+            {
+                await _manageApplicationUpdatesUseCase.PerformUpdateAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+
+                string errorFormat = _localizationService.GetString("Options_UpdateFailed_Message");
+                string errorMessage = string.Format(errorFormat, ex.Message);
+
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.GetString("Options_UpdateFailed_Title"),
+                    errorMessage,
+                    DialogIcon.Error
+                );
+            }
+            finally
+            {
+                IsCheckingForUpdates = false;
+            }
         }
 
         [RelayCommand]
@@ -334,6 +407,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #endregion
 
         #region PrivateHelperMethods
+
+        private bool CanCheckForUpdates() => !IsCheckingForUpdates;
 
         private void SaveThemeConfig(string theme)
         {
