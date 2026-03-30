@@ -19,7 +19,9 @@ using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
@@ -59,6 +61,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         [ObservableProperty] public partial bool IsUpdateAvailable { get; set; }
         [ObservableProperty] public partial string UpdateMessage { get; set; } = string.Empty;
 
+        [ObservableProperty] public partial string ExtensionUrl { get; set; } = string.Empty;
+        [ObservableProperty] public partial double ExtensionWaitTimeMinutes { get; set; } = 3;
+        [ObservableProperty] public partial LanguageOption SelectedExtensionLanguage { get; set; }
+        [ObservableProperty] public partial string ExtensionSaveStatus { get; set; } = string.Empty;
+
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand))]
         public partial bool IsCheckingForUpdates { get; set; } = false;
@@ -71,6 +78,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList { get; }
         public int ComputerRestartClockTimeMin { get; init; }
         public int ComputerRestartClockTimeMax { get; init; }
+
+        public ReadOnlyCollection<LanguageOption> ExtensionLanguages { get; }
 
         #endregion
 
@@ -126,6 +135,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
 
             _computerRestartScheduler.OnNextRestartDateChanged += OnNextRestartDateChanged;
+
+            ExtensionLanguages = new ReadOnlyCollection<LanguageOption>([.. localizationService.GetAvailableLanguages()]);
+            SelectedExtensionLanguage = ExtensionLanguages.FirstOrDefault()!;
+
+            LoadExtensionConfig();
 
             InitializeAsync().Forget();
         }
@@ -223,6 +237,55 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             finally
             {
                 IsCheckingForUpdates = false;
+            }
+        }
+
+        [RelayCommand]
+        private void OpenExtensionFolder()
+        {
+            try
+            {
+                string extensionPath = GetExtensionFolderPath();
+                if (!Directory.Exists(extensionPath))
+                {
+                    Directory.CreateDirectory(extensionPath);
+                }
+                _os.WindowsProcessControlService.OpenExplorer(extensionPath);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fehler beim Öffnen des Extension-Ordners: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async Task SaveExtensionConfig()
+        {
+            try
+            {
+                string configPath = Path.Combine(GetExtensionFolderPath(), "config.json");
+
+                var configData = new ExtensionConfigDto
+                {
+                    LANGUAGE = SelectedExtensionLanguage?.Index == 0 ? "DE" : "EN",
+                    ZIEL_URL = ExtensionUrl,
+                    WARTEZEIT_MS = (int)(ExtensionWaitTimeMinutes * 60000)
+                };
+
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonString = JsonSerializer.Serialize(configData, options);
+
+                if (!Directory.Exists(GetExtensionFolderPath())) Directory.CreateDirectory(GetExtensionFolderPath());
+                await File.WriteAllTextAsync(configPath, jsonString);
+
+                ExtensionSaveStatus = _localizationService.GetString("Options_SavedSuccessfully") ?? "Erfolgreich gespeichert!";
+                await Task.Delay(3000);
+                ExtensionSaveStatus = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fehler beim Speichern der Extension Config: {ex.Message}");
+                await _dialogService.ShowMessageAsync("Fehler", $"Konnte config.json nicht speichern: {ex.Message}", DialogIcon.Error);
             }
         }
 
@@ -407,6 +470,39 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #endregion
 
         #region PrivateHelperMethods
+
+        private string GetExtensionFolderPath()
+        {
+            return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Extension");
+        }
+
+        private void LoadExtensionConfig()
+        {
+            try
+            {
+                string configPath = Path.Combine(GetExtensionFolderPath(), "config.json");
+                if (File.Exists(configPath))
+                {
+                    string jsonString = File.ReadAllText(configPath);
+                    var configData = JsonSerializer.Deserialize<ExtensionConfigDto>(jsonString);
+
+                    if (configData != null)
+                    {
+                        ExtensionUrl = configData.ZIEL_URL;
+                        ExtensionWaitTimeMinutes = configData.WARTEZEIT_MS / 60000.0;
+
+                        if (configData.LANGUAGE == "EN")
+                            SelectedExtensionLanguage = ExtensionLanguages.FirstOrDefault(l => l.Index == 1)!;
+                        else
+                            SelectedExtensionLanguage = ExtensionLanguages.FirstOrDefault(l => l.Index == 0)!;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Konnte existierende config.json nicht lesen: {ex.Message}");
+            }
+        }
 
         private bool CanCheckForUpdates() => !IsCheckingForUpdates;
 
