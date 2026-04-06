@@ -1,13 +1,18 @@
 namespace eBRestarter.Core.Domain.Extensions;
 
+using System;
+using System.Globalization;
+
 public static class FormatExtensions
 {
-    private static readonly string[] _sizeSuffixes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+    private static readonly string[] _sizeSuffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
 
-    public static string ToSizeSuffix(this long value)
+    public static string ToSizeSuffix(this long value, int decimalPlaces = 1, IFormatProvider? formatProvider = null)
     {
-        if (value < 0) { return "-" + ToSizeSuffix(-value); }
-        if (value == 0) { return "0.0 bytes"; }
+        formatProvider ??= CultureInfo.CurrentCulture;
+
+        if (value < 0) { return "-" + ToSizeSuffix(-value, decimalPlaces, formatProvider); }
+        if (value == 0) { return "0 B"; }
 
         int mag = (int)Math.Log(value, 1024);
 
@@ -16,8 +21,15 @@ public static class FormatExtensions
             mag = _sizeSuffixes.Length - 1;
         }
 
-        decimal adjustedSize = (decimal)value / (1L << (mag * 10));
+        if (mag == 0)
+        {
+            return $"{value} {_sizeSuffixes[0]}";
+        }
 
-        return $"{adjustedSize:n1} {_sizeSuffixes[mag]}";
+        decimal adjustedSize = (decimal)(value / Math.Pow(1024, mag));
+
+        string numberFormat = $"n{decimalPlaces}";
+
+        return $"{adjustedSize.ToString(numberFormat, formatProvider)} {_sizeSuffixes[mag]}";
     }
 }
