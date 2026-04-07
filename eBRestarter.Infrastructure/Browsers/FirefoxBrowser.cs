@@ -103,7 +103,7 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
 
         try
         {
-            var lines = File.ReadAllLines(iniPath);
+            var lines = _os.WindowsFileSystemService.ReadAllLines(iniPath);
 
             string? currentPath = null;
             bool? currentIsRelative = null;

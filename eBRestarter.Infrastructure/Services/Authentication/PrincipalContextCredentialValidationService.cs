@@ -1,10 +1,14 @@
 using eBRestarter.Core.Application.Interfaces.Authentication;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using System.DirectoryServices.AccountManagement;
+using Windows.Services.Maps;
 
 namespace eBRestarter.Infrastructure.Services.Authentication;
 
-public class PrincipalContextCredentialValidationService : ICredentialValidationService
+public class PrincipalContextCredentialValidationService(IActiveDirectoryService adService) : ICredentialValidationService
 {
+    private readonly IActiveDirectoryService _adService = adService;
+
     #region PublicAndProtectedMethods
 
     public bool ValidateCredentials(string username, string domain, string password)
@@ -18,10 +22,7 @@ public class PrincipalContextCredentialValidationService : ICredentialValidation
                 contextType = ContextType.Domain;
             }
 
-            using (var context = new PrincipalContext(contextType, domain))
-            {
-                return context.ValidateCredentials(username, password);
-            }
+            return _adService.ValidateCredentials(contextType, domain, username, password);
         }
         catch (PrincipalServerDownException)
         {
