@@ -59,6 +59,8 @@ public static class InfrastructureServiceRegistration
 
         services.AddSingleton<IOperatingSystemFacade, OperatingSystemFacade>();
 
+        services.AddSingleton<INetworkProvider, NetworkProvider>();
+
         services.AddSingleton<IWindowsNetworkInfoService, WindowsNetworkInfoService>();
 
         services.AddTransient<ChromeBrowser>();

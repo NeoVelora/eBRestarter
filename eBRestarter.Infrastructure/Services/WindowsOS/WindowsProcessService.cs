@@ -148,26 +148,28 @@ public class WindowsProcessService : IWindowsProcessControlService
 
         foreach (var process in processes)
         {
-            if (process.ProcessName == "System" || process.ProcessName == "Idle")
-                continue;
-
-            try
+            using (process)
             {
-                if (process.MainWindowHandle != IntPtr.Zero)
+                if (process.ProcessName == "System" || process.ProcessName == "Idle")
+                    continue;
+
+                try
                 {
-                    PostMessage(process.MainWindowHandle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-
-                    bool exited = process.WaitForExit(5000);
-
-                    if (!exited)
+                    if (process.MainWindowHandle != IntPtr.Zero)
                     {
-                        _logger.LogWarning("Prozess {Name} hat auf WM_CLOSE nicht reagiert.", process.ProcessName);
+                        PostMessage(process.MainWindowHandle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                        bool exited = process.WaitForExit(5000);
+
+                        if (!exited)
+                        {
+                            _logger.LogWarning("Prozess {Name} hat auf WM_CLOSE nicht reagiert.", process.ProcessName);
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Fehler beim Schließen von Prozess {Name}", process.ProcessName);
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Fehler beim Schließen von Prozess {Name}", process.ProcessName);
+                }
             }
         }
     }

@@ -66,7 +66,7 @@ public class FileDeletionService : IFileDeletionService
 
                 if (token.IsCancellationRequested) return;
 
-                try { Directory.Delete(dir, true); } catch { }
+                try { Directory.Delete(dir, false); } catch { }
             }
 
             statusReporter.Report("Abschließe Bereinigung...");

@@ -5,7 +5,17 @@ namespace eBRestarter.Infrastructure.Wrapper;
 
 public class RealProcessWrapper : IProcessWrapper
 {
-    public Process? Start(ProcessStartInfo info) => Process.Start(info);
+    public IProcess? Start(ProcessStartInfo info)
+    {
+        var process = Process.Start(info);
+
+        if (process != null)
+        {
+            return new ProcessAdapter(process);
+        }
+
+        return null;
+    }
 
     public bool IsProcessRunning(string name)
     {
@@ -21,5 +31,10 @@ public class RealProcessWrapper : IProcessWrapper
         }
     }
 
-    public Process[] GetProcesses() => Process.GetProcesses();
+    public IProcess[] GetProcesses()
+    {
+        var processes = Process.GetProcesses();
+
+        return processes.Select(p => (IProcess)new ProcessAdapter(p)).ToArray();
+    }
 }

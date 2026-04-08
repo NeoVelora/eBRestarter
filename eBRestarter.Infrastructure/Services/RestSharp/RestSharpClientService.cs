@@ -8,9 +8,10 @@ using System.Net;
 
 namespace eBRestarter.Infrastructure.Services.RestSharp
 {
-    public class RestSharpClientService(ILogger<RestSharpClientService> logger) : IRestClientService
+    public class RestSharpClientService(ILogger<RestSharpClientService> logger, HttpMessageHandler? httpMessageHandler = null) : IRestClientService
     {
         private readonly ILogger<RestSharpClientService> _logger = logger;
+        private readonly HttpMessageHandler? _httpMessageHandler = httpMessageHandler;
 
         public async Task<ApiResponse> ExecuteGetAsync(ApiRequest requestModel)
         {
@@ -56,6 +57,11 @@ namespace eBRestarter.Infrastructure.Services.RestSharp
                 Timeout = TimeSpan.FromSeconds(model.TimeoutSeconds)
             };
 
+            if (_httpMessageHandler != null)
+            {
+                options.ConfigureMessageHandler = _ => _httpMessageHandler;
+            }
+
             if (!string.IsNullOrWhiteSpace(model.Username) && !string.IsNullOrWhiteSpace(model.Password))
             {
                 options.Authenticator = new HttpBasicAuthenticator(model.Username, model.Password);
@@ -69,12 +75,22 @@ namespace eBRestarter.Infrastructure.Services.RestSharp
             if (response.IsSuccessful)
             {
                 var rateCode = CheckRateLimit(response);
-
                 return new ApiResponse
                 {
                     IsSuccess = true,
                     Content = response.Content,
                     StatusCode = rateCode
+                };
+            }
+
+            if (response.ResponseStatus == ResponseStatus.TimedOut)
+            {
+                _logger.LogWarning("API Fehler: Lokaler Timeout bei {Url}", response.Request.Resource);
+                return new ApiResponse
+                {
+                    IsSuccess = false,
+                    StatusCode = ResponseCode.HTTPTimeout,
+                    ErrorMessage = "Die Anfrage hat das Zeitlimit überschritten."
                 };
             }
 
@@ -114,6 +130,7 @@ namespace eBRestarter.Infrastructure.Services.RestSharp
             var code = ex switch
             {
                 TimeoutException => ResponseCode.HTTPTimeout,
+                TaskCanceledException => ResponseCode.HTTPTimeout,
                 HttpRequestException httpEx when httpEx.Message.Contains("429") => ResponseCode.HttpRE429,
                 HttpRequestException httpEx when httpEx.Message.Contains("401") => ResponseCode.HttpRE401,
                 _ => ResponseCode.GeneralExceptionError

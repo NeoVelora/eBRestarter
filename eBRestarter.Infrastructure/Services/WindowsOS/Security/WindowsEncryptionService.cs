@@ -6,7 +6,7 @@ namespace eBRestarter.Infrastructure.Services.WindowsOS.Security;
 
 public class WindowsEncryptionService : IEncryptionService
 {
-    private static readonly byte[] _entropy = Encoding.UTF8.GetBytes("eBRestarter_Secure_Entropy_2024");
+    private static readonly byte[] _entropy = Encoding.UTF8.GetBytes("eBRestarter_Secure_Entropy_2026");
 
     public string Encrypt(string plainText)
     {
