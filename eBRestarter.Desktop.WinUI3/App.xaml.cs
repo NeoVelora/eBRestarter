@@ -5,6 +5,7 @@ using eBRestarter.Desktop.WinUI3.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.Services;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Infrastructure.DependencyInjection;
+using eBRestarter.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,11 +38,15 @@ namespace eBRestarter.Desktop.WinUI3
              })
              .ConfigureServices((_, services) =>
              {
+
                  services.AddInfrastructureServices();
                  services.AddApplicationServices();
                  services.AddNavigationService();
                  services.AddDialoglServiceExtensions();
                  services.AddThemeService();
+
+                 services.AddSingleton<IBrowserExtensionDeploymentService, BrowserExtensionDeploymentService>();
+
                  services.AddViewModels();
 
                  services.AddSingleton<ILanguageService, LanguageService>();

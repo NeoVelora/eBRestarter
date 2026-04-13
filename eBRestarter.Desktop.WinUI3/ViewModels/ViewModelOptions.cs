@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Contstants;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Config;
@@ -18,12 +19,13 @@ using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Infrastructure.Constants;
 using Microsoft.Windows.AppLifecycle;
 using System;
-using System.Buffers.Text;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
@@ -47,6 +49,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private readonly IThemeService _themeService;
         private readonly Microsoft.UI.Dispatching.DispatcherQueue _dispatcherQueue;
         private readonly IComputerRestartScheduler _computerRestartScheduler;
+        private readonly IBrowserExtensionDeploymentService _browserExtensionDeploymentService;
 
         #endregion
 
@@ -99,7 +102,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ILanguageService languageService,
             ILocalizationService localizationService,
             IRestartCalculationService restartCalculationService,
-            IComputerRestartScheduler computerRestartScheduler)
+            IComputerRestartScheduler computerRestartScheduler,
+            IBrowserExtensionDeploymentService browserExtensionDeploymentService)
         {
             _isInitializing = true;
 
@@ -115,7 +119,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _localizationService = localizationService;
             _restartCalculationService = restartCalculationService;
             _computerRestartScheduler = computerRestartScheduler;
+            _browserExtensionDeploymentService = browserExtensionDeploymentService;
 
+            _browserExtensionDeploymentService.EnsureExtensionIsDeployed();
             ComputerRestartList = new ReadOnlyCollection<ComputerRestartOption>([.. localizationService.GetComputerRestartOptions()]);
 
             LanguageList = new ReadOnlyCollection<LanguageOption>([.. localizationService.GetAvailableLanguages()]);
@@ -126,7 +132,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ComputerRestartClockTimeMax = 23;
             ComputerRestartClockTime = _currentConfig.Computer.RestartClockTime;
 
-            var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
+            var configDays = _currentConfig.Computer.ComputerRestartIntervalDays;
             var configLanguageIndex = _currentConfig.Settings.Language;
 
             SelectedComputerRestartOption = ComputerRestartList.FirstOrDefault(option => option.Days == configDays) ?? ComputerRestartList[0];
@@ -144,6 +150,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             LoadExtensionConfig();
 
             InitializeAsync().Forget();
+
+
         }
 
         #endregion
@@ -247,7 +255,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             try
             {
-                string extensionPath = GetExtensionFolderPath();
+                string extensionPath = _browserExtensionDeploymentService.GetExtensionFolderPath();
                 if (!Directory.Exists(extensionPath))
                 {
                     Directory.CreateDirectory(extensionPath);
@@ -265,7 +273,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             try
             {
-                string configPath = Path.Combine(GetExtensionFolderPath(), "config.json");
+                string extensionPath = _browserExtensionDeploymentService.GetExtensionFolderPath();
+                string configPath = Path.Combine(extensionPath, "tab_restarter_config.json");
 
                 var configData = new ExtensionConfigDto
                 {
@@ -274,10 +283,16 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     WARTEZEIT_MS = (int)(ExtensionWaitTimeMinutes * 60000)
                 };
 
-                var options = new JsonSerializerOptions { WriteIndented = true };
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+
+                    TypeInfoResolver = ExtensionConfigJsonContext.Default
+                };
+
                 string jsonString = JsonSerializer.Serialize(configData, options);
 
-                if (!Directory.Exists(GetExtensionFolderPath())) Directory.CreateDirectory(GetExtensionFolderPath());
+                if (!Directory.Exists(_browserExtensionDeploymentService.GetExtensionFolderPath())) Directory.CreateDirectory(_browserExtensionDeploymentService.GetExtensionFolderPath());
                 await File.WriteAllTextAsync(configPath, jsonString);
 
                 ExtensionSaveStatus = _localizationService.GetString("Options_SavedSuccessfully") ?? "Erfolgreich gespeichert!";
@@ -286,9 +301,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Fehler beim Speichern der Extension Config: {ex.Message}");
-                await _dialogService.ShowMessageAsync("Fehler", $"Konnte config.json nicht speichern: {ex.Message}", DialogIcon.Error);
+
+                await _dialogService.ShowMessageAsync(_localizationService.GetString("General_Error"), _localizationService.GetString("BrowserExtension_Config_Error_Message") + " " + ex.Message, DialogIcon.Error);
             }
+        }
+
+        [JsonSerializable(typeof(ExtensionConfigDto))]
+        public partial class ExtensionConfigJsonContext : JsonSerializerContext
+        {
         }
 
         [RelayCommand]
@@ -331,6 +351,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _currentConfig.Settings.ApiUsername = string.Empty;
             _currentConfig.Settings.ApiKey = string.Empty;
 
+            WeakReferenceMessenger.Default.Send(new ApiCredentialsRemovedMessage());
+
             await _dialogService.ShowMessageAsync(
                 _localizationService.GetString("Options_RemoveCreds_Title"),
                 _localizationService.GetString("Options_RemoveCreds_Message"),
@@ -364,7 +386,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 }
                 else if (response.Status == AutoLogonResultStatus.Activated)
                 {
-                    await _dialogService.ShowMessageAsync("Erfolg", _localizationService.GetString("Options_AutoLogon_Success"));
+                    await _dialogService.ShowMessageAsync(_localizationService.GetString("General_Success"), _localizationService.GetString("Options_AutoLogon_Success"));
                 }
             }
             else
@@ -378,16 +400,16 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 }
                 else if (response.Status == AutoLogonResultStatus.ValidationError)
                 {
-                    await _dialogService.ShowMessageAsync("Fehler", _localizationService.GetString("Options_AutoLogon_ValidationError"));
+                    await _dialogService.ShowMessageAsync(_localizationService.GetString("General_Error"), _localizationService.GetString("Options_AutoLogon_ValidationError"));
                 }
                 else if (response.Status == AutoLogonResultStatus.DomainError)
                 {
-                    await _dialogService.ShowMessageAsync("Fehler", _localizationService.GetString("Options_AutoLogon_DomainError"));
+                    await _dialogService.ShowMessageAsync(_localizationService.GetString("General_Error"), _localizationService.GetString("Options_AutoLogon_DomainError"));
                 }
                 else
                 {
                     string errorFormat = _localizationService.GetString("General_UnexpectedError");
-                    await _dialogService.ShowMessageAsync("Fehler", string.Format(errorFormat, response.ErrorMessage));
+                    await _dialogService.ShowMessageAsync(_localizationService.GetString("General_Error"), string.Format(errorFormat, response.ErrorMessage));
                 }
             }
         }
@@ -405,8 +427,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             });
         }
 
+
         partial void OnSelectedComputerRestartOptionChanged(ComputerRestartOption value)
         {
+            if (value == null || _isInitializing)
+            {
+                UpdateRestartUiState();
+                return;
+            }
+
             _currentConfig.Computer.ComputerRestartIntervalDays = value.Days;
 
             RecalculateNextRestartDate();
@@ -473,30 +502,18 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         #region PrivateHelperMethods
 
-        private string GetExtensionFolderPath()
-        {
-#if DEBUG
-            // Im Debug-Modus gehen wir 6 Ebenen nach oben in den Solution-Root-Ordner.
-            // Von: ...\eBRestarter\eBRestarter.Desktop.WinUI3\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64\
-            // Nach: ...\eBRestarter\
-            string solutionDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\..\..\"));
 
-            // Nun navigieren wir in dein JavaScript-Projekt
-            return Path.Combine(solutionDirectory, "eBRestarter.RedirectExtension", "RedirectExtension");
-#else
-    
-    return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RedirectExtension");
-#endif
-        }
-
+        [RequiresUnreferencedCode("Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
         private void LoadExtensionConfig()
         {
             try
             {
-                string configPath = Path.Combine(GetExtensionFolderPath(), "config.json");
+                string configPath = Path.Combine(_browserExtensionDeploymentService.GetExtensionFolderPath(), "tab_restarter_config.json");
+
                 if (File.Exists(configPath))
                 {
                     string jsonString = File.ReadAllText(configPath);
+
                     var configData = JsonSerializer.Deserialize<ExtensionConfigDto>(jsonString);
 
                     if (configData != null)
@@ -511,6 +528,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     }
                 }
             }
+
             catch (Exception ex)
             {
                 Debug.WriteLine($"Konnte existierende config.json nicht lesen: {ex.Message}");

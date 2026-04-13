@@ -1,8 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Authentication;
 using eBRestarter.Core.Application.Interfaces.Config;
+using eBRestarter.Core.Domain.Models.Records;
 using System;
 using System.Threading.Tasks;
 
@@ -74,6 +76,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 _configService.SaveConfig(newConfig);
                 StatusMessage = _localizationService.GetString("ActivateApi_Success");
                 StatusColor = "#7ED422";
+
+                WeakReferenceMessenger.Default.Send(new ApiCredentialsUpdatedMessage());
             }
             else
             {

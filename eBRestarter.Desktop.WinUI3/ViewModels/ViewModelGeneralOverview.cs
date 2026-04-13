@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Domain.Models.Records;
 using LiveChartsCore;
@@ -114,6 +115,25 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _timer.Start();
 
             Task.Run(LoadDataAsync);
+
+            WeakReferenceMessenger.Default.Register<ApiCredentialsUpdatedMessage>(this, (_, __) => Task.Run(LoadDataAsync));
+
+            WeakReferenceMessenger.Default.Register<ApiCredentialsRemovedMessage>(this, (_, __) =>
+            {
+                _dispatcherQueue.TryEnqueue(() =>
+                {
+                    ResetChart();
+
+                    _cachedEarnings = null;
+
+                    UpdateChartData();
+
+                    EarningsThisDaySum = "-";
+                    EarningsThisMonthSum = "-";
+                    EarningsThisYearSum = "-";
+
+                });
+            });
         }
 
         #endregion
