@@ -19,7 +19,8 @@ public class EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger)
 
     protected override string RegistryKeyVersion => @"Software\Microsoft\Edge\BLBeacon";
 
-    protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
+    protected override string ExtensionId => "kjhejmaladginnedpoppohfnkionnghi";
+
     public override string ExtensionInstallUrl => WebLinks.EdgeEVisitorAddOnLink;
 
     protected override string ExeFileName => "msedge.exe";

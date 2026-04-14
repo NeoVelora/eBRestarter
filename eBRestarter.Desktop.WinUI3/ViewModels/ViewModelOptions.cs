@@ -256,10 +256,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             try
             {
                 string extensionPath = _browserExtensionDeploymentService.GetExtensionFolderPath();
+
                 if (!Directory.Exists(extensionPath))
                 {
                     Directory.CreateDirectory(extensionPath);
                 }
+
                 _os.WindowsProcessControlService.OpenExplorer(extensionPath);
             }
             catch (Exception ex)
@@ -292,11 +294,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
                 string jsonString = JsonSerializer.Serialize(configData, options);
 
-                if (!Directory.Exists(_browserExtensionDeploymentService.GetExtensionFolderPath())) Directory.CreateDirectory(_browserExtensionDeploymentService.GetExtensionFolderPath());
+                if (!Directory.Exists(_browserExtensionDeploymentService.GetExtensionFolderPath()))
+                {
+                    Directory.CreateDirectory(_browserExtensionDeploymentService.GetExtensionFolderPath());
+                }
+
                 await File.WriteAllTextAsync(configPath, jsonString);
 
                 ExtensionSaveStatus = _localizationService.GetString("Options_SavedSuccessfully") ?? "Erfolgreich gespeichert!";
+
                 await Task.Delay(3000);
+
                 ExtensionSaveStatus = string.Empty;
             }
             catch (Exception ex)
@@ -304,11 +312,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
                 await _dialogService.ShowMessageAsync(_localizationService.GetString("General_Error"), _localizationService.GetString("BrowserExtension_Config_Error_Message") + " " + ex.Message, DialogIcon.Error);
             }
-        }
-
-        [JsonSerializable(typeof(ExtensionConfigDto))]
-        public partial class ExtensionConfigJsonContext : JsonSerializerContext
-        {
         }
 
         [RelayCommand]
@@ -503,7 +506,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #region PrivateHelperMethods
 
 
-        [RequiresUnreferencedCode("Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)")]
         private void LoadExtensionConfig()
         {
             try
@@ -514,7 +516,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 {
                     string jsonString = File.ReadAllText(configPath);
 
-                    var configData = JsonSerializer.Deserialize<ExtensionConfigDto>(jsonString);
+                    var configData = JsonSerializer.Deserialize(jsonString, ExtensionConfigJsonContext.Default.ExtensionConfigDto);
 
                     if (configData != null)
                     {
@@ -533,6 +535,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             {
                 Debug.WriteLine($"Konnte existierende config.json nicht lesen: {ex.Message}");
             }
+        }
+
+        [JsonSerializable(typeof(ExtensionConfigDto))]
+        public partial class ExtensionConfigJsonContext : JsonSerializerContext
+        {
         }
 
         private bool CanCheckForUpdates() => !IsCheckingForUpdates;
