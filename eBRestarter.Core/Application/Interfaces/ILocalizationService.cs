@@ -5,10 +5,4 @@ namespace eBRestarter.Core.Application.Interfaces;
 public interface ILocalizationService
 {
     string GetString(string key);
-
-    IEnumerable<LanguageOption> GetAvailableLanguages();
-
-    IEnumerable<ComputerRestartOption> GetComputerRestartOptions();
-
-    IEnumerable<BrowserCacheDeleteOption> GetBrowserCacheOptions();
 }

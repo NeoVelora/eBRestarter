@@ -7,11 +7,13 @@ using eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Extensions;
 using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Dispatching;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using eBRestarter.Desktop.WinUI3.Models.Enums;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {

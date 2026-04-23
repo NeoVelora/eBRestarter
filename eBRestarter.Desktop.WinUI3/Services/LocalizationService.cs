@@ -1,27 +1,22 @@
 using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Desktop.WinUI3.Models;
+using eBRestarter.Desktop.WinUI3.Models.Constants;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.Windows.ApplicationModel.Resources;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace eBRestarter.Desktop.WinUI3.Services;
 
-public class LocalizationService : ILocalizationService
+public class LocalizationService : ILocalizationService, IUIOptionsService
 {
-    #region FieldsAndInjectedServices
-
     private readonly ResourceManager _resourceManager;
     private readonly ResourceContext _resourceContext;
     private readonly ResourceMap _resourceMap;
 
-    #endregion
-
-    #region ConstructorAndFinalizer
-
     public LocalizationService()
     {
         _resourceManager = new ResourceManager();
-
         _resourceContext = _resourceManager.CreateResourceContext();
 
         string currentLanguage = Microsoft.Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride;
@@ -31,19 +26,13 @@ public class LocalizationService : ILocalizationService
         }
 
         _resourceContext.QualifierValues["Language"] = currentLanguage;
-
         _resourceMap = _resourceManager.MainResourceMap;
     }
-
-    #endregion
-
-    #region PublicMethods
 
     public string GetString(string key)
     {
         try
         {
-
             var result = _resourceMap.GetValue($"Resources/{key}", _resourceContext);
             return result?.ValueAsString ?? $"[{key}]";
         }
@@ -85,6 +74,4 @@ public class LocalizationService : ILocalizationService
             new(GetString("BrowserCacheOption_14"), 14)
         ];
     }
-
-    #endregion
 }

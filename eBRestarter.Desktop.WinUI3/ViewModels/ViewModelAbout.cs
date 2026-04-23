@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Desktop.WinUI3.Models;
+using eBRestarter.Desktop.WinUI3.Models.Constants;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using System.Collections.ObjectModel;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
@@ -11,6 +13,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private readonly IAppInfoService _appInfoService;
         private readonly ILocalizationService _localizationService;
+        private readonly IIconCreditService _iconCreditService;
 
         #endregion
 
@@ -30,10 +33,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         public ViewModelAbout(
             IAppInfoService appInfoService,
-            ILocalizationService localizationService)
+            ILocalizationService localizationService,
+            IIconCreditService iconCreditService)
         {
             _appInfoService = appInfoService;
             _localizationService = localizationService;
+            _iconCreditService = iconCreditService;
             AppVersion = _localizationService.GetString("About_Loading");
             LoadData();
         }
@@ -46,7 +51,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             string prefix = _localizationService.GetString("About_VersionPrefix");
             AppVersion = $"{prefix} {_appInfoService.GetAppVersion()}";
-            var credits = _appInfoService.GetIconCredits();
+            var credits = _iconCreditService.GetIconCredits();
             IconCredits.Clear();
             foreach (var iconCredit in credits)
                 IconCredits.Add(iconCredit);

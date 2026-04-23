@@ -14,6 +14,10 @@ using eBRestarter.Core.Application.UseCases.ToggleAppAutoStart;
 using eBRestarter.Core.Domain.Enums;
 using eBRestarter.Core.Domain.Extensions;
 using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Desktop.WinUI3.Models;
+using eBRestarter.Desktop.WinUI3.Models.Constants;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
+using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Core.Domain.Models.Records.Config;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Infrastructure.Constants;
@@ -27,6 +31,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using eBRestarter.Desktop.WinUI3.Models.Enums;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
@@ -44,6 +49,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private bool _isInitializing = false;
         private readonly ILanguageService _languageService;
         private readonly ILocalizationService _localizationService;
+        private readonly IUIOptionsService _uiOptionsService;
         private readonly IOperatingSystemFacade _os;
         private readonly IRestartCalculationService _restartCalculationService;
         private readonly IThemeService _themeService;
@@ -101,6 +107,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IEVisitorConfigService eVisitorConfigService,
             ILanguageService languageService,
             ILocalizationService localizationService,
+            IUIOptionsService uiOptionsService,
             IRestartCalculationService restartCalculationService,
             IComputerRestartScheduler computerRestartScheduler,
             IBrowserExtensionDeploymentService browserExtensionDeploymentService)
@@ -117,14 +124,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _eVisitorConfigService = eVisitorConfigService;
             _languageService = languageService;
             _localizationService = localizationService;
+            _uiOptionsService = uiOptionsService;
             _restartCalculationService = restartCalculationService;
             _computerRestartScheduler = computerRestartScheduler;
             _browserExtensionDeploymentService = browserExtensionDeploymentService;
 
             _browserExtensionDeploymentService.EnsureExtensionIsDeployed();
-            ComputerRestartList = new ReadOnlyCollection<ComputerRestartOption>([.. localizationService.GetComputerRestartOptions()]);
+            ComputerRestartList = new ReadOnlyCollection<ComputerRestartOption>([.. _uiOptionsService.GetComputerRestartOptions()]);
 
-            LanguageList = new ReadOnlyCollection<LanguageOption>([.. localizationService.GetAvailableLanguages()]);
+            LanguageList = new ReadOnlyCollection<LanguageOption>([.. _uiOptionsService.GetAvailableLanguages()]);
 
             _currentConfig = _eVisitorConfigService.LoadConfig();
 
@@ -144,7 +152,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             _computerRestartScheduler.OnNextRestartDateChanged += OnNextRestartDateChanged;
 
-            ExtensionLanguages = new ReadOnlyCollection<LanguageOption>([.. localizationService.GetAvailableLanguages()]);
+            ExtensionLanguages = new ReadOnlyCollection<LanguageOption>([.. _uiOptionsService.GetAvailableLanguages()]);
             SelectedExtensionLanguage = ExtensionLanguages.FirstOrDefault()!;
 
             LoadExtensionConfig();
@@ -614,3 +622,4 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         #endregion
     }
 }
+

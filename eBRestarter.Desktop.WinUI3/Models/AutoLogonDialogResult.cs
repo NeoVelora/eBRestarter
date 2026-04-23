@@ -1,6 +1,6 @@
 using eBRestarter.Core.Domain.Models.Records;
 
-namespace eBRestarter.Core.Domain.Models;
+namespace eBRestarter.Desktop.WinUI3.Models;
 
 public class AutoLogonDialogResult
 {
