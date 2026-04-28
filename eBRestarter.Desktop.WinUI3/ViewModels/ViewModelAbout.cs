@@ -9,27 +9,15 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelAbout : ObservableObject
     {
-        #region FieldsAndInjectedServices
-
         private readonly IAppInfoService _appInfoService;
-        private readonly ILocalizationService _localizationService;
+
         private readonly IIconCreditService _iconCreditService;
 
-        #endregion
-
-        #region ObservableProperties
+        private readonly ILocalizationService _localizationService;
 
         [ObservableProperty] public partial string AppVersion { get; set; }
 
-        #endregion
-
-        #region PublicProperties
-
         public ObservableCollection<IconCredit> IconCredits { get; } = [];
-
-        #endregion
-
-        #region ConstructorAndFinalizer
 
         public ViewModelAbout(
             IAppInfoService appInfoService,
@@ -40,14 +28,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _localizationService = localizationService;
             _iconCreditService = iconCreditService;
             AppVersion = _localizationService.GetString("About_Loading");
-            LoadData();
+            LoadVersionAndIconCredits();
         }
 
-        #endregion
-
-        #region PrivateHelperMethods
-
-        private void LoadData()
+        private void LoadVersionAndIconCredits()
         {
             string prefix = _localizationService.GetString("About_VersionPrefix");
             AppVersion = $"{prefix} {_appInfoService.GetAppVersion()}";
@@ -56,7 +40,5 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             foreach (var iconCredit in credits)
                 IconCredits.Add(iconCredit);
         }
-
-        #endregion
     }
 }

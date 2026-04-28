@@ -1,11 +1,10 @@
 using eBRestarter.Core.Application.DependencyInjections;
 using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.Interfaces.Config;
+using eBRestarter.Core.Application.Models;
 using eBRestarter.Desktop.WinUI3.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.Services;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Infrastructure.DependencyInjection;
-using eBRestarter.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -45,8 +44,6 @@ namespace eBRestarter.Desktop.WinUI3
                  services.AddDialoglServiceExtensions();
                  services.AddThemeService();
 
-                 services.AddSingleton<IBrowserExtensionDeploymentService, BrowserExtensionDeploymentService>();
-
                  services.AddViewModels();
 
                  services.AddSingleton<ILanguageService, LanguageService>();
@@ -62,21 +59,11 @@ namespace eBRestarter.Desktop.WinUI3
                 return;
             }
 
+            StartupDisplayPreferences? launchConfig = null;
             try
             {
-                var configService = AppHost!.Services.GetRequiredService<IEVisitorConfigService>();
-                var config = configService.LoadConfig();
-
-                int intervalDays = config.Browser?.DeleteBrowserCacheIntervalDays ?? 0;
-                DateTime nextDate = config.Browser?.NextBrowserDeleteCacheDate ?? DateTime.MinValue;
-
-                if (nextDate == DateTime.Today && intervalDays > 0)
-                    nextDate = DateTime.Today.AddDays(intervalDays);
-
-                config.Browser?.NextBrowserDeleteCacheDate = nextDate;
-                configService.SaveConfig(config);
-
-                string languageCode = config.Settings.Language == 0 ? "de-DE" : "en-US";
+                launchConfig = AppHost!.Services.GetRequiredService<IApplicationLaunchConfigService>().PrepareConfigForLaunch();
+                string languageCode = launchConfig.LanguageCode;
 
                 ApplicationLanguages.PrimaryLanguageOverride = languageCode;
 
@@ -93,11 +80,10 @@ namespace eBRestarter.Desktop.WinUI3
 
             try
             {
-                var configService = AppHost!.Services.GetRequiredService<IEVisitorConfigService>();
-                var themeService = AppHost.Services.GetRequiredService<IThemeService>();
-                var config = configService.LoadConfig();
-
-                string themeToSet = string.IsNullOrEmpty(config.Settings.Theme) ? "Light" : config.Settings.Theme;
+                var themeService = AppHost!.Services.GetRequiredService<IThemeService>();
+                string themeToSet = launchConfig != null && !string.IsNullOrEmpty(launchConfig.ThemeName)
+                    ? launchConfig.ThemeName
+                    : "Light";
                 themeService.SetTheme(themeToSet);
             }
             catch (Exception ex)

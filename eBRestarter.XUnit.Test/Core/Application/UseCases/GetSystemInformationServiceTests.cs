@@ -6,8 +6,7 @@ using Shouldly;
 using System;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Core.Domain.Models.Records;
-
+using eBRestarter.Core.Application.Models.Records;
 
 namespace eBRestarter.Tests.Core.Application.UseCases.GetSystemInformation
 {

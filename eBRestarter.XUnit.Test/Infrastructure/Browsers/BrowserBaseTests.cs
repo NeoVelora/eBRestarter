@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
-using eBRestarter.Core.Domain.Enums;
-using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Infrastructure.Browsers.Abstract;
 using Microsoft.Extensions.Logging;
 using Moq;

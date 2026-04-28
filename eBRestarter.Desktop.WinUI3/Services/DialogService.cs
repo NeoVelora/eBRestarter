@@ -1,5 +1,3 @@
-using eBRestarter.Core.Domain.Enums;
-using eBRestarter.Core.Domain.Models;
 using eBRestarter.Desktop.WinUI3.Models;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.Views.Dialogs;

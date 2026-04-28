@@ -1,5 +1,5 @@
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
-using eBRestarter.Core.Domain.Enums;
+using eBRestarter.Core.Application.Enums;
 using eBRestarter.Infrastructure.Browsers;
 using eBRestarter.Infrastructure.Factories;
 using Microsoft.Extensions.Logging;

@@ -1,11 +1,12 @@
-using eBRestarter.Core.Application.Contstants;
+using eBRestarter.Core.Application.Constants;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
-using eBRestarter.Core.Domain.Enums;
-using eBRestarter.Core.Domain.Models.Records.Config;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Services;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Shouldly;
@@ -139,7 +140,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
 
             var dummyConfig = new AppConfig { Browser = new Browser { DeleteBrowserCacheIntervalDays = 7, NextBrowserDeleteCacheDate = DateTime.MinValue } };
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
-            _mockCleanupScheduleService.Setup(c => c.ShouldRunCleanupNow(dummyConfig)).Returns(true);
+            _mockCleanupScheduleService.Setup(c => c.ShouldRunCleanupNow(7, DateTime.MinValue)).Returns(true);
             _mockCleanupScheduleService.Setup(c => c.GetNextCleanupDateAfterRun(It.IsAny<DateTime>(), 7)).Returns(new DateTime(2050, 1, 1));
 
             var cycleTask = _sut.StartAsync(request, () =>

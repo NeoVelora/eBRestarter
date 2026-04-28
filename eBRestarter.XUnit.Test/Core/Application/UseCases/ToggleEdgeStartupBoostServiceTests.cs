@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.UseCases.ToggleEdgeStartupBoost;
-using eBRestarter.Core.Domain.Enums;
+using eBRestarter.Core.Application.Enums;
 using Moq;
 using Shouldly;
 using System;

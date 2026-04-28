@@ -1,98 +1,152 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using eBRestarter.Core.Application.Interfaces.Authentication;
+using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-    public partial class ViewModelImportApi(
-        IApiAuthenticationService authService,
-        ICredentialStore credentialStore) : ObservableObject
+    public partial class ViewModelImportApi : ObservableObject
     {
-        #region FieldsAndInjectedServices
+        private const string DefaultFileStatusIconUri = "ms-appx:///Resources/Visuals/Icons/LightTheme/note_light_theme.png";
 
-        private readonly IApiAuthenticationService _authService = authService;
-        private readonly ICredentialStore _credentialStore = credentialStore;
+        private const string ErrorFileReadMessage = "Fehler beim Lesen der Datei (Format ungültig).";
 
-        #endregion
+        private const string ErrorInvalidFileFormatMessage = "Ungültiges Dateiformat. Bitte .apiaf Datei verwenden.";
 
-        #region ObservableProperties
+        private const string FileStatusIconErrorUri = "ms-appx:///Resources/Visuals/Icons/Intersection/wrong_document.png";
 
-        [ObservableProperty] public partial string FileStatusIcon { get; set; } = "ms-appx:///Resources/Visuals/Icons/LightTheme/note_light_theme.png";
-        [ObservableProperty] public partial string ImportedFileName { get; set; } = string.Empty;
+        private const string FileStatusIconReadyUri = "ms-appx:///Resources/Visuals/Icons/Intersection/approval.png";
+
+        private const string ImportFailedMessagePrefix = "Import fehlgeschlagen: ";
+
+        private const string ImportVerificationBusyMessage = "Lese Datei und prüfe Zugangsdaten...";
+
+        private const string InvalidStatusColorHex = "#E40E87";
+
+        private const string LegacyApiFileExtension = ".apiaf";
+
+        private const string ReadyStatusColorThemeKey = "{ThemeResource TextFillColorPrimaryBrush}";
+
+        private const string StatusColorThemeCautionKey = "{ThemeResource SystemFillColorCautionBrush}";
+
+        private const string StatusFileReadyMessage = "Datei erkannt. Bereit zum Import.";
+
+        private const string SuccessImportMessage = "Import und Aktivierung erfolgreich!";
+
+        private const string SuccessStatusColorHex = "#7ED422";
+
+        private const string UnexpectedImportErrorMessage = "Unerwarteter Fehler beim Import.";
+
+        private readonly IApiAuthenticationService _authService;
+
+        private readonly ICredentialStore _credentialStore;
+
+        [ObservableProperty]
+        public partial bool IsBusy { get; set; }
+
+
+        [ObservableProperty]
+        public partial string FileStatusIcon { get; set; } = DefaultFileStatusIconUri;
+
+        [ObservableProperty]
+        public partial string ImportedFileName { get; set; } = string.Empty;
+
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
         public partial string ImportedFilePath { get; set; } = string.Empty;
-        [ObservableProperty] public partial bool IsBusy { get; set; }
-        [ObservableProperty] public partial string StatusColor { get; set; } = "Transparent";
-        [ObservableProperty] public partial string StatusMessage { get; set; } = string.Empty;
 
-        #endregion
+        [ObservableProperty]
+        public partial string StatusColor { get; set; } = "Transparent";
 
-        #region Commands
+        [ObservableProperty]
+        public partial string StatusMessage { get; set; } = string.Empty;
+
+        private bool CanImport => !string.IsNullOrEmpty(ImportedFilePath) && !IsBusy;
+
+        public ViewModelImportApi(IApiAuthenticationService authService, ICredentialStore credentialStore)
+        {
+            ArgumentNullException.ThrowIfNull(authService);
+            ArgumentNullException.ThrowIfNull(credentialStore);
+
+            _authService = authService;
+            _credentialStore = credentialStore;
+        }
 
         [RelayCommand(CanExecute = nameof(CanImport))]
         private async Task Import()
         {
             IsBusy = true;
-            StatusMessage = "Lese Datei und prüfe Zugangsdaten...";
-            StatusColor = "{ThemeResource SystemFillColorCautionBrush}";
 
-            var credentials = _credentialStore.ImportFromLegacyFile(ImportedFilePath);
-
-            if (credentials == null)
+            try
             {
-                StatusMessage = "Fehler beim Lesen der Datei (Format ungültig).";
-                StatusColor = "#E40E87";
+                StatusMessage = ImportVerificationBusyMessage;
+                StatusColor = StatusColorThemeCautionKey;
+
+                var credentials = _credentialStore.ImportFromLegacyFile(ImportedFilePath);
+
+                if (credentials == null)
+                {
+                    StatusMessage = ErrorFileReadMessage;
+                    StatusColor = InvalidStatusColorHex;
+                    return;
+                }
+
+                var (isValid, verificationDetail) = await _authService.VerifyCredentialsAsync(credentials.Username, credentials.ApiKey);
+
+                if (isValid)
+                {
+                    _credentialStore.SaveCredentials(credentials);
+                    StatusMessage = SuccessImportMessage;
+                    StatusColor = SuccessStatusColorHex;
+                }
+                else
+                {
+                    StatusMessage = $"{ImportFailedMessagePrefix}{verificationDetail}";
+                    StatusColor = InvalidStatusColorHex;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                StatusMessage = UnexpectedImportErrorMessage;
+                StatusColor = InvalidStatusColorHex;
+            }
+            finally
+            {
                 IsBusy = false;
-                return;
-            }
-
-            var (IsValid, Message) = await _authService.VerifyCredentialsAsync(credentials.Username, credentials.ApiKey);
-
-            IsBusy = false;
-
-            if (IsValid)
-            {
-                _credentialStore.SaveCredentials(credentials);
-                StatusMessage = "Import und Aktivierung erfolgreich!";
-                StatusColor = "#7ED422";
-            }
-            else
-            {
-                StatusMessage = $"Import fehlgeschlagen: {Message}";
-                StatusColor = "#E40E87";
             }
         }
-
-        #endregion
-
-        #region PublicAndProtectedMethods
 
         public void HandleFileDrop(string filePath)
         {
-            if (!filePath.EndsWith(".apiaf"))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                StatusMessage = "Ungültiges Dateiformat. Bitte .apiaf Datei verwenden.";
-                StatusColor = "#E40E87";
-                FileStatusIcon = "ms-appx:///Resources/Visuals/Icons/Intersection/wrong_document.png";
-                ImportedFilePath = "";
-                ImportedFileName = "";
+                StatusMessage = ErrorInvalidFileFormatMessage;
+                StatusColor = InvalidStatusColorHex;
+                FileStatusIcon = FileStatusIconErrorUri;
+                ImportedFilePath = string.Empty;
+                ImportedFileName = string.Empty;
                 return;
             }
+
+            if (!filePath.EndsWith(LegacyApiFileExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                StatusMessage = ErrorInvalidFileFormatMessage;
+                StatusColor = InvalidStatusColorHex;
+                FileStatusIcon = FileStatusIconErrorUri;
+                ImportedFilePath = string.Empty;
+                ImportedFileName = string.Empty;
+                return;
+            }
+
             ImportedFilePath = filePath;
-            ImportedFileName = System.IO.Path.GetFileName(filePath);
-            StatusMessage = "Datei erkannt. Bereit zum Import.";
-            StatusColor = "{ThemeResource TextFillColorPrimaryBrush}";
-            FileStatusIcon = "ms-appx:///Resources/Visuals/Icons/Intersection/approval.png";
+            ImportedFileName = Path.GetFileName(filePath);
+            StatusMessage = StatusFileReadyMessage;
+            StatusColor = ReadyStatusColorThemeKey;
+            FileStatusIcon = FileStatusIconReadyUri;
         }
-
-        #endregion
-
-        #region PrivateHelperMethods
-
-        private bool CanImport => !string.IsNullOrEmpty(ImportedFilePath) && !IsBusy;
-
-        #endregion
     }
 }

@@ -4,9 +4,11 @@ using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.UseCases.DeleteBrowserContent;
-using eBRestarter.Core.Domain.Enums;
-using eBRestarter.Core.Domain.Models.Records.Config;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Models.Config;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,48 +16,64 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelDeleteBrowserContent : ObservableObject
     {
-        #region FieldsAndInjectedServices
+        private const int AutoCloseAfterSuccessDelayMilliseconds = 1000;
+
+        private const int AutoSequenceStartupDelayMilliseconds = 500;
+
+        private const string InitialProgressTextDisplay = "0 %";
+
+        private bool _isAutoMode;
+
+        private readonly IBrowserFactory _browserFactory;
 
         private readonly IDeleteBrowserContentUseCase _deleteBrowserContentUseCase;
-        private readonly IBrowserFactory _browserFactory;
-        private readonly ILocalizationService _localizationService;
+
         private readonly IEVisitorConfigService _eVisitorConfigService;
 
-        private CancellationTokenSource? _cts;
-        private bool _isAutoMode = false;
+        private readonly ILocalizationService _localizationService;
+
         private BrowserType _selectedBrowserType;
 
-        #endregion
+        private CancellationTokenSource? _deleteBrowserContentCancellationTokenSource;
 
-        #region ObservableProperties
 
-        [ObservableProperty] public partial string BrowserIconPath { get; set; } = string.Empty;
-        [ObservableProperty] public partial string BrowserName { get; set; }
+        [ObservableProperty]
+        public partial string BrowserIconPath { get; set; }
+
+        [ObservableProperty]
+        public partial string BrowserName { get; set; }
+
+        [ObservableProperty]
+        public partial string ProgressText { get; set; }
+
+        [ObservableProperty]
+        public partial string StatusText { get; set; }
+
+
+        [ObservableProperty]
+        public partial double ProgressMaximum { get; set; }
+
+        [ObservableProperty]
+        public partial double ProgressValue { get; set; }
+
+
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
         [NotifyCanExecuteChangedFor(nameof(CancelCleaningCommand))]
-        public partial bool IsBusy { get; set; } = false;
+        public partial bool IsBusy { get; set; }
+
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
-        public partial bool IsDeleteCookiesChecked { get; set; } = true;
+        public partial bool IsDeleteCookiesChecked { get; set; }
+
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(StartCleaningCommand))]
-        public partial bool IsDeleteInternetCacheChecked { get; set; } = true;
-        [ObservableProperty] public partial bool IsProcessConflict { get; set; } = false;
-        [ObservableProperty] public partial double ProgressMaximum { get; set; } = 100;
-        [ObservableProperty] public partial string ProgressText { get; set; } = "0 %";
-        [ObservableProperty] public partial double ProgressValue { get; set; } = 0;
-        [ObservableProperty] public partial string StatusText { get; set; }
+        public partial bool IsDeleteInternetCacheChecked { get; set; }
 
-        #endregion
-
-        #region PublicProperties
+        [ObservableProperty]
+        public partial bool IsProcessConflict { get; set; }
 
         public event Action? RequestCloseDialog;
-
-        #endregion
-
-        #region ConstructorAndFinalizer
 
         public ViewModelDeleteBrowserContent(
             IDeleteBrowserContentUseCase deleteBrowserContentUseCase,
@@ -63,22 +81,30 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IEVisitorConfigService eVisitorConfigService,
             ILocalizationService localizationService)
         {
+            ArgumentNullException.ThrowIfNull(deleteBrowserContentUseCase);
+            ArgumentNullException.ThrowIfNull(browserFactory);
+            ArgumentNullException.ThrowIfNull(eVisitorConfigService);
+            ArgumentNullException.ThrowIfNull(localizationService);
+
             _deleteBrowserContentUseCase = deleteBrowserContentUseCase;
             _browserFactory = browserFactory;
             _eVisitorConfigService = eVisitorConfigService;
             _localizationService = localizationService;
 
+            BrowserIconPath = string.Empty;
             BrowserName = _localizationService.GetString("Cleanup_Loading");
+            ProgressText = InitialProgressTextDisplay;
             StatusText = _localizationService.GetString("Cleanup_Ready");
+            ProgressMaximum = 100;
+            ProgressValue = 0;
+            IsDeleteCookiesChecked = true;
+            IsDeleteInternetCacheChecked = true;
 
-            AppConfig appConfig = eVisitorConfigService.LoadConfig();
+            AppConfig appConfig = _eVisitorConfigService.LoadConfig();
             string selectedBrowserString = appConfig.Browser.Selected;
 
-            if (Enum.TryParse(typeof(BrowserType), selectedBrowserString, true, out var parsedResult))
-            {
-                var browserType = (BrowserType)parsedResult;
-                Initialize(browserType);
-            }
+            if (Enum.TryParse<BrowserType>(selectedBrowserString, ignoreCase: true, out BrowserType parsedBrowserType))
+                Initialize(parsedBrowserType);
             else
             {
                 string errorFormat = _localizationService.GetString("Cleanup_ConfigError");
@@ -86,29 +112,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        #endregion
-
-        #region Commands
-
         [RelayCommand(CanExecute = nameof(CanCancel))]
         private void CancelCleaning()
         {
-            _cts?.Cancel();
+            _deleteBrowserContentCancellationTokenSource?.Cancel();
             StatusText = _localizationService.GetString("Cleanup_Canceling");
-        }
-
-        [RelayCommand(CanExecute = nameof(CanClean))]
-        private async Task StartCleaning()
-        {
-            if (IsBusy) return;
-            await ExecuteCleaningLogic(false);
-        }
-
-        [RelayCommand]
-        private async Task ForceCloseAndContinue()
-        {
-            IsProcessConflict = false;
-            await ExecuteCleaningLogic(true);
         }
 
         [RelayCommand]
@@ -118,15 +126,18 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             StatusText = _localizationService.GetString("Cleanup_CanceledByUser");
         }
 
-        #endregion
-
-        #region PublicAndProtectedMethods
-
-        public async Task RunAutoSequenceAsync()
+        [RelayCommand]
+        private async Task ForceCloseAndContinue()
         {
-            _isAutoMode = true;
-            await Task.Delay(500);
-            await StartCleaning();
+            IsProcessConflict = false;
+            await ExecuteCleaningLogic(true);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanClean))]
+        private async Task StartCleaning()
+        {
+            if (IsBusy) return;
+            await ExecuteCleaningLogic(false);
         }
 
         public void Initialize(BrowserType selectedBrowserType)
@@ -138,25 +149,40 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 BrowserName = currentBrowser.DisplayName;
                 BrowserIconPath = currentBrowser.IconPath;
             }
+            catch (NotSupportedException ex)
+            {
+                string errorFormat = _localizationService.GetString("General_LoadErrorPrefix");
+                StatusText = string.Format(errorFormat, ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                string errorFormat = _localizationService.GetString("General_LoadErrorPrefix");
+                StatusText = string.Format(errorFormat, ex.Message);
+            }
             catch (Exception ex)
             {
+                Debug.WriteLine(ex);
                 string errorFormat = _localizationService.GetString("General_LoadErrorPrefix");
                 StatusText = string.Format(errorFormat, ex.Message);
             }
         }
 
-        #endregion
-
-        #region PrivateHelperMethods
+        public async Task RunAutoSequenceAsync()
+        {
+            _isAutoMode = true;
+            await Task.Delay(AutoSequenceStartupDelayMilliseconds);
+            await StartCleaning();
+        }
 
         private bool CanCancel() => IsBusy;
+
         private bool CanClean() => !IsBusy && (IsDeleteCookiesChecked || IsDeleteInternetCacheChecked);
 
         private async Task ExecuteCleaningLogic(bool forceClose)
         {
             IsBusy = true;
-            _cts?.Dispose();
-            _cts = new CancellationTokenSource();
+            _deleteBrowserContentCancellationTokenSource?.Dispose();
+            _deleteBrowserContentCancellationTokenSource = new CancellationTokenSource();
 
             try
             {
@@ -167,52 +193,51 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     ForceCloseProcess: forceClose
                 );
 
-                var progress = new Progress<DeleteBrowserContentProgress>(p =>
+                var progress = new Progress<DeleteBrowserContentProgress>(cleanupProgress =>
                 {
-                    StatusText = p.StatusMessage;
-                    ProgressMaximum = p.TotalFiles > 0 ? p.TotalFiles : 1;
-                    ProgressValue = p.CurrentFile;
-                    if (p.TotalFiles > 0)
-                    {
-                        ProgressText = $"{p.CurrentFile * 100 / p.TotalFiles} %";
-                    }
+                    StatusText = cleanupProgress.StatusMessage;
+                    ProgressMaximum = cleanupProgress.TotalFiles > 0 ? cleanupProgress.TotalFiles : 1;
+                    ProgressValue = cleanupProgress.CurrentFile;
+                    if (cleanupProgress.TotalFiles > 0)
+                        ProgressText = $"{cleanupProgress.CurrentFile * 100 / cleanupProgress.TotalFiles} %";
                 });
 
-                var response = await _deleteBrowserContentUseCase.ExecuteAsync(request, progress, _cts.Token);
+                var response = await _deleteBrowserContentUseCase.ExecuteAsync(
+                    request,
+                    progress,
+                    _deleteBrowserContentCancellationTokenSource.Token);
 
                 if (response.ProcessConflict)
-                {
                     IsProcessConflict = true;
-                }
                 else if (!response.Success)
-                {
                     StatusText = response.ErrorMessage;
-                }
-                else
+                else if (_isAutoMode)
                 {
-                    if (_isAutoMode)
-                    {
-                        await Task.Delay(1000);
-                        RequestCloseDialog?.Invoke();
-                    }
+                    await Task.Delay(AutoCloseAfterSuccessDelayMilliseconds);
+                    RequestCloseDialog?.Invoke();
                 }
             }
             catch (OperationCanceledException)
             {
                 StatusText = _localizationService.GetString("Cleanup_CanceledByUser");
             }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                string errorFormat = _localizationService.GetString("General_ErrorPrefix");
+                StatusText = string.Format(errorFormat, ex.Message);
+            }
             catch (Exception ex)
             {
+                Debug.WriteLine(ex);
                 string errorFormat = _localizationService.GetString("General_ErrorPrefix");
                 StatusText = string.Format(errorFormat, ex.Message);
             }
             finally
             {
                 IsBusy = false;
-                _cts = null;
+                _deleteBrowserContentCancellationTokenSource?.Dispose();
+                _deleteBrowserContentCancellationTokenSource = null;
             }
         }
-
-        #endregion
     }
 }

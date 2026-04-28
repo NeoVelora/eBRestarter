@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Interfaces.RestClient;
-using eBRestarter.Core.Domain.Enums;
-using eBRestarter.Core.Domain.Models;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Models.Api;
 using eBRestarter.Infrastructure.Services.RestSharp;
 using Microsoft.Extensions.Logging;
 using Moq;

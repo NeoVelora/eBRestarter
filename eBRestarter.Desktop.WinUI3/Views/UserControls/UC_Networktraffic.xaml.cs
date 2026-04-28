@@ -1,5 +1,5 @@
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
-using eBRestarter.Core.Domain.Extensions;
+using eBRestarter.Core.Application.Extensions;
 using eBRestarter.Desktop.WinUI3.Models.UI;
 using eBRestarter.Desktop.WinUI3.ViewModels;
 using Microsoft.Extensions.DependencyInjection;

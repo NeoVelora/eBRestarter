@@ -1,23 +1,25 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using eBRestarter.Core.Application.Contstants;
+using eBRestarter.Core.Application.Constants;
+using eBRestarter.Core.Application.Extensions;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Models;
+using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.UseCases.ScheduleBrowserCleanup;
-using eBRestarter.Core.Domain.Extensions;
-using eBRestarter.Core.Domain.Models.Records;
-using eBRestarter.Core.Domain.Models.Records.Config;
-using eBRestarter.Desktop.WinUI3.Models;
-using eBRestarter.Desktop.WinUI3.Models.Constants;
-using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.Messages;
+using eBRestarter.Desktop.WinUI3.Models;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -25,51 +27,68 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
     public partial class ViewModelRestarterProperties : ObservableObject
     {
-        #region FieldsAndInjectedServices
-
-        private readonly IScheduleBrowserCleanupUseCase _scheduleBrowserCleanupUseCase;
-        private readonly AppConfig _currentConfig;
-        private readonly IDialogService _dialogService;
-        private readonly IEVisitorConfigService _eVisitorConfigService;
-        private readonly ILocalizationService _localizationService;
-        private readonly IUIOptionsService _uiOptionsService;
-        private readonly IOperatingSystemFacade _operatingSystemFacade;
+        private const int BrowserInstallCheckIntervalSeconds = 5;
 
         private readonly IBrowserService _browserService;
-        private readonly DispatcherQueue? _dispatcherQueue;
+
+        private readonly IDialogService _dialogService;
+
+        private readonly IEVisitorConfigService _eVisitorConfigService;
+
+        private readonly ILocalizationService _localizationService;
+
+        private readonly IOperatingSystemFacade _operatingSystemFacade;
+
+        private readonly IScheduleBrowserCleanupUseCase _scheduleBrowserCleanupUseCase;
+
+        private readonly IUIOptionsService _uiOptionsService;
+
         private readonly DispatcherTimer _browserCheckTimer;
 
-        #endregion
+        private readonly AppConfig _currentConfig;
 
-        #region ObservableProperties
+        private readonly DispatcherQueue _dispatcherQueue;
 
-        [ObservableProperty] public partial bool CheckBrowserIsAliveIsOn { get; set; } = false;
-        [ObservableProperty] public partial int RuntimeHours { get; set; }
-        [ObservableProperty] public partial int RuntimePauseSeconds { get; set; }
-        [ObservableProperty] public partial BrowserCacheDeleteOption SelectedDeleteBrowserCacheOption { get; set; }
-        [ObservableProperty] public partial bool StartBrowserWithProgrammStartIs { get; set; } = false;
-        [ObservableProperty] private partial string StandardBrowser { get; set; } = string.Empty;
-        [ObservableProperty] public partial Visibility Tbl_NoBrowserInstalledIsVisible { get; set; } = Visibility.Collapsed;
-        [ObservableProperty] public partial bool BtnDeleteBrowserContentIsEnabled { get; set; } = true;
-        [ObservableProperty] public partial bool BtnInstalleBesucherAddOnIsEnabled { get; set; } = true;
+        [ObservableProperty]
+        public partial bool CheckBrowserIsAliveIsOn { get; set; }
+
+        [ObservableProperty]
+        public partial bool DeleteBrowserContentCommandIsEnabled { get; set; } = true;
+
+        [ObservableProperty]
+        public partial bool InstallEVisitorAddOnCommandIsEnabled { get; set; } = true;
+
+        [ObservableProperty]
+        public partial int RuntimeHours { get; set; }
+
+        [ObservableProperty]
+        public partial int RuntimePauseSeconds { get; set; }
+
+        [ObservableProperty]
+        public partial bool StartBrowserWithProgramStart { get; set; }
+
+        [ObservableProperty]
+        private partial string StandardBrowser { get; set; } = string.Empty;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddEVisitorUsernameCommand))]
         public partial string Username { get; set; } = string.Empty;
 
-        #endregion
+        [ObservableProperty]
+        public partial Visibility NoBrowserInstalledSectionVisibility { get; set; } = Visibility.Collapsed;
 
-        #region PublicProperties
+        [ObservableProperty]
+        public partial BrowserCacheDeleteOption SelectedDeleteBrowserCacheOption { get; set; }
 
-        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList { get; }
         public int BrowserRuntimeHoursMax { get; init; }
+
         public int BrowserRuntimeHoursMin { get; init; }
+
         public int RuntimePauseSecondsMax { get; init; }
+
         public int RuntimePauseSecondsMin { get; init; }
 
-        #endregion
-
-        #region ConstructorAndFinalizer
+        public ReadOnlyCollection<BrowserCacheDeleteOption> BrowserDeleteCacheOptionList { get; }
 
         public ViewModelRestarterProperties(
             IScheduleBrowserCleanupUseCase scheduleBrowserCleanupUseCase,
@@ -80,14 +99,27 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             IDialogService dialogService,
             IBrowserService browserService)
         {
-            _scheduleBrowserCleanupUseCase = scheduleBrowserCleanupUseCase;
-            _operatingSystemFacade = operatingSystemFacade;
-            _eVisitorConfigService = eVisitorConfigService;
-            _dialogService = dialogService;
-            _localizationService = localizationService;
-            _uiOptionsService = uiOptionsService;
+            ArgumentNullException.ThrowIfNull(scheduleBrowserCleanupUseCase);
+            ArgumentNullException.ThrowIfNull(operatingSystemFacade);
+            ArgumentNullException.ThrowIfNull(eVisitorConfigService);
+            ArgumentNullException.ThrowIfNull(localizationService);
+            ArgumentNullException.ThrowIfNull(uiOptionsService);
+            ArgumentNullException.ThrowIfNull(dialogService);
+            ArgumentNullException.ThrowIfNull(browserService);
+
             _browserService = browserService;
-            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            _dialogService = dialogService;
+            _eVisitorConfigService = eVisitorConfigService;
+            _localizationService = localizationService;
+            _operatingSystemFacade = operatingSystemFacade;
+            _scheduleBrowserCleanupUseCase = scheduleBrowserCleanupUseCase;
+            _uiOptionsService = uiOptionsService;
+
+            _dispatcherQueue =
+                DispatcherQueue.GetForCurrentThread()
+                ?? throw new InvalidOperationException(
+                    $"{nameof(ViewModelRestarterProperties)} must be constructed on a thread with a WinUI DispatcherQueue (UI thread).");
+
             _currentConfig = _eVisitorConfigService.LoadConfig();
 
             RuntimePauseSecondsMin = 20;
@@ -97,43 +129,44 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             RuntimePauseSeconds = _currentConfig.Browser.RuntimePauseSeconds;
             RuntimeHours = _currentConfig.Browser.RuntimeHours;
-            StartBrowserWithProgrammStartIs = _currentConfig.Browser.StartBrowserWithProgrammStart;
+            StartBrowserWithProgramStart = _currentConfig.Browser.StartBrowserWithProgrammStart;
             CheckBrowserIsAliveIsOn = _currentConfig.Browser.CheckBrowserAliveRoutine;
 
             BrowserDeleteCacheOptionList = new ReadOnlyCollection<BrowserCacheDeleteOption>([.. _uiOptionsService.GetBrowserCacheOptions()]);
 
-            var configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
+            if (BrowserDeleteCacheOptionList.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(ViewModelRestarterProperties)} requires at least one entry from {nameof(IUIOptionsService.GetBrowserCacheOptions)}.");
+            }
 
-            SelectedDeleteBrowserCacheOption = BrowserDeleteCacheOptionList.FirstOrDefault(option => option.Days == configDays) ?? BrowserDeleteCacheOptionList[0];
+            int configDays = _currentConfig.Browser.DeleteBrowserCacheIntervalDays;
 
-            _browserCheckTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
-            _browserCheckTimer.Tick += async (__, _) => await CheckInstalledBrowsersAsync();
+            SelectedDeleteBrowserCacheOption =
+                BrowserDeleteCacheOptionList.FirstOrDefault(option => option.Days == configDays)
+                ?? BrowserDeleteCacheOptionList[0];
+
+            _browserCheckTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(BrowserInstallCheckIntervalSeconds)
+            };
+
+            _browserCheckTimer.Tick += async (_, _) =>
+            {
+                try
+                {
+                    await CheckInstalledBrowsersAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            };
+
             _browserCheckTimer.Start();
 
             CheckInstalledBrowsersAsync().Forget();
         }
-
-        #endregion
-
-        private async Task CheckInstalledBrowsersAsync()
-        {
-            var browsers = await Task.Run(() => _browserService.GetInstalledBrowsersAsync());
-
-            bool hasInstalledBrowsers = browsers != null && browsers.Any(b => b.IsInstalled);
-
-            _dispatcherQueue!.TryEnqueue(() =>
-            {
-                var newVisibility = hasInstalledBrowsers ? Visibility.Collapsed : Visibility.Visible;
-                if (Tbl_NoBrowserInstalledIsVisible != newVisibility)
-                {
-                    Tbl_NoBrowserInstalledIsVisible = newVisibility;
-                    BtnDeleteBrowserContentIsEnabled = hasInstalledBrowsers;
-                    BtnInstalleBesucherAddOnIsEnabled = hasInstalledBrowsers;
-                }
-            });
-        }
-
-        #region Commands
 
         [RelayCommand(CanExecute = nameof(CanAddUsername))]
         private void AddEVisitorUsername()
@@ -145,6 +178,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             WeakReferenceMessenger.Default.Send(new UsernameChangedMessage(Username));
 
             Username = string.Empty;
+        }
+
+        [RelayCommand]
+        private async Task OpenStartupBoostDialog()
+        {
+            await _dialogService.ShowTurnOffEdgeStartupBoostDialogAsync();
         }
 
         [RelayCommand]
@@ -171,19 +210,26 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             await _dialogService.ShowInstallAddOnInfoDialogAsync();
         }
 
-        [RelayCommand]
-        private async Task OpenStartupBoostDialog()
+        private async Task CheckInstalledBrowsersAsync()
         {
-            await _dialogService.ShowTurnOffEdgeStartupBoostDialogAsync();
+            IEnumerable<BrowserInfo>? installedBrowsers =
+                await Task.Run(() => _browserService.GetInstalledBrowsersAsync()).ConfigureAwait(false);
+
+            bool hasInstalledBrowsers =
+                installedBrowsers != null && installedBrowsers.Any(browser => browser.IsInstalled);
+
+            _dispatcherQueue.TryEnqueue(() =>
+            {
+                Visibility newVisibility = hasInstalledBrowsers ? Visibility.Collapsed : Visibility.Visible;
+
+                if (NoBrowserInstalledSectionVisibility != newVisibility)
+                {
+                    NoBrowserInstalledSectionVisibility = newVisibility;
+                    DeleteBrowserContentCommandIsEnabled = hasInstalledBrowsers;
+                    InstallEVisitorAddOnCommandIsEnabled = hasInstalledBrowsers;
+                }
+            });
         }
-
-        #endregion
-
-        #region PublicAndProtectedMethods
-
-        #endregion
-
-        #region PropertyChangeHandlers
 
         partial void OnCheckBrowserIsAliveIsOnChanged(bool value)
         {
@@ -207,7 +253,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 _currentConfig.Browser.RuntimeHours = value;
                 SaveSettings();
             }
-
         }
 
         partial void OnRuntimePauseSecondsChanged(int value)
@@ -229,15 +274,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         partial void OnSelectedDeleteBrowserCacheOptionChanged(BrowserCacheDeleteOption value)
         {
-            var response = _scheduleBrowserCleanupUseCase.UpdateSchedule(new ScheduleBrowserCleanupRequest(value.Days));
+            if (value == null)
+                return;
+
+            var scheduleUpdateResponse =
+                _scheduleBrowserCleanupUseCase.UpdateSchedule(new ScheduleBrowserCleanupRequest(value.Days));
 
             _currentConfig.Browser.DeleteBrowserCacheIntervalDays = value.Days;
-            _currentConfig.Browser.NextBrowserDeleteCacheDate = response.NextDate ?? DateTime.MinValue;
+            _currentConfig.Browser.NextBrowserDeleteCacheDate = scheduleUpdateResponse.NextDate ?? DateTime.MinValue;
 
-            if (response.IsActive && response.NextDate.HasValue)
+            if (scheduleUpdateResponse.IsActive && scheduleUpdateResponse.NextDate.HasValue)
             {
                 string formatPattern = _localizationService.GetString("Browser_NextDeleteDate_Format");
-                string formattedDateString = string.Format(formatPattern, response.NextDate.Value);
+                string formattedDateString = string.Format(formatPattern, scheduleUpdateResponse.NextDate.Value);
 
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcess(_localizationService.GetString("NextDeletionProcess")));
                 WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(formattedDateString));
@@ -253,15 +302,11 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        partial void OnStartBrowserWithProgrammStartIsChanged(bool value)
+        partial void OnStartBrowserWithProgramStartChanged(bool value)
         {
             _currentConfig.Browser.StartBrowserWithProgrammStart = value;
             SaveSettings();
         }
-
-        #endregion
-
-        #region PrivateHelperMethods
 
         private bool CanAddUsername() => !string.IsNullOrWhiteSpace(Username);
 
@@ -269,7 +314,5 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             _eVisitorConfigService.SaveConfig(_currentConfig);
         }
-
-        #endregion
     }
 }

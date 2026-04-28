@@ -1,9 +1,10 @@
-using eBRestarter.Core.Application.Contstants;
+using eBRestarter.Core.Application.Constants;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
-using eBRestarter.Core.Domain.Enums;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Domain.Services;
 using System.Diagnostics;
 
 namespace eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
@@ -185,7 +186,8 @@ public class ManageRestarterCycleService(
     {
         var appConfig = _configService.LoadConfig();
 
-        if (!_browserCleanupScheduleService.ShouldRunCleanupNow(appConfig))
+        var browser = appConfig.Browser;
+        if (browser == null || !_browserCleanupScheduleService.ShouldRunCleanupNow(browser.DeleteBrowserCacheIntervalDays, browser.NextBrowserDeleteCacheDate))
             return;
 
         CloseCurrentBrowser();

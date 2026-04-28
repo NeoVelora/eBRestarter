@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
-using eBRestarter.Core.Domain.Enums;
-using eBRestarter.Core.Domain.Models.Records;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Models.Records;
 using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Browsers.Abstract;
