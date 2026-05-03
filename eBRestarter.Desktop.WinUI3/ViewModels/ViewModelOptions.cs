@@ -33,6 +33,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
     {
         private const string ExtensionConfigFileName = "tab_restarter_config.json";
 
+        private const string GeneralErrorKey = "General_Error";
+
         private const int ExtensionSaveStatusDisplayDurationMilliseconds = 3000;
 
         private const int MillisecondsPerMinute = 60000;
@@ -333,20 +335,20 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 else if (configureAutoLogonResponse.Status == AutoLogonResultStatus.ValidationError)
                 {
                     await _dialogService.ShowMessageAsync(
-                        _localizationService.GetString("General_Error"),
+                        _localizationService.GetString(GeneralErrorKey),
                         _localizationService.GetString("Options_AutoLogon_ValidationError"));
                 }
                 else if (configureAutoLogonResponse.Status == AutoLogonResultStatus.DomainError)
                 {
                     await _dialogService.ShowMessageAsync(
-                        _localizationService.GetString("General_Error"),
+                        _localizationService.GetString(GeneralErrorKey),
                         _localizationService.GetString("Options_AutoLogon_DomainError"));
                 }
                 else
                 {
                     string errorFormat = _localizationService.GetString("General_UnexpectedError");
                     await _dialogService.ShowMessageAsync(
-                        _localizationService.GetString("General_Error"),
+                        _localizationService.GetString(GeneralErrorKey),
                         string.Format(errorFormat, configureAutoLogonResponse.ErrorMessage));
                 }
             }
@@ -441,7 +443,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 Debug.WriteLine(ex);
 
                 await _dialogService.ShowMessageAsync(
-                    _localizationService.GetString("General_Error"),
+                    _localizationService.GetString(GeneralErrorKey),
                     _localizationService.GetString("BrowserExtension_Config_Error_Message") + " " + ex.Message,
                     DialogIcon.Error);
             }
@@ -465,12 +467,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task ShowActivateApiDialog()
         {
             await _dialogService.ShowActivateApiDialogAsync();
-        }
-
-        [RelayCommand]
-        private async Task ShowImportApiDialog()
-        {
-            await _dialogService.ShowImportApiDialogAsync();
         }
 
         partial void OnComputerRestartClockTimeChanged(int value)

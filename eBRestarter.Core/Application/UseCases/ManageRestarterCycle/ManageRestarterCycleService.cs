@@ -118,12 +118,9 @@ public class ManageRestarterCycleService(
         {
             token.ThrowIfCancellationRequested();
 
-            if (request.CheckBrowserAliveRoutine && secondsRemaining < request.RuntimeSeconds - 2)
+            if (request.CheckBrowserAliveRoutine && secondsRemaining < request.RuntimeSeconds - 2 && !_processService.IsProcessAlive(processName))
             {
-                if (!_processService.IsProcessAlive(processName))
-                {
-                    return BrowserPhaseResult.BrowserClosed;
-                }
+                return BrowserPhaseResult.BrowserClosed;
             }
 
             if (isCleanupActive && _timeProvider.GetLocalNow().DateTime >= nextCleanupDate)

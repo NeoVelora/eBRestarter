@@ -48,7 +48,6 @@ public sealed partial class UC_EarningsAmount : UserControl
     public UC_EarningsAmount()
     {
         InitializeComponent();
-
     }
 }
 

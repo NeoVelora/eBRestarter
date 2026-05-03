@@ -14,6 +14,6 @@ public class WindowsAppVersionInfoService : IAppVersionInfoService
             return $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
         }
 
-        return "1.0.0.0";
+        return new Version(1, 0, 0, 0).ToString();
     }
 }

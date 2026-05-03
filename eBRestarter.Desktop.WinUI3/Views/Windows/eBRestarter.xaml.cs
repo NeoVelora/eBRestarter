@@ -21,7 +21,7 @@ namespace eBRestarter.Desktop.WinUI3
 
         private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
-        public EBRestarter(INavigationService navigationService, IAppVersionInfoService iAppVersionInfoService, MainViewModel mainViewModel)
+        public EBRestarter(INavigationService navigationService, IAppVersionInfoService iAppVersionInfoService)
         {
             InitializeComponent();
 
@@ -34,8 +34,6 @@ namespace eBRestarter.Desktop.WinUI3
             _iAppVersionInfoService = iAppVersionInfoService;
 
             _navigationService.AttachFrame(NavigationFrame);
-
-            (this.Content as FrameworkElement)!.DataContext = mainViewModel;
 
             _navigationService.NavigateTo("CommonOverview", transitionInfo: new DrillInNavigationTransitionInfo());
 
