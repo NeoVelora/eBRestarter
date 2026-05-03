@@ -51,11 +51,13 @@ public abstract class ChromiumBrowserBase(IOperatingSystemFacade os, ILogger log
 
             var appPathKey = $@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{ExeFileName}";
             var appPath = _os.WindowsRegistryService.GetLocalMachineValue(appPathKey, "")?.ToString();
-            if (!string.IsNullOrEmpty(appPath)) paths.Add(appPath);
+
+            if (!string.IsNullOrEmpty(appPath)) { paths.Add(appPath); }
 
             var clientKey = $@"SOFTWARE\Clients\StartMenuInternet\{BrowserRegistryName}\shell\open\command";
             var clientPath = _os.WindowsRegistryService.GetLocalMachineValue(clientKey, "")?.ToString();
-            if (!string.IsNullOrEmpty(clientPath)) paths.Add(clientPath.Replace("\"", "").Trim());
+
+            if (!string.IsNullOrEmpty(clientPath)) { paths.Add(clientPath.Replace("\"", "").Trim()); }
 
             AddPathFromUninstallKey(paths, $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, true);
             AddPathFromUninstallKey(paths, $@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, true);
@@ -67,7 +69,7 @@ public abstract class ChromiumBrowserBase(IOperatingSystemFacade os, ILogger log
             paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles(x86)"), pathPart));
             paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData"), pathPart));
 
-            return paths.Distinct().ToList();
+            return [.. paths.Distinct()];
         }
     }
 }

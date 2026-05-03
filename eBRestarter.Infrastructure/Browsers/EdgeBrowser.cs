@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Constants;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Infrastructure.Browsers.Abstract;
 using Microsoft.Extensions.Logging;
@@ -45,11 +45,13 @@ public class EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger)
 
         var defaultPath = _os.WindowsFileSystemService.CombinePaths(userDataRoot, "Default");
         if (_os.WindowsFileSystemService.DirectoryExists(defaultPath))
+        {
             allProfileFolders.Add(defaultPath);
+        }
 
         try
         {
-            var dirs = System.IO.Directory.GetDirectories(userDataRoot, "Profile *");
+            var dirs = Directory.GetDirectories(userDataRoot, "Profile *");
             allProfileFolders.AddRange(dirs);
         }
         catch { }

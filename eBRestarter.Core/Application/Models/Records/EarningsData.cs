@@ -1,6 +1,6 @@
 namespace eBRestarter.Core.Application.Models.Records;
 
-public record EarningsData(
+public sealed record EarningsData(
     double[] HourlyEarnings,
     double[] DailyEarnings,
     double[] MonthlyEarnings,

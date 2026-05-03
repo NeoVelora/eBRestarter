@@ -110,7 +110,7 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
 
             foreach (var line in lines)
             {
-                if (line.Trim().StartsWith("[") && line.Trim().EndsWith("]"))
+                if (line.Trim().StartsWith('[') && line.Trim().EndsWith(']'))
                 {
                     if (currentPath != null)
                     {
@@ -128,11 +128,11 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
 
                 if (line.StartsWith("Path=", StringComparison.OrdinalIgnoreCase))
                 {
-                    currentPath = line.Substring(5).Trim();
+                    currentPath = line[5..].Trim();
                 }
                 else if (line.StartsWith("IsRelative=", StringComparison.OrdinalIgnoreCase))
                 {
-                    currentIsRelative = line.Trim().EndsWith("1");
+                    currentIsRelative = line.Trim().EndsWith('1');
                 }
             }
 
@@ -161,7 +161,7 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
 
             string? GetPathFromMozillaRegistry(bool isHklm)
             {
-                string rootKey = @"Software\Mozilla\Mozilla Firefox";
+                const string rootKey = @"Software\Mozilla\Mozilla Firefox";
 
                 var currentVersionObj = isHklm
                     ? _os.WindowsRegistryService.GetLocalMachineValue(rootKey, "CurrentVersion")
@@ -180,16 +180,25 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
             }
 
             var hkcuPath = GetPathFromMozillaRegistry(false);
-            if (!string.IsNullOrEmpty(hkcuPath)) paths.Add(hkcuPath);
+
+            if (!string.IsNullOrEmpty(hkcuPath)) {
+
+                paths.Add(hkcuPath);
+
+            }
 
             var hklmPath = GetPathFromMozillaRegistry(true);
-            if (!string.IsNullOrEmpty(hklmPath)) paths.Add(hklmPath);
+
+            if (!string.IsNullOrEmpty(hklmPath))
+            {
+                 paths.Add(hklmPath);
+            }
 
             paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles"), @"Mozilla Firefox\firefox.exe"));
             paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles(x86)"), @"Mozilla Firefox\firefox.exe"));
             paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData"), @"Mozilla Firefox\firefox.exe"));
 
-            return paths.Distinct().ToList();
+            return [.. paths.Distinct()];
         }
     }
 }

@@ -5,9 +5,14 @@ using Microsoft.Win32;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS;
 
-public class WindowsStartupService : IWindowsStartupManagerService
+public class WindowsStartupService(
+    ILogger<WindowsStartupService> logger,
+    IWindowsRegistryService registry,
+    IProcessInfoService processInfo) : IWindowsStartupManagerService
 {
+#pragma warning disable RCS1213 // Remove unused member declaration
     private const string StartupTaskId = "eBRestarterAutoStart";
+#pragma warning restore RCS1213 // Remove unused member declaration
 
 
     private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
@@ -16,19 +21,9 @@ public class WindowsStartupService : IWindowsStartupManagerService
 
     private const string RegistryPathPasswordLess = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PasswordLess\Device";
 
-    private readonly ILogger<WindowsStartupService> _logger;
-    private readonly IWindowsRegistryService _registry;
-    private readonly IProcessInfoService _processInfo;
-
-    public WindowsStartupService(
-        ILogger<WindowsStartupService> logger,
-        IWindowsRegistryService registry,
-        IProcessInfoService processInfo)
-    {
-        _logger = logger;
-        _registry = registry;
-        _processInfo = processInfo;
-    }
+    private readonly ILogger<WindowsStartupService> _logger = logger;
+    private readonly IWindowsRegistryService _registry = registry;
+    private readonly IProcessInfoService _processInfo = processInfo;
 
     public void EnableAutoStart()
     {
@@ -66,7 +61,8 @@ public class WindowsStartupService : IWindowsStartupManagerService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving autostart entries.");
-            return new Dictionary<string, object>();
+
+            return [];
         }
     }
 
@@ -75,8 +71,13 @@ public class WindowsStartupService : IWindowsStartupManagerService
         try
         {
             int dwordValue = enable ? 1 : 0;
+
             _registry.SetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled", dwordValue, RegistryValueKind.DWord);
-            _logger.LogInformation("Edge Startup Boost set to {State} (Value: {Value}).", enable, dwordValue);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Edge Startup Boost set to {State} (Value: {Value}).", enable, dwordValue);
+            }
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -113,7 +114,11 @@ public class WindowsStartupService : IWindowsStartupManagerService
         {
             int dwordValue = enable ? 0 : 2;
             _registry.SetLocalMachineValue(RegistryPathPasswordLess, "DevicePasswordLessBuildVersion", dwordValue, RegistryValueKind.DWord);
-            _logger.LogInformation("AutoLogon setting set to {State} (RegValue: {Value}).", enable, dwordValue);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("AutoLogon setting set to {State} (RegValue: {Value}).", enable, dwordValue);
+            }
         }
         catch (UnauthorizedAccessException ex)
         {

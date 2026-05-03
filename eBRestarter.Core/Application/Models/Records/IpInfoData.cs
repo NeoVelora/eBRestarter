@@ -1,6 +1,6 @@
 namespace eBRestarter.Core.Application.Models.Records;
 
-public record IpInfoData(
+public sealed record IpInfoData(
     string IpAddress,
     string Hostname,
     string CountryCode,

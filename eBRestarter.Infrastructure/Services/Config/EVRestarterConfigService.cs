@@ -59,11 +59,13 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
         catch (JsonException)
         {
             _logger.LogError("Config-Datei ist kein gültiges JSON.");
+
             return new AppConfig();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Kritischer Fehler beim Laden.");
+
             return new AppConfig();
         }
     }
@@ -103,11 +105,10 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
         _logger.LogWarning("Konfiguration wird auf Standardwerte zurückgesetzt.");
 
         var defaultConfig = new AppConfig();
+
         SaveConfig(defaultConfig);
     }
 }
 
 [JsonSerializable(typeof(AppConfig))]
-internal partial class AppConfigJsonContext : JsonSerializerContext
-{
-}
+internal partial class AppConfigJsonContext : JsonSerializerContext;

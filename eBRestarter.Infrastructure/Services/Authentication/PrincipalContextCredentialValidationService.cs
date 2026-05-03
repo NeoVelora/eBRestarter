@@ -1,14 +1,11 @@
 using eBRestarter.Core.Application.Interfaces.Authentication;
 using System.DirectoryServices.AccountManagement;
-using Windows.Services.Maps;
 
 namespace eBRestarter.Infrastructure.Services.Authentication;
 
 public class PrincipalContextCredentialValidationService(IActiveDirectoryService adService) : ICredentialValidationService
 {
     private readonly IActiveDirectoryService _adService = adService;
-
-    #region PublicAndProtectedMethods
 
     public bool ValidateCredentials(string username, string domain, string password)
     {
@@ -32,6 +29,4 @@ public class PrincipalContextCredentialValidationService(IActiveDirectoryService
             return false;
         }
     }
-
-    #endregion
 }

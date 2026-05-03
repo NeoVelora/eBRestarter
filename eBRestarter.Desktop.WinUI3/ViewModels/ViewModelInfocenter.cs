@@ -7,113 +7,112 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace eBRestarter.Desktop.WinUI3.ViewModels
+namespace eBRestarter.Desktop.WinUI3.ViewModels;
+
+public partial class ViewModelInfocenter : ObservableObject
 {
-    public partial class ViewModelInfocenter : ObservableObject
+    private const string InfocenterLoadFailedResourceKey = "Infocenter_LoadFailed";
+
+    private const string InfocenterLoadingResourceKey = "Infocenter_Loading";
+
+    private readonly IDialogService _dialogService;
+
+    private readonly IGetSystemInformationUseCase _getSystemInformationUseCase;
+
+    private readonly ILocalizationService _localizationService;
+
+    [ObservableProperty]
+    public partial string BrowserText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string GraphicsText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string OsBuildText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string OsEditionText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string OsVersionText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string ProcessorText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string RamText { get; set; } = string.Empty;
+
+    public ViewModelInfocenter(
+        IGetSystemInformationUseCase getSystemInformationUseCase,
+        IDialogService dialogService,
+        ILocalizationService localizationService)
     {
-        private const string InfocenterLoadFailedResourceKey = "Infocenter_LoadFailed";
+        ArgumentNullException.ThrowIfNull(getSystemInformationUseCase);
+        ArgumentNullException.ThrowIfNull(dialogService);
+        ArgumentNullException.ThrowIfNull(localizationService);
 
-        private const string InfocenterLoadingResourceKey = "Infocenter_Loading";
+        _getSystemInformationUseCase = getSystemInformationUseCase;
+        _dialogService = dialogService;
+        _localizationService = localizationService;
 
-        private readonly IDialogService _dialogService;
+        string loadingPlaceholder = _localizationService.GetString(InfocenterLoadingResourceKey);
+        BrowserText = loadingPlaceholder;
+        GraphicsText = loadingPlaceholder;
+        OsBuildText = loadingPlaceholder;
+        OsEditionText = loadingPlaceholder;
+        OsVersionText = loadingPlaceholder;
+        ProcessorText = loadingPlaceholder;
+        RamText = loadingPlaceholder;
 
-        private readonly IGetSystemInformationUseCase _getSystemInformationUseCase;
+        _ = LoadDataAsync();
+    }
 
-        private readonly ILocalizationService _localizationService;
+    [RelayCommand]
+    public static void OpenSupportWebsite(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
 
-        [ObservableProperty]
-        public partial string BrowserText { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string GraphicsText { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string OsBuildText { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string OsEditionText { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string OsVersionText { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string ProcessorText { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string RamText { get; set; } = string.Empty;
-
-        public ViewModelInfocenter(
-            IGetSystemInformationUseCase getSystemInformationUseCase,
-            IDialogService dialogService,
-            ILocalizationService localizationService)
+        try
         {
-            ArgumentNullException.ThrowIfNull(getSystemInformationUseCase);
-            ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(localizationService);
-
-            _getSystemInformationUseCase = getSystemInformationUseCase;
-            _dialogService = dialogService;
-            _localizationService = localizationService;
-
-            string loadingPlaceholder = _localizationService.GetString(InfocenterLoadingResourceKey);
-            BrowserText = loadingPlaceholder;
-            GraphicsText = loadingPlaceholder;
-            OsBuildText = loadingPlaceholder;
-            OsEditionText = loadingPlaceholder;
-            OsVersionText = loadingPlaceholder;
-            ProcessorText = loadingPlaceholder;
-            RamText = loadingPlaceholder;
-
-            _ = LoadDataAsync();
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
-
-        [RelayCommand]
-        public void OpenSupportWebsite(string? url)
+        catch (Exception ex)
         {
-            if (string.IsNullOrWhiteSpace(url)) return;
-
-            try
-            {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
+            Debug.WriteLine(ex);
         }
+    }
 
-        [RelayCommand]
-        private async Task ShowAboutInfo()
+    [RelayCommand]
+    private async Task ShowAboutInfo()
+    {
+        await _dialogService.ShowAboutDialogAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
         {
-            await _dialogService.ShowAboutDialogAsync();
+            var systemInformation = await _getSystemInformationUseCase.ExecuteAsync();
+
+            ProcessorText = $"{_localizationService.GetString("Infocenter_ProcessorPrefix")} {systemInformation.ProcessorName}";
+            GraphicsText = $"{_localizationService.GetString("Infocenter_GraphicsPrefix")} {systemInformation.GraphicsCardName}";
+            RamText = $"{_localizationService.GetString("Infocenter_RamPrefix")} {systemInformation.InstalledRam}";
+            OsEditionText = $"{_localizationService.GetString("Infocenter_EditionPrefix")} {systemInformation.OsEdition}";
+            OsVersionText = $"{_localizationService.GetString("Infocenter_VersionPrefix")} {systemInformation.OsDisplayVersion}";
+            OsBuildText = $"{_localizationService.GetString("Infocenter_BuildPrefix")} {systemInformation.OsBuildVersion}";
+            BrowserText = $"{_localizationService.GetString("Infocenter_BrowserPrefix")} {systemInformation.StandardBrowserName}";
         }
-
-        private async Task LoadDataAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                var systemInformation = await _getSystemInformationUseCase.ExecuteAsync();
-
-                ProcessorText = $"{_localizationService.GetString("Infocenter_ProcessorPrefix")} {systemInformation.ProcessorName}";
-                GraphicsText = $"{_localizationService.GetString("Infocenter_GraphicsPrefix")} {systemInformation.GraphicsCardName}";
-                RamText = $"{_localizationService.GetString("Infocenter_RamPrefix")} {systemInformation.InstalledRam}";
-                OsEditionText = $"{_localizationService.GetString("Infocenter_EditionPrefix")} {systemInformation.OsEdition}";
-                OsVersionText = $"{_localizationService.GetString("Infocenter_VersionPrefix")} {systemInformation.OsDisplayVersion}";
-                OsBuildText = $"{_localizationService.GetString("Infocenter_BuildPrefix")} {systemInformation.OsBuildVersion}";
-                BrowserText = $"{_localizationService.GetString("Infocenter_BrowserPrefix")} {systemInformation.StandardBrowserName}";
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-                string failureMessage = _localizationService.GetString(InfocenterLoadFailedResourceKey);
-                BrowserText = failureMessage;
-                GraphicsText = failureMessage;
-                OsBuildText = failureMessage;
-                OsEditionText = failureMessage;
-                OsVersionText = failureMessage;
-                ProcessorText = failureMessage;
-                RamText = failureMessage;
-            }
+            Debug.WriteLine(ex);
+            string failureMessage = _localizationService.GetString(InfocenterLoadFailedResourceKey);
+            BrowserText = failureMessage;
+            GraphicsText = failureMessage;
+            OsBuildText = failureMessage;
+            OsEditionText = failureMessage;
+            OsVersionText = failureMessage;
+            ProcessorText = failureMessage;
+            RamText = failureMessage;
         }
     }
 }

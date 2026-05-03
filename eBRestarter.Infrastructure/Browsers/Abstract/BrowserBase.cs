@@ -29,7 +29,11 @@ public abstract class BrowserBase(IOperatingSystemFacade os, ILogger logger) : I
         try
         {
             var exePath = GetExecutablePath();
-            _logger.LogInformation($"Starte {Type} mit URL {url}...");
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Starte {BrowserType} mit URL {Url}...", Type, url);
+            }
 
             string finalArguments = $"{url} {arguments}".Trim();
 
@@ -37,7 +41,10 @@ public abstract class BrowserBase(IOperatingSystemFacade os, ILogger logger) : I
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Fehler beim Starten von {Type}");
+            if (_logger.IsEnabled(LogLevel.Error))
+            {
+                _logger.LogError(ex, "Fehler beim Starten von {BrowserType}", Type);
+            }
         }
     }
 

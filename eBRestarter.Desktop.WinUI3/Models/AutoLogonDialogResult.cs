@@ -2,7 +2,7 @@ using eBRestarter.Core.Application.Models.Records;
 
 namespace eBRestarter.Desktop.WinUI3.Models;
 
-public class AutoLogonDialogResult
+public sealed class AutoLogonDialogResult
 {
     public bool IsDeactivateAction { get; set; }
     public AutoLogonCredentials? Credentials { get; set; }

@@ -7,13 +7,8 @@ namespace eBRestarter.Desktop.WinUI3.Behaviors;
 
 public class TextBoxNumericOnlyBehavior : Behavior<TextBox>
 {
-    #region ConstantsAndStatics
 
     private static readonly Regex _regex = new("[^0-9]+", RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100));
-
-    #endregion
-
-    #region ProtectedMethods
 
     protected override void OnAttached()
     {
@@ -27,10 +22,6 @@ public class TextBoxNumericOnlyBehavior : Behavior<TextBox>
         AssociatedObject.TextChanging -= OnTextChanging;
     }
 
-    #endregion
-
-    #region PrivateHelperMethods
-
     private void OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         try
@@ -39,7 +30,7 @@ public class TextBoxNumericOnlyBehavior : Behavior<TextBox>
             {
                 int pos = sender.SelectionStart;
                 sender.Text = _regex.Replace(sender.Text, "");
-                sender.SelectionStart = System.Math.Min(pos, sender.Text.Length);
+                sender.SelectionStart = Math.Min(pos, sender.Text.Length);
             }
         }
         catch (RegexMatchTimeoutException)
@@ -47,6 +38,4 @@ public class TextBoxNumericOnlyBehavior : Behavior<TextBox>
             sender.Text = string.Empty;
         }
     }
-
-    #endregion
 }

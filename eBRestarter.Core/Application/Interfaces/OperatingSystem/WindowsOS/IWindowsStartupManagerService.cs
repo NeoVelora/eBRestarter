@@ -9,6 +9,7 @@ public interface IWindowsStartupManagerService
     void EnableAutoStart();
     void DisableAutoStart();
     Dictionary<string, object> GetStartupEntries();
+
     void SetEdgeStartupBoost(bool enable);
 
     bool IsEdgeStartupBoostEnabled();

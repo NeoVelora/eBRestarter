@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Services.Scheduling;
 
-public class ComputerRestartScheduler(
+public partial class ComputerRestartScheduler(
     IEVisitorConfigService configService,
     IWindowsProcessControlService processService,
     IApplicationLifetime applicationLifetime,
@@ -147,9 +147,7 @@ public class ComputerRestartScheduler(
         }
     }
 
-
     private bool _disposed;
-
     public void Dispose()
     {
         Dispose(true);

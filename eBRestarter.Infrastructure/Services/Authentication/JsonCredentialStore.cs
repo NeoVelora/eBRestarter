@@ -36,8 +36,10 @@ public class JsonCredentialStore : ICredentialStore
         try
         {
             var json = _fileSystem.ReadAllText(_storagePath);
+
             return JsonSerializer.Deserialize<ApiCredentials>(json);
         }
+
         catch { return null; }
     }
 
@@ -52,10 +54,12 @@ public class JsonCredentialStore : ICredentialStore
 
         try
         {
+
             using var reader = new BinaryReader(File.Open(filePath, FileMode.Open));
             var user = reader.ReadString();
             var key = reader.ReadString();
             return new ApiCredentials(user, key);
+
         }
         catch
         {

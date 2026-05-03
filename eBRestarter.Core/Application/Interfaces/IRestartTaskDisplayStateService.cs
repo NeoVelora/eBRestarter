@@ -5,9 +5,6 @@ namespace eBRestarter.Core.Application.Interfaces;
 
 public interface IRestartTaskDisplayStateService
 {
-    #region PublicMethods
 
     RestartTaskDisplayState GetInitialState(AppConfig config);
-
-    #endregion
 }

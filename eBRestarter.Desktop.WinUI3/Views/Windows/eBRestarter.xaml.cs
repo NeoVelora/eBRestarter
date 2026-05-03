@@ -40,7 +40,7 @@ namespace eBRestarter.Desktop.WinUI3
             _navigationService.NavigateTo("CommonOverview", transitionInfo: new DrillInNavigationTransitionInfo());
 
             IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            Microsoft.UI.WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
+            WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
             AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
 
             string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "eB Restarter.ico");
@@ -62,6 +62,9 @@ namespace eBRestarter.Desktop.WinUI3
 
         private void AppTitleBar_BackRequested(TitleBar sender, object args)
         {
+            ArgumentNullException.ThrowIfNull(sender);
+            ArgumentNullException.ThrowIfNull(args);
+
             if (NavigationFrame.CanGoBack)
             {
                 NavigationFrame.GoBack();
@@ -70,11 +73,17 @@ namespace eBRestarter.Desktop.WinUI3
 
         private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args)
         {
+            ArgumentNullException.ThrowIfNull(sender);
+            ArgumentNullException.ThrowIfNull(args);
+
             NavView.IsPaneOpen = !NavView.IsPaneOpen;
         }
 
         private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
+            ArgumentNullException.ThrowIfNull(sender);
+            ArgumentNullException.ThrowIfNull(args);
+
 
             if (args.InvokedItemContainer is NavigationViewItem nvi
                 && nvi.Tag is string tag)

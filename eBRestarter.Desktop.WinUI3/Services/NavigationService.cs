@@ -8,14 +8,9 @@ namespace eBRestarter.Desktop.WinUI3.Services;
 
 public sealed class NavigationService : INavigationService
 {
-    #region FieldsAndInjectedServices
 
     private readonly Dictionary<string, Type> _pages = [];
     private INavigationFrame? _frameAdapter;
-
-    #endregion
-
-    #region PublicMethods
 
     public void AttachFrame(Frame frame)
     {
@@ -46,5 +41,4 @@ public sealed class NavigationService : INavigationService
         _pages.TryAdd(key, pageType);
     }
 
-    #endregion
 }

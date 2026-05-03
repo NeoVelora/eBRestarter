@@ -1,3 +1,3 @@
 namespace eBRestarter.Core.Application.Models;
 
-public record StartupDisplayPreferences(string LanguageCode, string ThemeName);
+public sealed record StartupDisplayPreferences(string LanguageCode, string ThemeName);

@@ -5,14 +5,9 @@ using System.Diagnostics;
 
 namespace eBRestarter.Infrastructure.Services.WindowsOS;
 
-public class WindowsBrowserService : IBrowserService
+public class WindowsBrowserService(IBrowserFactory browserFactory) : IBrowserService
 {
-    private readonly IBrowserFactory _browserFactory;
-
-    public WindowsBrowserService(IBrowserFactory browserFactory)
-    {
-        _browserFactory = browserFactory ?? throw new ArgumentNullException(nameof(browserFactory));
-    }
+    private readonly IBrowserFactory _browserFactory = browserFactory ?? throw new ArgumentNullException(nameof(browserFactory));
 
     public async Task<IEnumerable<BrowserInfo>> GetInstalledBrowsersAsync()
     {
@@ -29,6 +24,7 @@ public class WindowsBrowserService : IBrowserService
                 string displayName = browserLogic.DisplayName;
                 string iconPath = browserLogic.IconPath;
                 string downloadUrl = browserLogic.DownloadUrl;
+
                 var browserInfo = new BrowserInfo
                 {
                     Type = type,

@@ -8,17 +8,11 @@ using System.Runtime.Versioning;
 namespace eBRestarter.Infrastructure.Services.WindowsOS;
 
 [SupportedOSPlatform("windows")]
-public class WindowsProcessService : IWindowsProcessControlService
+public partial class WindowsProcessService(ILogger<WindowsProcessService> logger, IProcessWrapper processWrapper) : IWindowsProcessControlService
 {
-    private readonly ILogger<WindowsProcessService> _logger;
+    private readonly ILogger<WindowsProcessService> _logger = logger;
 
-    private readonly IProcessWrapper _processWrapper;
-
-    public WindowsProcessService(ILogger<WindowsProcessService> logger, IProcessWrapper processWrapper)
-    {
-        _logger = logger;
-        _processWrapper = processWrapper;
-    }
+    private readonly IProcessWrapper _processWrapper = processWrapper;
 
     public void StartExecutable(string exeFilePath)
     {
@@ -29,7 +23,11 @@ public class WindowsProcessService : IWindowsProcessControlService
                 FileName = exeFilePath,
                 UseShellExecute = true
             });
-            _logger.LogInformation("Executable gestartet: {Path}", exeFilePath);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Executable gestartet: {Path}", exeFilePath);
+            }
         }
         catch (Exception ex)
         {
@@ -60,7 +58,10 @@ public class WindowsProcessService : IWindowsProcessControlService
 
             if (process == null)
             {
-                _logger.LogWarning("MSI Prozess konnte nicht gestartet werden (null): {Path}", path);
+                if (_logger.IsEnabled(LogLevel.Warning))
+                {
+                    _logger.LogWarning("MSI Prozess konnte nicht gestartet werden (null): {Path}", path);
+                }
                 return;
             }
 
@@ -71,12 +72,18 @@ public class WindowsProcessService : IWindowsProcessControlService
 
             if (!string.IsNullOrWhiteSpace(error))
             {
-                _logger.LogWarning("MSI Installer Fehler-Output: {Error}", error);
+                if (_logger.IsEnabled(LogLevel.Warning))
+                {
+                    _logger.LogWarning("MSI Installer Fehler-Output: {Error}", error);
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(output))
             {
-                _logger.LogDebug("MSI Installer Output: {Output}", output);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("MSI Installer Output: {Output}", output);
+                }
             }
         }
         catch (Exception ex)
@@ -97,7 +104,11 @@ public class WindowsProcessService : IWindowsProcessControlService
             };
 
             _processWrapper.Start(startInfo);
-            _logger.LogInformation("Executable gestartet: {Path} mit Arguments: {Args}", exeFilePath, arguments);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Executable gestartet: {Path} mit Arguments: {Args}", exeFilePath, arguments);
+            }
         }
         catch (Exception ex)
         {
@@ -162,7 +173,10 @@ public class WindowsProcessService : IWindowsProcessControlService
 
                         if (!exited)
                         {
-                            _logger.LogWarning("Prozess {Name} hat auf WM_CLOSE nicht reagiert.", process.ProcessName);
+                            if (_logger.IsEnabled(LogLevel.Warning))
+                            {
+                                _logger.LogWarning("Prozess {Name} hat auf WM_CLOSE nicht reagiert.", process.ProcessName);
+                            }
                         }
                     }
                 }
@@ -175,8 +189,9 @@ public class WindowsProcessService : IWindowsProcessControlService
     }
 
 
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
     public async Task StartExecutableAsync(string exeFilePath)
     {
@@ -192,15 +207,24 @@ public class WindowsProcessService : IWindowsProcessControlService
 
             if (process != null)
             {
-                _logger.LogInformation("Executable gestartet und warte auf Beendeung: {Path}", exeFilePath);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Executable gestartet und warte auf Beendeung: {Path}", exeFilePath);
+                }
 
                 await process.WaitForExitAsync();
 
-                _logger.LogInformation("Executable wurde beendet: {Path}", exeFilePath);
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Executable wurde beendet: {Path}", exeFilePath);
+                }
             }
             else
             {
-                _logger.LogWarning("Prozess konnte nicht gestartet werden (null zurückerhalten): {Path}", exeFilePath);
+                if (_logger.IsEnabled(LogLevel.Warning))
+                {
+                    _logger.LogWarning("Prozess konnte nicht gestartet werden (null zurückerhalten): {Path}", exeFilePath);
+                }
             }
         }
         catch (Exception ex)
@@ -226,7 +250,10 @@ public class WindowsProcessService : IWindowsProcessControlService
                 UseShellExecute = true
             });
 
-            _logger.LogInformation("Explorer geöffnet in: {Path}", folderPath);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Explorer geöffnet in: {Path}", folderPath);
+            }
         }
         catch (Exception ex)
         {

@@ -2,7 +2,7 @@ using eBRestarter.Core.Application.Constants;
 
 namespace eBRestarter.Core.Application.Models.Config;
 
-public record ExtensionConfigDto
+public sealed record ExtensionConfigDto
 {
     public string LANGUAGE { get; init; } = "DE";
     public string ZIEL_URL { get; init; } = WebLinks.EVisitorSurflink;

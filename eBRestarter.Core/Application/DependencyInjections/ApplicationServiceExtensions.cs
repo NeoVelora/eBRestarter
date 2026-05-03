@@ -16,8 +16,6 @@ namespace eBRestarter.Core.Application.DependencyInjections;
 
 public static class ApplicationServiceExtensions
 {
-    #region PublicAndProtectedMethods
-
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddSingleton<IRestartCalculationService, RestartCalculationService>();
@@ -39,6 +37,4 @@ public static class ApplicationServiceExtensions
 
         return services;
     }
-
-    #endregion
 }

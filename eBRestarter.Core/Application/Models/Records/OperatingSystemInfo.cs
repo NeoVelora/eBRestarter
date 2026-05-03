@@ -1,6 +1,6 @@
 namespace eBRestarter.Core.Application.Models.Records;
 
-public record OperatingSystemInfo
+public sealed record OperatingSystemInfo
 {
     public string Edition { get; init; } = string.Empty;
     public string Version { get; init; } = string.Empty;

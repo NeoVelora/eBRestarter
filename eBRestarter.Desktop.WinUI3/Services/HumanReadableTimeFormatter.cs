@@ -5,12 +5,12 @@ namespace eBRestarter.Desktop.WinUI3.Services;
 
 public class HumanReadableTimeFormatter : ITimeFormatter
 {
-    #region PublicMethods
-
     public string Format(int seconds)
     {
         if (seconds < 0) return "0s";
+
         TimeSpan time = TimeSpan.FromSeconds(seconds);
+
         return time switch
         {
             { TotalHours: >= 1 } => time.ToString(@"h\h\:\ m\m\:\ s\s"),
@@ -18,6 +18,4 @@ public class HumanReadableTimeFormatter : ITimeFormatter
             _ => time.ToString(@"s\s")
         };
     }
-
-    #endregion
 }

@@ -9,121 +9,120 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace eBRestarter.Desktop.WinUI3.ViewModels
+namespace eBRestarter.Desktop.WinUI3.ViewModels;
+
+public partial class ViewModelActivateApi : ObservableObject
 {
-    public partial class ViewModelActivateApi : ObservableObject
+    private readonly IApiAuthenticationService _apiAuthenticationService;
+
+    private readonly IEVisitorConfigService _configService;
+
+    private readonly ILocalizationService _localizationService;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
+    public partial string ApiKey { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string StatusColor { get; set; } = "Transparent";
+
+    [ObservableProperty]
+    public partial string StatusMessage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
+    public partial string Username { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
+
+    public ViewModelActivateApi(
+        IApiAuthenticationService apiAuthenticationService,
+        IEVisitorConfigService configService,
+        ILocalizationService localizationService)
     {
-        private readonly IApiAuthenticationService _apiAuthenticationService;
+        ArgumentNullException.ThrowIfNull(apiAuthenticationService);
+        ArgumentNullException.ThrowIfNull(configService);
+        ArgumentNullException.ThrowIfNull(localizationService);
 
-        private readonly IEVisitorConfigService _configService;
+        _apiAuthenticationService = apiAuthenticationService;
+        _configService = configService;
+        _localizationService = localizationService;
 
-        private readonly ILocalizationService _localizationService;
+        var config = _configService.LoadConfig();
+        Username = config.Settings.ApiUsername;
+        ApiKey = config.Settings.ApiKey;
+    }
 
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
-        public partial string ApiKey { get; set; } = string.Empty;
+    [RelayCommand(CanExecute = nameof(CanSubmit))]
+    private async Task Submit()
+    {
+        IsBusy = true;
+        StatusMessage = _localizationService.GetString("ActivateApi_Checking");
 
-        [ObservableProperty]
-        public partial string StatusColor { get; set; } = "Transparent";
-
-        [ObservableProperty]
-        public partial string StatusMessage { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
-        public partial string Username { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial bool IsBusy { get; set; }
-
-        private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
-
-        public ViewModelActivateApi(
-            IApiAuthenticationService apiAuthenticationService,
-            IEVisitorConfigService configService,
-            ILocalizationService localizationService)
+        try
         {
-            ArgumentNullException.ThrowIfNull(apiAuthenticationService);
-            ArgumentNullException.ThrowIfNull(configService);
-            ArgumentNullException.ThrowIfNull(localizationService);
+            var (isValid, verificationDetail) = await _apiAuthenticationService.VerifyCredentialsAsync(
+                Username ?? string.Empty,
+                ApiKey ?? string.Empty);
 
-            _apiAuthenticationService = apiAuthenticationService;
-            _configService = configService;
-            _localizationService = localizationService;
-
-            var config = _configService.LoadConfig();
-            Username = config.Settings.ApiUsername;
-            ApiKey = config.Settings.ApiKey;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanSubmit))]
-        private async Task Submit()
-        {
-            IsBusy = true;
-            StatusMessage = _localizationService.GetString("ActivateApi_Checking");
-
-            try
+            if (isValid)
             {
-                var (isValid, verificationDetail) = await _apiAuthenticationService.VerifyCredentialsAsync(
-                    Username ?? string.Empty,
-                    ApiKey ?? string.Empty);
-
-                if (isValid)
+                var currentConfig = _configService.LoadConfig();
+                var newConfig = currentConfig with
                 {
-                    var currentConfig = _configService.LoadConfig();
-                    var newConfig = currentConfig with
+                    Settings = currentConfig.Settings with
                     {
-                        Settings = currentConfig.Settings with
-                        {
-                            ApiUsername = Username ?? string.Empty,
-                            ApiKey = ApiKey ?? string.Empty
-                        }
-                    };
-                    _configService.SaveConfig(newConfig);
-                    StatusMessage = _localizationService.GetString("ActivateApi_Success");
-                    StatusColor = "#7ED422";
+                        ApiUsername = Username ?? string.Empty,
+                        ApiKey = ApiKey ?? string.Empty
+                    }
+                };
+                _configService.SaveConfig(newConfig);
+                StatusMessage = _localizationService.GetString("ActivateApi_Success");
+                StatusColor = "#7ED422";
 
-                    WeakReferenceMessenger.Default.Send(new ApiCredentialsUpdatedMessage());
-                }
-                else
-                {
-                    StatusMessage = verificationDetail ?? string.Empty;
-                    StatusColor = "#E40E87";
-                }
+                WeakReferenceMessenger.Default.Send(new ApiCredentialsUpdatedMessage());
             }
-            finally
+            else
             {
-                IsBusy = false;
+                StatusMessage = verificationDetail ?? string.Empty;
+                StatusColor = "#E40E87";
             }
         }
-
-        public void ImportLegacyFile(string filePath)
+        finally
         {
-            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
-            {
-                StatusMessage = _localizationService.GetString("ActivateApi_FileNotFound");
-                StatusColor = "#E40E87";
-                return;
-            }
+            IsBusy = false;
+        }
+    }
 
-            try
-            {
-                using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
-                using var reader = new BinaryReader(stream);
-                var importedUser = reader.ReadString();
-                var importedKey = reader.ReadString();
-                Username = importedUser;
-                ApiKey = importedKey;
-                StatusMessage = _localizationService.GetString("ActivateApi_ImportSuccess");
-                StatusColor = "{ThemeResource SystemFillColorSuccessBrush}";
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ObjectDisposedException)
-            {
-                StatusMessage = _localizationService.GetString("ActivateApi_ImportError");
-                StatusColor = "#E40E87";
-                Username = string.Empty;
-                ApiKey = string.Empty;
-            }
+    public void ImportLegacyFile(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            StatusMessage = _localizationService.GetString("ActivateApi_FileNotFound");
+            StatusColor = "#E40E87";
+            return;
+        }
+
+        try
+        {
+            using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+            using var reader = new BinaryReader(stream);
+            var importedUser = reader.ReadString();
+            var importedKey = reader.ReadString();
+            Username = importedUser;
+            ApiKey = importedKey;
+            StatusMessage = _localizationService.GetString("ActivateApi_ImportSuccess");
+            StatusColor = "{ThemeResource SystemFillColorSuccessBrush}";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ObjectDisposedException)
+        {
+            StatusMessage = _localizationService.GetString("ActivateApi_ImportError");
+            StatusColor = "#E40E87";
+            Username = string.Empty;
+            ApiKey = string.Empty;
         }
     }
 }

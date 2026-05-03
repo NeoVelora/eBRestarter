@@ -26,7 +26,7 @@ public class WindowsSystemInfoService(ILogger<WindowsSystemInfoService> logger, 
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Fehler beim Lesen der OS Display Version.");
+            _logger.LogError(ex, "Error reading the OS display version.");
             return "Error";
         }
     }
@@ -43,7 +43,7 @@ public class WindowsSystemInfoService(ILogger<WindowsSystemInfoService> logger, 
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Fehler beim Lesen der OS Build Version.");
+            _logger.LogError(ex, "Error reading the OS build version.");
             return "Error";
         }
     }
@@ -60,7 +60,7 @@ public class WindowsSystemInfoService(ILogger<WindowsSystemInfoService> logger, 
 
         if (!string.Equals(progIdHttp, progIdHttps, StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogInformation("Unterschiedliche Browser für HTTP ({Http}) und HTTPS ({Https}) erkannt.", progIdHttp, progIdHttps);
+            _logger.LogInformation("Different browsers detected for HTTP ({Http}) and HTTPS ({Https}).", progIdHttp, progIdHttps);
         }
 
         return IdentifyBrowserByProgId(progIdHttp);
@@ -74,7 +74,7 @@ public class WindowsSystemInfoService(ILogger<WindowsSystemInfoService> logger, 
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Konnte Registry-Pfad nicht lesen: {Path}", subKey);
+            _logger.LogWarning(ex, "Unable to read the registry path: {Path}", subKey);
             return null;
         }
     }

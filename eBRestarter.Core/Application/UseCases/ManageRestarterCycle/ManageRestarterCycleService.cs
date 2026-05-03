@@ -1,11 +1,10 @@
 using eBRestarter.Core.Application.Constants;
+using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
-using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Domain.Services;
-using System.Diagnostics;
 
 namespace eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
 
@@ -37,7 +36,9 @@ public class ManageRestarterCycleService(
     public async Task StartAsync(ManageRestarterCycleRequest request, Func<Task> performCleanupCallback)
     {
         Stop();
+
         _cts = new CancellationTokenSource();
+
         var token = _cts.Token;
 
         try
@@ -110,7 +111,7 @@ public class ManageRestarterCycleService(
         string processName = GetProcessNameFromDisplayName(request.BrowserDisplayName);
 
         var appConfig = _configService.LoadConfig();
-        bool isCleanupActive = appConfig.Browser != null && appConfig.Browser.DeleteBrowserCacheIntervalDays > 0;
+        bool isCleanupActive = appConfig.Browser?.DeleteBrowserCacheIntervalDays > 0;
         DateTime nextCleanupDate = appConfig.Browser?.NextBrowserDeleteCacheDate ?? DateTime.MaxValue;
 
         for (int secondsRemaining = request.RuntimeSeconds; secondsRemaining >= 0; secondsRemaining--)
@@ -221,7 +222,7 @@ public class ManageRestarterCycleService(
         };
     }
 
-    private string GetProcessNameFromDisplayName(string displayName)
+    private static string GetProcessNameFromDisplayName(string displayName)
     {
         if (string.IsNullOrEmpty(displayName)) return "";
         var lower = displayName.ToLowerInvariant();

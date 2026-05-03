@@ -2,20 +2,8 @@ using eBRestarter.Desktop.WinUI3.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.Windows.Storage.Pickers;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
 
 namespace eBRestarter.Desktop.WinUI3.Views.Dialogs;
@@ -32,12 +20,17 @@ public sealed partial class ImportApiDialog : ContentDialog
 
     private void DropZone_DragOver(object sender, DragEventArgs e)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(e);
+
         e.AcceptedOperation = DataPackageOperation.Copy;
         e.DragUIOverride.Caption = "Hier ablegen";
     }
 
     private async void DropZone_Drop(object sender, DragEventArgs e)
     {
+        ArgumentNullException.ThrowIfNull(sender);
+
         if (e.DataView.Contains(StandardDataFormats.StorageItems))
         {
             var items = await e.DataView.GetStorageItemsAsync();
@@ -50,7 +43,7 @@ public sealed partial class ImportApiDialog : ContentDialog
 
     private async void BtnBrowse_Click(object sender, RoutedEventArgs e)
     {
-
-
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(e);
     }
 }

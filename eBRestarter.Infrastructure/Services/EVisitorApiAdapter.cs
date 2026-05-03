@@ -271,7 +271,7 @@ public class EVisitorApiAdapter(
         }
     }
 
-    private double GetValueSafe(JsonElement item)
+    private static double GetValueSafe(JsonElement item)
     {
         if (item.TryGetProperty("value", out JsonElement valProp))
         {
@@ -288,7 +288,7 @@ public class EVisitorApiAdapter(
         return 0.0;
     }
 
-    private string GetStringSafe(JsonElement element, string propertyName)
+    private static string GetStringSafe(JsonElement element, string propertyName)
     {
         if (element.TryGetProperty(propertyName, out JsonElement prop) &&
             prop.ValueKind == JsonValueKind.String)
