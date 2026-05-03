@@ -35,6 +35,6 @@ public class RealProcessWrapper : IProcessWrapper
     {
         var processes = Process.GetProcesses();
 
-        return processes.Select(p => (IProcess)new ProcessAdapter(p)).ToArray();
+        return [.. processes.Select(p => (IProcess)new ProcessAdapter(p))];
     }
 }
