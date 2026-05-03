@@ -31,6 +31,7 @@ public partial class ComputerRestartScheduler(
         _logger.LogInformation("Computer Restart Scheduler gestartet.");
 
         _cts = new CancellationTokenSource();
+
         _timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
 
         _backgroundTask = Task.Run(async () => await LoopAsync(_cts.Token));
@@ -107,10 +108,10 @@ public partial class ComputerRestartScheduler(
                     newTargetDate = today;
                 }
 
-                config.Computer.NextRestartDate = today;
+                config.Computer.NextRestartDate = newTargetDate;
                 _configService.SaveConfig(config);
 
-                OnNextRestartDateChanged?.Invoke(this, today);
+                OnNextRestartDateChanged?.Invoke(this, newTargetDate);
                 return;
             }
 
