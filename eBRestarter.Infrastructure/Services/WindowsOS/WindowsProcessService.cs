@@ -147,43 +147,76 @@ public partial class WindowsProcessService(ILogger<WindowsProcessService> logger
         }
     }
 
-    public void CloseAllOpenPrograms()
+    public async Task CloseAllOpenProgramsAsync(int timeoutMilliseconds)
     {
         var processes = _processWrapper.GetProcesses();
+        var pendingTasks = new List<Task>();
+        var processesToDispose = new List<IProcess>();
 
         foreach (var process in processes)
         {
-            using (process)
+            if (process.ProcessName == "System" || process.ProcessName == "Idle")
             {
-                if (process.ProcessName == "System" || process.ProcessName == "Idle")
-                    continue;
+                process.Dispose();
+                continue;
+            }
 
-                try
+            try
+            {
+                if (process.MainWindowHandle != IntPtr.Zero)
                 {
-                    if (process.MainWindowHandle != IntPtr.Zero)
-                    {
-                        PostMessage(process.MainWindowHandle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-                        bool exited = process.WaitForExit(5000);
+                    PostMessage(process.MainWindowHandle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                    pendingTasks.Add(process.WaitForExitAsync());
+                    processesToDispose.Add(process);
+                }
+                else
+                {
+                    process.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fehler beim Senden von WM_CLOSE an Prozess {Name}", process.ProcessName);
+                process.Dispose();
+            }
+        }
 
-                        if (!exited)
-                        {
-                            if (_logger.IsEnabled(LogLevel.Warning))
-                            {
-                                _logger.LogWarning("Prozess {Name} hat auf WM_CLOSE nicht reagiert.", process.ProcessName);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
+        if (pendingTasks.Count > 0)
+        {
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Warte auf das Schließen von {Count} Programmen (Timeout: {Timeout}ms)...", pendingTasks.Count, timeoutMilliseconds);
+            }
+
+            var allTasksFinished = Task.WhenAll(pendingTasks);
+            var timeoutTask = Task.Delay(timeoutMilliseconds);
+
+            var finishedTask = await Task.WhenAny(allTasksFinished, timeoutTask);
+
+            if (finishedTask == timeoutTask)
+            {
+                if (_logger.IsEnabled(LogLevel.Warning))
                 {
-                    _logger.LogError(ex, "Fehler beim Schließen von Prozess {Name}", process.ProcessName);
+                    _logger.LogWarning("Timeout beim Warten auf das Beenden der Programme erreicht.");
                 }
+            }
+            else
+            {
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("Alle Programme wurden erfolgreich sanft geschlossen.");
+                }
+            }
+
+            foreach (var process in processesToDispose)
+            {
+                process.Dispose();
             }
         }
     }
 
 
-    [LibraryImport("user32.dll", SetLastError = true)]
+    [LibraryImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 

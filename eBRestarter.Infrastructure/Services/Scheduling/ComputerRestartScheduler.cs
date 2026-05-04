@@ -66,7 +66,7 @@ public partial class ComputerRestartScheduler(
         {
             while (await _timer!.WaitForNextTickAsync(token))
             {
-                CheckAndExecuteRestart();
+                await CheckAndExecuteRestartAsync();
             }
         }
         catch (OperationCanceledException)
@@ -78,7 +78,7 @@ public partial class ComputerRestartScheduler(
         }
     }
 
-    private void CheckAndExecuteRestart()
+    private async Task CheckAndExecuteRestartAsync()
     {
         var config = _configService.LoadConfig();
 
@@ -121,21 +121,19 @@ public partial class ComputerRestartScheduler(
 
             if (isCorrectDay && isCorrectTime)
             {
-                ExecuteRestartSequence();
+                await ExecuteRestartSequenceAsync();
             }
         }
     }
 
-    private void ExecuteRestartSequence()
+    private async Task ExecuteRestartSequenceAsync()
     {
         _logger.LogWarning("Automatischer Neustart wird eingeleitet...");
 
         try
         {
             _logger.LogInformation("Schließe offene Anwendungen...");
-            _processService.CloseAllOpenPrograms();
-
-            Thread.Sleep(3000);
+            await _processService.CloseAllOpenProgramsAsync(30000);
 
             _logger.LogInformation("Fahre System herunter...");
             _processService.ShutdownComputer();

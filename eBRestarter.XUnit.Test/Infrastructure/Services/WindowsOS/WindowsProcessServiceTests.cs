@@ -139,7 +139,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
 
         [Fact]
-        public void CloseAllOpenPrograms_ShouldIgnoreSystemAndHeadlessProcesses()
+        public async Task CloseAllOpenProgramsAsync_ShouldIgnoreSystemAndHeadlessProcesses()
         {
             var systemMock = new Mock<IProcess>();
             systemMock.Setup(p => p.ProcessName).Returns("System");
@@ -151,6 +151,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             var validAppMock = new Mock<IProcess>();
             validAppMock.Setup(p => p.ProcessName).Returns("Notepad");
             validAppMock.Setup(p => p.MainWindowHandle).Returns(new IntPtr(1234));
+            validAppMock.Setup(p => p.WaitForExitAsync()).Returns(Task.CompletedTask);
 
             _mockProcessWrapper.Setup(w => w.GetProcesses()).Returns(new IProcess[]
             {
@@ -159,13 +160,13 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                 validAppMock.Object
             });
 
-            _sut.CloseAllOpenPrograms();
+            await _sut.CloseAllOpenProgramsAsync(5000);
 
-            systemMock.Verify(p => p.WaitForExit(It.IsAny<int>()), Times.Never);
+            systemMock.Verify(p => p.WaitForExitAsync(), Times.Never);
 
-            headlessMock.Verify(p => p.WaitForExit(It.IsAny<int>()), Times.Never);
+            headlessMock.Verify(p => p.WaitForExitAsync(), Times.Never);
 
-            validAppMock.Verify(p => p.WaitForExit(5000), Times.Once);
+            validAppMock.Verify(p => p.WaitForExitAsync(), Times.Once);
 
             validAppMock.Verify(p => p.Dispose(), Times.Once);
         }
