@@ -9,5 +9,19 @@ namespace eBRestarter.Desktop.WinUI3.Views.Pages
         {
             InitializeComponent();
         }
+
+        protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            
+            if (e.Parameter is int index)
+            {
+                UcOptions.SelectPivotIndex(index);
+            }
+            else if (e.Parameter is string param && int.TryParse(param, out int parsedIndex))
+            {
+                UcOptions.SelectPivotIndex(parsedIndex);
+            }
+        }
     }
 }

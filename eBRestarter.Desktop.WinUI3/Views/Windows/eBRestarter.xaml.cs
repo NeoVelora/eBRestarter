@@ -60,9 +60,6 @@ namespace eBRestarter.Desktop.WinUI3
 
         private void AppTitleBar_BackRequested(TitleBar sender, object args)
         {
-            ArgumentNullException.ThrowIfNull(sender);
-            ArgumentNullException.ThrowIfNull(args);
-
             if (NavigationFrame.CanGoBack)
             {
                 NavigationFrame.GoBack();
@@ -71,9 +68,6 @@ namespace eBRestarter.Desktop.WinUI3
 
         private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args)
         {
-            ArgumentNullException.ThrowIfNull(sender);
-            ArgumentNullException.ThrowIfNull(args);
-
             NavView.IsPaneOpen = !NavView.IsPaneOpen;
         }
 

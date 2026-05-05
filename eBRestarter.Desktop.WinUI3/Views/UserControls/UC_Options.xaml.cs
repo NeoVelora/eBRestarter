@@ -18,4 +18,8 @@ public sealed partial class UC_Options : UserControl
         this.DataContext = ViewModelOptions;
     }
 
+    public void SelectPivotIndex(int index)
+    {
+        OptionsPivot.SelectedIndex = index;
+    }
 }

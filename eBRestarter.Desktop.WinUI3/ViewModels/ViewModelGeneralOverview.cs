@@ -1,8 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Desktop.WinUI3.Messages;
+using eBRestarter.Desktop.WinUI3.Services;
+using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
@@ -40,6 +43,8 @@ public partial class ViewModelGeneralOverview : ObservableObject
     private readonly IEVisitorApiService _eVisitorApiService;
 
     private readonly ILocalizationService _localizationService;
+
+    private readonly INavigationService _navigationService;
 
     private EarningsData? _cachedEarnings;
 
@@ -105,12 +110,15 @@ public partial class ViewModelGeneralOverview : ObservableObject
     public Axis[] YAxes { get; set; } = null!;
 
     public ViewModelGeneralOverview(
+        INavigationService navigationService,
         IEVisitorApiService eVisitorApiService,
         ILocalizationService localizationService)
     {
-        ArgumentNullException.ThrowIfNull(eVisitorApiService);
+        ArgumentNullException.ThrowIfNull(navigationService);
+        ArgumentNullException.ThrowIfNull(localizationService);
         ArgumentNullException.ThrowIfNull(localizationService);
 
+        _navigationService = navigationService;
         _eVisitorApiService = eVisitorApiService;
         _localizationService = localizationService;
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
@@ -283,10 +291,16 @@ public partial class ViewModelGeneralOverview : ObservableObject
         };
 
         while (_chartValues.Count < earningsValuesForPivot.Length)
+        {
             _chartValues.Add(new ObservableValue(0));
+        }
+
 
         while (_chartValues.Count > earningsValuesForPivot.Length)
+        {
             _chartValues.RemoveAt(_chartValues.Count - 1);
+        }
+
 
         for (int index = 0; index < earningsValuesForPivot.Length; index++)
         {
@@ -296,4 +310,7 @@ public partial class ViewModelGeneralOverview : ObservableObject
                 _chartValues[index].Value = earningsValuesForPivot[index];
         }
     }
+
+   [RelayCommand] private void GoToAPILogin() => _navigationService.NavigateTo("Options", parameter: 1);
+
 }
