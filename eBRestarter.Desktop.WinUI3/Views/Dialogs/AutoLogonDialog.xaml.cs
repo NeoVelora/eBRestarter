@@ -10,7 +10,6 @@ namespace eBRestarter.Desktop.WinUI3.Views.Dialogs
         {
             this.InitializeComponent();
         }
-
         public void SetDefaults(string user, string domain)
         {
             if (!string.IsNullOrEmpty(user))

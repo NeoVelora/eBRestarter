@@ -11,7 +11,6 @@ public class HttpClientDownloadService : IBrowserDownloadService
     public HttpClientDownloadService()
     {
         _httpClient = new HttpClient();
-
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36");
 
     }
@@ -31,7 +30,6 @@ public class HttpClientDownloadService : IBrowserDownloadService
         var buffer = new byte[8192];
         long totalRead = 0;
         int bytesRead;
-
         var stopwatch = new Stopwatch();
         stopwatch.Start();
         long lastUpdateTicks = 0;

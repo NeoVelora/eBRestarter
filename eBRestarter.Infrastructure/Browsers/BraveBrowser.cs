@@ -24,7 +24,6 @@ public class BraveBrowser(IOperatingSystemFacade os, ILogger<BraveBrowser> logge
     protected override string ProcessName => "brave";
 
     protected override string RegistryKeyVersion => @"Software\BraveSoftware\Brave-Browser\BLBeacon";
-
     protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
     public override string ExtensionInstallUrl => "https://chrome.google.com/webstore/detail/ebesucher-addon/agchmcconfdfcenopioeilpgjngelefk";
 

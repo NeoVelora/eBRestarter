@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.Security;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Infrastructure.Services.Config;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -31,17 +31,13 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
             _mockPathService.Setup(p => p.GetConfigFilePath()).Returns(_tempFilePath);
         }
 
-
         [Fact]
         public void SaveConfig_ShouldEncryptApiKey_AndWriteJsonToFile()
         {
             var service = new EVisitorConfigService(_mockPathService.Object, _mockEncryptionService.Object, _mockLogger.Object);
 
             var configToSave = new AppConfig();
-            configToSave = configToSave with
-            {
-                Settings = configToSave.Settings with { ApiKey = "SecretPlaintextKey123" }
-            };
+            configToSave.Settings.ApiKey = "SecretPlaintextKey123";
 
             _mockEncryptionService
                 .Setup(e => e.Encrypt(It.IsAny<string>()))
@@ -56,7 +52,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
             savedJson.ShouldContain("EncryptedSecretData789");
             savedJson.ShouldNotContain("SecretPlaintextKey123");
         }
-
 
         [Fact]
         public void LoadConfig_ShouldCreateAndReturnDefault_WhenFileDoesNotExist()
@@ -123,7 +118,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
             result.ShouldNotBeNull();
         }
 
-
         [Fact]
         public void ResetConfig_ShouldWriteDefaultConfigToFile()
         {
@@ -137,7 +131,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
             newContent.ShouldNotContain("Alte, kaputte Daten");
             newContent.ShouldContain("{");
         }
-
         public void Dispose()
         {
             if (File.Exists(_tempFilePath))

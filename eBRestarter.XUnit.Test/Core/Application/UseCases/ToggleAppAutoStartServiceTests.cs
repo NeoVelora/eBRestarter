@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.UseCases.ToggleAppAutoStart;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using Moq;
 using Shouldly;
 using System.Threading.Tasks;
@@ -24,7 +24,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleAppAutoStart
                 _mockStartupManager.Object,
                 _mockConfigService.Object);
         }
-
 
         [Fact]
         public async Task InitializeAndGetStateAsync_ShouldEnableInOs_WhenConfigIsTrueAndOsIsFalse()
@@ -59,7 +58,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleAppAutoStart
             _mockStartupManager.Verify(s => s.EnableAutoStartAsync(), Times.Never);
             _mockStartupManager.Verify(s => s.DisableAutoStartAsync(), Times.Never);
         }
-
 
         [Fact]
         public async Task ToggleAsync_ShouldEnableInOs_AndSaveConfig_WhenTrue()

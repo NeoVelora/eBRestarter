@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.UseCases.RemoveApiCredentials;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using Moq;
 using Shouldly;
 using System;
@@ -18,7 +18,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.RemoveApiCredentials
             _mockConfigService = new Mock<IEVisitorConfigService>();
             _sut = new RemoveApiCredentialsService(_mockConfigService.Object);
         }
-
 
         [Fact]
         public void Execute_ShouldClearCredentials_AndKeepOtherSettingsIntact()
@@ -56,7 +55,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.RemoveApiCredentials
             savedConfig.Settings.Theme.ShouldBe("Dark");
             savedConfig.Settings.Language.ShouldBe(1);
         }
-
 
         [Fact]
         public void Execute_ShouldBubbleUpException_WhenLoadConfigFails()

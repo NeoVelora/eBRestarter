@@ -22,7 +22,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             Directory.CreateDirectory(_baseTestDir);
         }
 
-
         [Fact]
         public async Task CountFilesAsync_ShouldReturnCorrectNumberOfFiles_IncludingSubdirectories()
         {
@@ -39,7 +38,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
 
             count.ShouldBe(3);
         }
-
 
         [Fact]
         public async Task DeleteFilesAsync_ShouldCleanUpEverything_ExceptExclusions()
@@ -95,7 +93,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             Directory.GetFiles(_baseTestDir).Length.ShouldBe(10);
         }
 
-
         [Fact]
         public void DeleteSingleFile_ShouldWork_IfFileExists()
         {
@@ -112,7 +109,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
         {
             Should.NotThrow(() => _sut.DeleteSingleFile("C:\\NonExistentFile.xyz"));
         }
-
         public void Dispose()
         {
             if (Directory.Exists(_baseTestDir))

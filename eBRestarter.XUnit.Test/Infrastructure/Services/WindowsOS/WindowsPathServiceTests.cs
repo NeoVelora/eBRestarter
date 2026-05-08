@@ -19,7 +19,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut = new WindowsPathService(_mockPathProvider.Object);
         }
 
-
         [Fact]
         public void GetAppDataPath_ShouldCombineLocalAppData_WithSkylarAndAppFolder()
         {
@@ -33,7 +32,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             actualPath.ShouldBe(expectedPath);
         }
 
-
         [Fact]
         public void GetDownloadsPath_ShouldCombineUserProfile_WithDownloadsFolder()
         {
@@ -46,7 +44,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             actualPath.ShouldBe(expectedPath);
         }
-
 
         [Fact]
         public void GetConfigFilePath_ShouldCombineAppDataPath_WithConfigFileName()

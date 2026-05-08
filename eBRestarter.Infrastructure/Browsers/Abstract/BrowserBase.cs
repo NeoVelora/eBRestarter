@@ -16,12 +16,10 @@ public abstract class BrowserBase(IOperatingSystemFacade os, ILogger logger) : I
     public abstract string DisplayName { get; }
     public abstract string IconPath { get; }
     public abstract string DownloadUrl { get; }
-
     public abstract string ExtensionInstallUrl { get; }
     protected abstract string ProcessName { get; }
     protected abstract string RegistryKeyVersion { get; }
     protected abstract List<string> ExecutablePaths { get; }
-
     public abstract bool IsExtensionInstalled(string? extensionId = null);
 
     public virtual void Start(string url, string arguments = "")

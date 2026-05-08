@@ -153,9 +153,14 @@ public partial class WindowsProcessService(ILogger<WindowsProcessService> logger
         var pendingTasks = new List<Task>();
         var processesToDispose = new List<IProcess>();
 
+        string currentProcessName = Process.GetCurrentProcess().ProcessName;
+
         foreach (var process in processes)
         {
-            if (process.ProcessName == "System" || process.ProcessName == "Idle")
+            if (process.ProcessName == "System" ||
+                process.ProcessName == "Idle" ||
+                process.ProcessName.Equals("explorer", StringComparison.OrdinalIgnoreCase) ||
+                process.ProcessName.Equals(currentProcessName, StringComparison.OrdinalIgnoreCase))
             {
                 process.Dispose();
                 continue;
@@ -214,7 +219,6 @@ public partial class WindowsProcessService(ILogger<WindowsProcessService> logger
             }
         }
     }
-
 
     [LibraryImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

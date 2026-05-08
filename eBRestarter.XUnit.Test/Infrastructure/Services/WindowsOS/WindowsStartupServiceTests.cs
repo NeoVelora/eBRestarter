@@ -32,7 +32,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut = new WindowsStartupService(_mockLogger.Object, _mockRegistry.Object, _mockProcessInfo.Object);
         }
 
-
         [Fact]
         public void EnableAutoStart_ShouldSetRegistryKey_WithCurrentExePath()
         {
@@ -86,7 +85,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             result.ShouldBe(isEnabledInRegistry);
         }
 
-
         [Theory]
         [InlineData(true, 1)]
         [InlineData(false, 0)]
@@ -116,7 +114,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             result.ShouldBe(expectedResult);
         }
-
 
         [Theory]
         [InlineData(true, 0)]

@@ -31,7 +31,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
                 _mockBrowserFactory.Object);
         }
 
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -58,7 +57,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
 
             _mockBrowserFactory.Verify(f => f.Create(BrowserType.Edge), Times.Once);
         }
-
 
         [Theory]
         [InlineData(true)]

@@ -44,9 +44,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
             var firefoxBrowser = new FirefoxBrowser(mockOs.Object, mockLogger.Object);
-
             var paths = firefoxBrowser.GetPaths();
-
 
             paths.CacheDirs.ShouldContain(@"C:\Local\Mozilla\Firefox\Profiles\abc.default\cache2\entries");
             paths.CookiesDirs.ShouldContain(@"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\storage\default");
@@ -83,9 +81,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
             var firefoxBrowser = new FirefoxBrowser(mockOs.Object, mockLogger.Object);
-
             bool isInstalled = firefoxBrowser.IsExtensionInstalled();
-
             isInstalled.ShouldBeTrue();
         }
 
@@ -117,9 +113,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
             var firefoxBrowser = new FirefoxBrowser(mockOs.Object, mockLogger.Object);
-
             bool isInstalled = firefoxBrowser.IsExtensionInstalled();
-
             isInstalled.ShouldBeTrue();
         }
     }

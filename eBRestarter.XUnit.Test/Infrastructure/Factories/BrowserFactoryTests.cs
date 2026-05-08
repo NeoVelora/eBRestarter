@@ -37,9 +37,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
             mockServiceProvider.Setup(sp => sp.GetService(typeof(VivaldiBrowser))).Returns(fakeVivaldi);
 
             var factory = new BrowserFactory(mockServiceProvider.Object);
-
             var result = factory.Create(inputType);
-
             result.ShouldNotBeNull();
 
             result.ShouldBeOfType(expectedClassType);
@@ -52,7 +50,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
             var factory = new BrowserFactory(mockServiceProvider.Object);
 
             var invalidBrowserType = (BrowserType)999;
-
             var exception = Should.Throw<NotSupportedException>(() =>
             {
                 factory.Create(invalidBrowserType);

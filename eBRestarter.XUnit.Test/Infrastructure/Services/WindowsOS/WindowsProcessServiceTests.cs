@@ -26,7 +26,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut = new WindowsProcessService(_mockLogger.Object, _mockProcessWrapper.Object);
         }
 
-
         [Fact]
         public void StartExecutable_ShouldCallWrapper_WithCorrectStartInfo()
         {
@@ -40,14 +39,12 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             )), Times.Once);
         }
 
-
         [Fact]
         public void StartMsiFile_ShouldConfigureMsiExec_AndReadStreams()
         {
             string msiPath = @"C:\Install\setup.msi";
             string expectedSystemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
             string expectedMsiExecPath = Path.Combine(expectedSystemFolder, "msiexec.exe");
-
             var mockProcess = new Mock<IProcess>();
 
             var outStream = new MemoryStream(Encoding.UTF8.GetBytes("Installation OK"));
@@ -69,7 +66,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             mockProcess.Verify(p => p.WaitForExit(), Times.Once);
         }
-
 
         [Fact]
         public void OpenUrlInBrowser_ShouldPassUrlAsArgument()
@@ -115,7 +111,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             )), Times.Once);
         }
 
-
         [Fact]
         public void CloseApplication_ShouldCallKill_WhenProcessIsRunning()
         {
@@ -152,7 +147,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             validAppMock.Setup(p => p.ProcessName).Returns("Notepad");
             validAppMock.Setup(p => p.MainWindowHandle).Returns(new IntPtr(1234));
             validAppMock.Setup(p => p.WaitForExitAsync()).Returns(Task.CompletedTask);
-
             _mockProcessWrapper.Setup(w => w.GetProcesses()).Returns(new IProcess[]
             {
                 systemMock.Object,
@@ -170,7 +164,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             validAppMock.Verify(p => p.Dispose(), Times.Once);
         }
-
 
         [Fact]
         public async Task StartExecutableAsync_ShouldAwaitProcessExit()

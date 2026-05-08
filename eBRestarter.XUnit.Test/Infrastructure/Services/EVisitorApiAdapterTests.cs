@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.RestClient;
 using eBRestarter.Core.Application.Models.Api;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Core.Application.Constants;
 using eBRestarter.Infrastructure.Services;
 using Microsoft.Extensions.Logging;
@@ -32,7 +32,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
                 _mockConfigService.Object,
                 _mockLogger.Object);
         }
-
 
         [Fact]
         public async Task GetIpInfoAsync_ShouldParseJsonCorrectly_WhenApiReturnsValidData()
@@ -71,7 +70,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             resultInvalid.ShouldBeNull();
         }
 
-
         [Fact]
         public async Task GetEarningsAsync_ShouldReturnNull_WhenCredentialsAreMissing()
         {
@@ -84,15 +82,12 @@ namespace eBRestarter.Tests.Infrastructure.Services
             _mockRestClient.Verify(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()), Times.Never);
         }
 
-
         [Fact]
         public async Task GetEarningsAsync_ShouldFetchAndAggregateDataCorrectly()
         {
             var validConfig = new AppConfig();
-            validConfig = validConfig with
-            {
-                Settings = validConfig.Settings with { ApiUsername = "user", ApiKey = "pass" }
-            };
+            validConfig.Settings.ApiUsername = "user";
+            validConfig.Settings.ApiKey = "pass";
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(validConfig);
 
             _mockRestClient
@@ -116,16 +111,13 @@ namespace eBRestarter.Tests.Infrastructure.Services
             var result = await _sut.GetEarningsAsync();
 
             result.ShouldNotBeNull();
-
             result.HourlyEarnings[0].ShouldBe(10.5);
             result.HourlyEarnings[2].ShouldBe(20.25);
             result.TodaySum.ShouldBe(30.75);
-
             result.DailyEarnings[4].ShouldBe(150.5);
             result.DailyEarnings[14].ShouldBe(200.0);
 
             result.MonthlySum.ShouldBe(350.5);
-
             result.MonthlyEarnings[0].ShouldBe(150.5);
             result.MonthlyEarnings[1].ShouldBe(200.0);
 
@@ -136,7 +128,8 @@ namespace eBRestarter.Tests.Infrastructure.Services
         public async Task GetEarningsAsync_ShouldHandleHourlyArrayFallback_Correctly()
         {
             var validConfig = new AppConfig();
-            validConfig = validConfig with { Settings = validConfig.Settings with { ApiUsername = "u", ApiKey = "p" } };
+            validConfig.Settings.ApiUsername = "u";
+            validConfig.Settings.ApiKey = "p";
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(validConfig);
 
             _mockRestClient

@@ -64,7 +64,6 @@ public class EVisitorApiAdapter(
         var username = config.Settings.ApiUsername;
         var apiKey = config.Settings.ApiKey;
         var now = DateTime.Now;
-
         var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0);
 
         var startOfYear = new DateTime(now.Year, 1, 1, 0, 0, 0);
@@ -78,7 +77,6 @@ public class EVisitorApiAdapter(
             var tYearlyDetails = GetMonthlyEarningsRawAsync(username, apiKey, startOfYear, now);
 
             await Task.WhenAll(tHourly, tMonthlyDetails, tYearlyDetails);
-
             double[] hourlyArray = tHourly.Result;
             double[] dailyArray = tMonthlyDetails.Result;
             double[] monthlyArray = tYearlyDetails.Result;
@@ -96,7 +94,6 @@ public class EVisitorApiAdapter(
             return null;
         }
     }
-
 
     private async Task<double[]> GetHourlyEarningsRawAsync(string username, string apiKey)
     {
@@ -119,7 +116,6 @@ public class EVisitorApiAdapter(
             var root = doc.RootElement;
 
             double[] hourly = new double[24];
-
             if (root.ValueKind == JsonValueKind.Object)
             {
                 foreach (var property in root.EnumerateObject())
@@ -209,7 +205,6 @@ public class EVisitorApiAdapter(
             return dailyEarnings;
         }
     }
-
     private async Task<double[]> GetMonthlyEarningsRawAsync(string username, string apiKey, DateTime start, DateTime end)
     {
         long unixStart = ((DateTimeOffset)start).ToUnixTimeSeconds();

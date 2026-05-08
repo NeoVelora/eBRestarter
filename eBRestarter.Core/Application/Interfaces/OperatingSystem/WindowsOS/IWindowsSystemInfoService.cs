@@ -5,4 +5,5 @@ public interface IWindowsSystemInfoService
     string GetCurrentStandardBrowserName();
     string GetCurrentOsBuildVersion();
     string GetCurrentOsDisplayVersion();
+    bool IsUserAdministrator();
 }

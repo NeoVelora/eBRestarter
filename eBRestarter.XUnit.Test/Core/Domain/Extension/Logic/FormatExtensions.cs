@@ -23,7 +23,6 @@ namespace eBRestarter.XUnit.Test.Core.Domain.Extension.Logic
             result.ShouldBe(expectedResult);
         }
 
-
          [Theory]
          [InlineData(-512, "-512 B")]
          [InlineData(-1048576, "-1.0 MB")]
@@ -33,7 +32,6 @@ namespace eBRestarter.XUnit.Test.Core.Domain.Extension.Logic
 
              result.ShouldBe(expectedResult);
          }
-
 
         [Fact]
         public void ToSizeSuffix_ShouldRespectDecimalPlaces()
@@ -49,7 +47,6 @@ namespace eBRestarter.XUnit.Test.Core.Domain.Extension.Logic
             zeroDecimals.ShouldBe("1 MB");
         }
 
-
         [Fact]
         public void ToSizeSuffix_ShouldRespectCultureInfo()
         {
@@ -64,7 +61,6 @@ namespace eBRestarter.XUnit.Test.Core.Domain.Extension.Logic
             germanResult.ShouldBe("1,5 KB");
             englishResult.ShouldBe("1.5 KB");
         }
-
 
         [Fact]
         public void ToSizeSuffix_ShouldNotThrowOnExtremelyLargeNumbers()

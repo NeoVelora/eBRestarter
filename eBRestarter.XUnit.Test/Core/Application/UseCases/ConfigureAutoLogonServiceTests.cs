@@ -1,4 +1,4 @@
-using eBRestarter.Core.Application.Interfaces.Authentication;
+﻿using eBRestarter.Core.Application.Interfaces.Authentication;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.UseCases.ConfigureAutoLogon;
 using Moq;
@@ -21,9 +21,9 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             _sut = new ConfigureAutoLogonService(
                 _mockAutoLogonService.Object,
-                _mockCredentialService.Object);
+                _mockCredentialService.Object,
+                new ConfigureAutoLogonRequestValidator());
         }
-
 
         [Fact]
         public void Execute_ShouldDisableAutoLogon_WhenDeactivateActionIsTrue()
@@ -32,11 +32,10 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             var result = _sut.Execute(request);
 
-            result.Success.ShouldBeTrue();
-            result.Status.ShouldBe(AutoLogonResultStatus.Deactivated);
+            result.IsSuccess.ShouldBeTrue();
+            result.Value.ShouldBe(AutoLogonResultStatus.Deactivated);
             _mockAutoLogonService.Verify(s => s.DisableAutoLogon(), Times.Once);
         }
-
 
         [Fact]
         public void Execute_ShouldReturnHelloBlock_WhenWindowsHelloIsActive()
@@ -46,13 +45,12 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             var result = _sut.Execute(request);
 
-            result.Success.ShouldBeFalse();
-            result.Status.ShouldBe(AutoLogonResultStatus.WindowsHelloBlockActive);
-            result.ErrorMessage.ShouldContain("Windows Hello");
+            result.IsSuccess.ShouldBeFalse();
+            result.Errors[0].Metadata["Status"].ShouldBe(AutoLogonResultStatus.WindowsHelloBlockActive);
+            result.Errors[0].Message.ShouldContain("Windows Hello");
 
             _mockCredentialService.Verify(s => s.ValidateCredentials(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
-
 
         [Fact]
         public void Execute_ShouldEnableAutoLogon_WhenCredentialsAreValid()
@@ -66,8 +64,8 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             var result = _sut.Execute(request);
 
-            result.Success.ShouldBeTrue();
-            result.Status.ShouldBe(AutoLogonResultStatus.Activated);
+            result.IsSuccess.ShouldBeTrue();
+            result.Value.ShouldBe(AutoLogonResultStatus.Activated);
             _mockAutoLogonService.Verify(s => s.EnableAutoLogon("Admin", "Workgroup", "TopSecret"), Times.Once);
         }
 
@@ -79,8 +77,8 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             var result = _sut.Execute(request);
 
-            result.Success.ShouldBeFalse();
-            result.Status.ShouldBe(AutoLogonResultStatus.ValidationError);
+            result.IsSuccess.ShouldBeFalse();
+            result.Errors[0].Metadata["Status"].ShouldBe(AutoLogonResultStatus.ValidationError);
             _mockAutoLogonService.Verify(s => s.EnableAutoLogon(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
@@ -93,9 +91,9 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             var result = _sut.Execute(request);
 
-            result.Status.ShouldBe(AutoLogonResultStatus.ValidationError);
+            result.IsSuccess.ShouldBeFalse();
+            result.Errors[0].Metadata["Status"].ShouldBe(AutoLogonResultStatus.ValidationError);
         }
-
 
         [Fact]
         public void Execute_ShouldReturnDomainError_OnInvalidOperationException()
@@ -107,7 +105,8 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             var result = _sut.Execute(request);
 
-            result.Status.ShouldBe(AutoLogonResultStatus.DomainError);
+            result.IsSuccess.ShouldBeFalse();
+            result.Errors[0].Metadata["Status"].ShouldBe(AutoLogonResultStatus.DomainError);
         }
 
         [Fact]
@@ -118,8 +117,9 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ConfigureAutoLogon
 
             var result = _sut.Execute(request);
 
-            result.Status.ShouldBe(AutoLogonResultStatus.UnexpectedError);
-            result.ErrorMessage.ShouldBe("Kritischer Systemfehler");
+            result.IsSuccess.ShouldBeFalse();
+            result.Errors[0].Metadata["Status"].ShouldBe(AutoLogonResultStatus.UnexpectedError);
+            result.Errors[0].Message.ShouldBe("Kritischer Systemfehler");
         }
     }
 }

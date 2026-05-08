@@ -20,7 +20,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _mockBrowserFactory = new Mock<IBrowserFactory>();
         }
 
-
         [Fact]
         public void Constructor_ShouldThrowArgumentNullException_WhenFactoryIsNull()
         {
@@ -28,7 +27,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             act.ShouldThrow<ArgumentNullException>().ParamName.ShouldBe("browserFactory");
         }
-
 
         [Fact]
         public async Task GetInstalledBrowsersAsync_ShouldMapInstalledBrowserCorrectly()
@@ -82,7 +80,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             firstBrowser.Version.ShouldBe("Nicht installiert");
         }
-
 
         [Fact]
         public async Task GetInstalledBrowsersAsync_ShouldSkipBrowser_WhenFactoryThrowsNotSupportedException()

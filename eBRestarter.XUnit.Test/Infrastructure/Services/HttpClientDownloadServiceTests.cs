@@ -25,7 +25,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             if (File.Exists(_tempFilePath)) File.Delete(_tempFilePath);
         }
 
-
         [Fact]
         public async Task DownloadFileAsync_ShouldWriteContentToFileSystem()
         {
@@ -46,7 +45,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             var downloadedData = await File.ReadAllBytesAsync(_tempFilePath);
             downloadedData.ShouldBe(contentBytes);
         }
-
 
         [Fact]
         public async Task DownloadFileAsync_ShouldReportProgress_AndReach100Percent()
@@ -72,7 +70,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             lastReport.TotalBytes.ShouldBe(contentSize);
         }
 
-
         [Fact]
         public async Task DownloadFileAsync_ShouldThrowException_OnHttpError()
         {
@@ -94,7 +91,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             await Should.ThrowAsync<OperationCanceledException>(async () =>
                 await sut.DownloadFileAsync("https://test.com", _tempFilePath, null!, cts.Token));
         }
-
 
         private void SetupMockResponse(HttpStatusCode statusCode, byte[] content)
         {

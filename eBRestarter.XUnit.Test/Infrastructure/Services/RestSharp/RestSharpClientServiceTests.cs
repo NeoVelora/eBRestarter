@@ -26,7 +26,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             _server = WireMockServer.Start();
         }
 
-
         [Fact]
         public async Task ExecuteGetAsync_Success_ReturnsSuccessAndContent()
         {
@@ -120,7 +119,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             Assert.True(result.StatusCode == ResponseCode.HTTPTimeout || result.StatusCode == ResponseCode.GeneralExceptionError);
         }
 
-
         [Fact]
         public void ExecuteGet_SyncCall_Success_ReturnsSuccessAndContent()
         {
@@ -136,7 +134,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             Assert.Equal("Sync Content", result.Content);
         }
 
-
         private void VerifyLoggerWarningWasCalled()
         {
             _loggerMock.Verify(
@@ -148,7 +145,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
                     It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
                 Times.Once);
         }
-
         public void Dispose()
         {
             _server.Stop();

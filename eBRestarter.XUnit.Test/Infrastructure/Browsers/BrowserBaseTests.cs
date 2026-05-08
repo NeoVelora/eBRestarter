@@ -37,7 +37,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             }
         }
 
-
         [Theory]
         [InlineData("120.0.1 (x64 de)", "120.0.1")]
         [InlineData("121.0.6167.161 (Official Build) (64-bit)", "121.0.6167.161")]

@@ -37,9 +37,9 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
                 _mockBrowserFactory.Object,
                 _mockFileDeletionService.Object,
                 _mockProcessService.Object,
-                _mockLocalizationService.Object);
+                _mockLocalizationService.Object,
+                new DeleteBrowserContentRequestValidator());
         }
-
 
         [Fact]
         public async Task ExecuteAsync_ShouldReturnProcessConflict_WhenBrowserIsStillRunning()
@@ -54,9 +54,8 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.Success.ShouldBeFalse();
-            result.ProcessConflict.ShouldBeTrue();
-            result.ErrorMessage.ShouldBe("Cleanup_BrowserRunning");
+            result.IsSuccess.ShouldBeFalse();
+            result.HasError<ProcessConflictError>().ShouldBeTrue();
 
             _mockFileDeletionService.Verify(f => f.DeleteFilesAsync(It.IsAny<List<string>>(), It.IsAny<IProgress<string>>(), It.IsAny<IProgress<int>>(), It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -86,7 +85,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
             progressUpdates.ShouldContain(p => p.StatusMessage == "Cleanup_ClosingBrowser");
         }
 
-
         [Fact]
         public async Task ExecuteAsync_ShouldReturnNoPathsError_WhenNothingIsSelectedOrAvailable()
         {
@@ -106,9 +104,8 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.Success.ShouldBeFalse();
-            result.ProcessConflict.ShouldBeFalse();
-            result.ErrorMessage.ShouldBe("Cleanup_NoPaths");
+            result.IsSuccess.ShouldBeFalse();
+            result.Errors[0].Message.ShouldBe("At least one deletion option (Cache or Cookies) must be selected.");
         }
 
         [Fact]
@@ -133,8 +130,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.Success.ShouldBeTrue();
-            result.ErrorMessage.ShouldBeEmpty();
+            result.IsSuccess.ShouldBeTrue();
 
             _mockFileDeletionService.Verify(f => f.DeleteFilesAsync(
                 It.Is<List<string>>(list => list.Contains("C:\\Brave\\Cache") && list.Contains("C:\\Brave\\Cookies") && list.Count == 2),
@@ -146,7 +142,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
             progressUpdates.ShouldContain(p => p.StatusMessage == "Cleanup_Finished" && p.TotalFiles == 100 && p.CurrentFile == 100);
         }
 
-
         [Fact]
         public async Task ExecuteAsync_ShouldCatchExceptions_AndReturnFailure()
         {
@@ -157,8 +152,8 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.Success.ShouldBeFalse();
-            result.ErrorMessage.ShouldBe("Zugriff verweigert");
+            result.IsSuccess.ShouldBeFalse();
+            result.Errors[0].Message.ShouldBe("Zugriff verweigert");
         }
     }
 }

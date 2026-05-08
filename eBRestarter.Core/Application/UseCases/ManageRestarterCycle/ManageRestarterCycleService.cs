@@ -5,6 +5,7 @@ using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Services;
+using FluentValidation;
 
 namespace eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
 
@@ -15,7 +16,8 @@ public class ManageRestarterCycleService(
     IEVisitorConfigService configService,
     IBrowserCleanupScheduleService browserCleanupScheduleService,
     TimeProvider timeProvider,
-    IWindowsProcessControlService processService) : IManageRestarterCycleUseCase
+    IWindowsProcessControlService processService,
+    IValidator<ManageRestarterCycleRequest> validator) : IManageRestarterCycleUseCase
 {
     private const string BaseUrl = WebLinks.EVisitorSurflink;
     private const int InitialDelaySeconds = 5;
@@ -27,6 +29,7 @@ public class ManageRestarterCycleService(
     private readonly IBrowserCleanupScheduleService _browserCleanupScheduleService = browserCleanupScheduleService;
     private readonly TimeProvider _timeProvider = timeProvider;
     private readonly IWindowsProcessControlService _processService = processService;
+    private readonly IValidator<ManageRestarterCycleRequest> _validator = validator;
 
     private CancellationTokenSource? _cts;
     private IBrowser? _currentBrowser;
@@ -35,6 +38,13 @@ public class ManageRestarterCycleService(
 
     public async Task StartAsync(ManageRestarterCycleRequest request, Func<Task> performCleanupCallback)
     {
+        var validationResult = _validator.Validate(request);
+        if (!validationResult.IsValid)
+        {
+            ReportProgress(RestartTaskState.Idle, 0, validationResult.Errors[0].ErrorMessage);
+            return;
+        }
+
         Stop();
 
         _cts = new CancellationTokenSource();
@@ -72,7 +82,6 @@ public class ManageRestarterCycleService(
         while (!token.IsCancellationRequested)
         {
             var appConfig = _configService.LoadConfig();
-
             request = request with
             {
                 BrowserDisplayName = string.IsNullOrWhiteSpace(appConfig.Browser?.Selected) ? request.BrowserDisplayName : appConfig.Browser.Selected,
@@ -109,7 +118,6 @@ public class ManageRestarterCycleService(
     private async Task<BrowserPhaseResult> RunBrowserPhaseAsync(ManageRestarterCycleRequest request, CancellationToken token)
     {
         string processName = GetProcessNameFromDisplayName(request.BrowserDisplayName);
-
         var appConfig = _configService.LoadConfig();
         bool isCleanupActive = appConfig.Browser?.DeleteBrowserCacheIntervalDays > 0;
         DateTime nextCleanupDate = appConfig.Browser?.NextBrowserDeleteCacheDate ?? DateTime.MaxValue;
@@ -197,7 +205,7 @@ public class ManageRestarterCycleService(
         var today = _timeProvider.GetLocalNow().Date;
         var newDate = _browserCleanupScheduleService.GetNextCleanupDateAfterRun(today, appConfig.Browser.DeleteBrowserCacheIntervalDays);
 
-        appConfig.Browser.NextBrowserDeleteCacheDate = newDate;
+        appConfig.Browser.SetNextCleanupDate(newDate);
         _configService.SaveConfig(appConfig);
     }
 

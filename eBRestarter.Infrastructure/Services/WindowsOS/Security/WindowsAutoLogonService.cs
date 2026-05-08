@@ -102,7 +102,6 @@ public partial class WindowsAutoLogonService(ILogger<WindowsAutoLogonService> lo
         return val == "1";
     }
 
-
     private static void SetLsaSecret(string keyName, string? value)
     {
         var objectAttributes = new LSA_OBJECT_ATTRIBUTES();
@@ -168,7 +167,6 @@ public partial class WindowsAutoLogonService(ILogger<WindowsAutoLogonService> lo
             Marshal.FreeHGlobal(lus.Buffer);
         }
     }
-
 
     [StructLayout(LayoutKind.Sequential)]
     private struct LSA_UNICODE_STRING

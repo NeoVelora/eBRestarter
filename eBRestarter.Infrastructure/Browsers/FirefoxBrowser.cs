@@ -10,7 +10,6 @@ namespace eBRestarter.Infrastructure.Browsers;
 public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> logger) : BrowserBase(os, logger)
 {
     private const string EbesucherAddOnNameForFirefox = "{fef425dc-a60f-4484-954d-71ecf2544846}.xpi";
-
     public override string DisplayName => "Firefox";
     public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_firefox.png";
     public override string DownloadUrl => WebLinks.FirefoxDownloadLink;
@@ -18,7 +17,6 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
     public override BrowserType Type => BrowserType.Firefox;
     protected override string ProcessName => "firefox";
     protected override string RegistryKeyVersion => @"Software\Mozilla\Mozilla Firefox";
-
     public override bool IsExtensionInstalled(string? extensionId = null)
     {
         var paths = GetPaths();
@@ -43,7 +41,6 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
 
         return false;
     }
-
     public override BrowserPaths GetPaths()
     {
         var appData = _os.WindowsFileSystemService.GetEnvironmentPath("AppData");
@@ -76,12 +73,9 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
                 var folderName = new DirectoryInfo(profile.Path).Name;
                 fullProfilePathLocal = _os.WindowsFileSystemService.CombinePaths(firefoxLocalRoot, "Profiles", folderName);
             }
-
             cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathLocal, "cache2", "entries"));
             cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathLocal, "startupCache"));
-
             cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathRoaming, "storage", "default"));
-
             extensionsDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathRoaming, "extensions"));
         }
 
@@ -152,7 +146,6 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
 
         return profiles;
     }
-
     protected override List<string> ExecutablePaths
     {
         get

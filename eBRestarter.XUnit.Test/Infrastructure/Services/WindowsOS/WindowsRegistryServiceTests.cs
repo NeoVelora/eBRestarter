@@ -20,7 +20,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _tempTestKey = $@"Software\eBRestarter_TestSandbox_{Guid.NewGuid()}";
         }
 
-
         [Fact]
         public void SetAndGetCurrentUserValue_ShouldWriteAndReadCorrectly()
         {
@@ -73,7 +72,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             results.ShouldBeEmpty();
         }
 
-
         [Fact]
         public void GetLocalMachineValue_ShouldReadExistingWindowsKey()
         {
@@ -107,7 +105,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                     .ShouldBeTrue("Erwartete fehlende Berechtigung, da der Test-Runner nicht als Administrator läuft.");
             }
         }
-
         public void Dispose()
         {
             try

@@ -11,7 +11,6 @@ public abstract class ChromiumBrowserBase(IOperatingSystemFacade os, ILogger log
     protected abstract string ProgramFilesSubPath { get; }
 
     protected abstract string ExtensionId { get; }
-
     public override bool IsExtensionInstalled(string? extensionId = null)
     {
         var idToCheck = string.IsNullOrEmpty(extensionId) ? ExtensionId : extensionId;

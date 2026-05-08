@@ -15,7 +15,6 @@ namespace eBRestarter.Desktop.WinUI3.Views.Dialogs
 
             ViewModelDeleteBrowserContent = App.AppHost!.Services.GetRequiredService<ViewModelDeleteBrowserContent>();
             this.DataContext = ViewModelDeleteBrowserContent;
-
             this.Loaded += DeleteBrowserContentDialog_Loaded;
             this.Unloaded += DeleteBrowserContentDialog_Unloaded;
         }

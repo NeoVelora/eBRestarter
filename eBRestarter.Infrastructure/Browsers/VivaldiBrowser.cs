@@ -23,7 +23,6 @@ public class VivaldiBrowser(IOperatingSystemFacade os, ILogger<VivaldiBrowser> l
     protected override string ProcessName => "vivaldi";
 
     protected override string RegistryKeyVersion => @"Software\Vivaldi\BLBeacon";
-
     protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
 
     public override string ExtensionInstallUrl => WebLinks.ChromeEVisitorAddOnLink;

@@ -29,7 +29,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.GetSystemInformation
                 _mockSystemInfoService.Object);
         }
 
-
         [Fact]
         public async Task ExecuteAsync_ShouldAggregateAndMapAllDataCorrectly()
         {
@@ -71,7 +70,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.GetSystemInformation
             _mockSystemInfoService.Verify(s => s.GetCurrentOsBuildVersion(), Times.Once);
             _mockSystemInfoService.Verify(s => s.GetCurrentStandardBrowserName(), Times.Once);
         }
-
 
         [Fact]
         public async Task ExecuteAsync_ShouldBubbleUpExceptions_WhenDependencyThrows()

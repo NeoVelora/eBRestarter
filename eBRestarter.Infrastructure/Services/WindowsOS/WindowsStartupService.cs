@@ -14,7 +14,6 @@ public class WindowsStartupService(
     private const string StartupTaskId = "eBRestarterAutoStart";
 #pragma warning restore RCS1213 // Remove unused member declaration
 
-
     private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
     private const string RegistryPathEdgePolicies = @"SOFTWARE\Policies\Microsoft\Edge";
@@ -129,7 +128,6 @@ public class WindowsStartupService(
             _logger.LogError(ex, "Error configuring AutoLogon settings.");
         }
     }
-
 
     public Task EnableAutoStartAsync()
     {

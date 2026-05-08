@@ -5,7 +5,7 @@ using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
 using eBRestarter.Core.Application.Enums;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Core.Domain.Services;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
@@ -45,7 +45,6 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
 
             _mockLocalizationService.Setup(l => l.GetString(It.IsAny<string>())).Returns((string key) => key);
             _mockBrowserFactory.Setup(f => f.Create(It.IsAny<BrowserType>())).Returns(_mockBrowser.Object);
-
             var dummyConfig = new AppConfig { Browser = null, Username = "TestUser" };
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
 
@@ -56,20 +55,18 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
                 _mockConfigService.Object,
                 _mockCleanupScheduleService.Object,
                 _fakeTimeProvider,
-                _mockProcessService.Object);
+                _mockProcessService.Object,
+                new ManageRestarterCycleRequestValidator());
         }
-
 
         private async Task AdvanceTimeAsync(int seconds)
         {
             for (int i = 0; i < seconds; i++)
             {
                 _fakeTimeProvider.Advance(TimeSpan.FromSeconds(1));
-
                 await Task.Delay(10);
             }
         }
-
 
         [Fact]
         public async Task StartAsync_ShouldStopCleanly_WhenStopIsCalled()
@@ -110,7 +107,6 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
             await cycleTask;
         }
 
-
         [Fact]
         public async Task RunBrowserPhase_ShouldDetectCrash_AndTriggerCrashCooldown()
         {
@@ -131,14 +127,15 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
             await cycleTask;
         }
 
-
         [Fact]
         public async Task Cycle_ShouldTriggerCleanupCallback_AndSaveNewDate()
         {
             var request = new ManageRestarterCycleRequest("Firefox", "TestUser", 60, 10, false);
             bool callbackExecuted = false;
 
-            var dummyConfig = new AppConfig { Browser = new Browser { DeleteBrowserCacheIntervalDays = 7, NextBrowserDeleteCacheDate = DateTime.MinValue } };
+            var dummyConfig = new AppConfig { Browser = new BrowserConfig() };
+            dummyConfig.Browser.UpdateCleanupSettings(7, _fakeTimeProvider);
+            dummyConfig.Browser.SetNextCleanupDate(DateTime.MinValue);
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
             _mockCleanupScheduleService.Setup(c => c.ShouldRunCleanupNow(7, DateTime.MinValue)).Returns(true);
             _mockCleanupScheduleService.Setup(c => c.GetNextCleanupDateAfterRun(It.IsAny<DateTime>(), 7)).Returns(new DateTime(2050, 1, 1));
@@ -159,7 +156,6 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
             _mockConfigService.Verify(c => c.SaveConfig(It.Is<AppConfig>(cfg => cfg.Browser.NextBrowserDeleteCacheDate.Year == 2050)), Times.Once);
         }
 
-
         [Fact]
         public async Task RunCycle_ShouldReloadConfig_BeforeEveryNewIteration()
         {
@@ -169,7 +165,6 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
             var config2 = new AppConfig { Username = "NewUser", Browser = null };
 
             int loadConfigCallCount = 0;
-
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(() =>
             {
                 loadConfigCallCount++;

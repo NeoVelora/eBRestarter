@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.UseCases.ScheduleBrowserCleanup;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Shouldly;
@@ -25,7 +25,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
                 _fakeTimeProvider);
         }
 
-
         [Theory]
         [InlineData(1)]
         [InlineData(3)]
@@ -36,7 +35,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
             var testDate = new DateTimeOffset(2026, 1, 10, 12, 0, 0, TimeSpan.Zero);
             _fakeTimeProvider.SetUtcNow(testDate);
 
-            var dummyConfig = new AppConfig { Browser = new Browser() };
+            var dummyConfig = new AppConfig { Browser = new BrowserConfig() };
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
 
             AppConfig? savedConfig = null;
@@ -60,7 +59,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
             _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Once);
         }
 
-
         [Theory]
         [InlineData(0)]
         [InlineData(2)]
@@ -69,7 +67,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
         [InlineData(99)]
         public void UpdateSchedule_ShouldDeactivate_AndClearNextDate_WhenIntervalIsInvalid(int invalidIntervalDays)
         {
-            var dummyConfig = new AppConfig { Browser = new Browser() };
+            var dummyConfig = new AppConfig { Browser = new BrowserConfig() };
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
 
             AppConfig? savedConfig = null;
@@ -90,7 +88,6 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
 
             _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Once);
         }
-
 
         [Fact]
         public void UpdateSchedule_ShouldBubbleUpException_WhenConfigFails()

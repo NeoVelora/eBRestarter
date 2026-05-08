@@ -26,7 +26,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut = new WindowsSystemInfoService(_mockLogger.Object, _mockRegistry.Object);
         }
 
-
         [Fact]
         public void GetCurrentOsDisplayVersion_ShouldReturnVersion_WhenRegistryKeyExists()
         {
@@ -62,7 +61,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             result.ShouldBe("Error");
         }
-
 
         [Fact]
         public void GetCurrentOsBuildVersion_ShouldCombineEnvironmentBuild_WithUbrFromRegistry()
@@ -100,7 +98,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             result.ShouldBe("Error");
         }
-
 
         [Theory]
         [InlineData("ChromeHTML", "Chrome")]

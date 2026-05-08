@@ -53,7 +53,6 @@ public class FileDeletionService : IFileDeletionService
                         File.Delete(file);
                         deletedCount++;
                         updateCounter++;
-
                         if (updateCounter >= reportInterval)
                         {
                             statusReporter.Report($"Lösche: {Path.GetFileName(file)}");

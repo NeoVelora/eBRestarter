@@ -49,7 +49,6 @@ namespace eBRestarter.Infrastructure.Services.RestSharp
             }
         }
 
-
         private RestClient CreateClient(ApiRequest model)
         {
             var options = new RestClientOptions(model.Url)
@@ -82,7 +81,6 @@ namespace eBRestarter.Infrastructure.Services.RestSharp
                     StatusCode = rateCode
                 };
             }
-
             if (response.ResponseStatus == ResponseStatus.TimedOut)
             {
                 _logger.LogWarning("API error: Local timeout at {Url}", response.Request.Resource);

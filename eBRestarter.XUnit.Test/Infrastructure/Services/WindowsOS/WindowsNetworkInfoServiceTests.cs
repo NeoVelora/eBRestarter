@@ -20,7 +20,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.WindowsOS
             _sut = new WindowsNetworkInfoService(_mockProvider.Object);
         }
 
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -32,7 +31,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.WindowsOS
 
             result.ShouldBe(isAvailable);
         }
-
 
         [Fact]
         public void GetActiveInterfaces_ShouldFilterOutInvalidInterfaces_AndMapCorrectly()
@@ -67,7 +65,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.WindowsOS
             wifiStats.BytesReceived.ShouldBe(50);
             wifiStats.IsActive.ShouldBeTrue();
         }
-
 
         private Mock<NetworkInterface> CreateNicMock(
             string name,

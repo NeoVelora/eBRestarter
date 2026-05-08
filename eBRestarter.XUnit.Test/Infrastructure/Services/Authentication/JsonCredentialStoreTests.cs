@@ -93,7 +93,6 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             mockFileSystem.Verify(fs => fs.DeleteFile(_expectedStoragePath), Times.Once);
         }
 
-
         [Fact]
         public void ImportFromLegacyFile_ShouldReadBinaryFileCorrectly()
         {

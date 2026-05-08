@@ -19,7 +19,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             Directory.CreateDirectory(_tempTestDirectory);
         }
 
-
         [Fact]
         public void FileExists_ShouldReturnCorrectBoolean()
         {
@@ -41,7 +40,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut.DirectoryExists(existingDirPath).ShouldBeTrue();
             _sut.DirectoryExists(missingDirPath).ShouldBeFalse();
         }
-
 
         [Fact]
         public void CombinePaths_ShouldCombineCorrectly()
@@ -71,7 +69,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             result.ShouldBeEmpty();
         }
 
-
         [Theory]
         [InlineData("")]
         [InlineData("   ")]
@@ -95,7 +92,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             File.Exists(targetFile).ShouldBeFalse();
         }
-
 
         [Fact]
         public void WriteAllText_And_ReadAllText_ShouldWorkCorrectly()
@@ -122,7 +118,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             actualLines[0].ShouldBe("Zeile 1");
             actualLines[2].ShouldBe("Zeile 3");
         }
-
         public void Dispose()
         {
             if (Directory.Exists(_tempTestDirectory))

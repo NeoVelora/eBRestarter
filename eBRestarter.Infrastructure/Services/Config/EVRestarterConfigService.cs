@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.Security;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -43,10 +43,7 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
                 var decryptedKey = _encryptionService.Decrypt(config.Settings.ApiKey);
 
 
-                config = config with
-                {
-                    Settings = config.Settings with { ApiKey = decryptedKey }
-                };
+                config.Settings.ApiKey = decryptedKey;
 
                 if (string.IsNullOrEmpty(decryptedKey))
                 {
@@ -81,16 +78,15 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
             {
                 Directory.CreateDirectory(directory);
             }
-
             var encryptedKey = _encryptionService.Encrypt(config.Settings.ApiKey);
 
-            var configToSave = config with
-            {
-                Settings = config.Settings with { ApiKey = encryptedKey }
-            };
+            string originalKey = config.Settings.ApiKey;
+            config.Settings.ApiKey = encryptedKey;
 
-            string jsonString = JsonSerializer.Serialize(configToSave, _jsonOptions);
+            string jsonString = JsonSerializer.Serialize(config, _jsonOptions);
             File.WriteAllText(filePath, jsonString);
+
+            config.Settings.ApiKey = originalKey;
 
             _logger.LogInformation("Konfiguration gespeichert.");
         }
@@ -109,6 +105,5 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
         SaveConfig(defaultConfig);
     }
 }
-
 [JsonSerializable(typeof(AppConfig))]
 internal partial class AppConfigJsonContext : JsonSerializerContext;

@@ -15,7 +15,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut = new WindowsPathProvider();
         }
 
-
         [Fact]
         public void GetAppDataDirectory_ShouldReturnCorrectRoamingAppDataPath()
         {
@@ -40,7 +39,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             Path.IsPathRooted(actualPath).ShouldBeTrue();
         }
 
-
         [Fact]
         public void GetUserProfileDirectory_ShouldReturnCorrectUserProfilePath()
         {
@@ -52,7 +50,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             actualPath.ShouldNotBeNullOrWhiteSpace();
             Path.IsPathRooted(actualPath).ShouldBeTrue();
         }
-
 
         [Fact]
         public void GetProgramFilesDirectory_ShouldReturnCorrectProgramFilesPath()

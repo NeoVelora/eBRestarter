@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Constants;
 using eBRestarter.Core.Application.Extensions;
 using eBRestarter.Core.Application.Interfaces;
@@ -8,12 +7,10 @@ using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.Interfaces.Update;
-using eBRestarter.Core.Application.Models.Config;
+using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Core.Application.UseCases.ConfigureAutoLogon;
 using eBRestarter.Core.Application.UseCases.ManageApplicationUpdates;
-using eBRestarter.Core.Application.UseCases.RemoveApiCredentials;
 using eBRestarter.Core.Application.UseCases.ToggleAppAutoStart;
-using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Models;
 using eBRestarter.Desktop.WinUI3.Models.Enums;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
@@ -22,74 +19,34 @@ using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
-    public partial class ViewModelOptions : ObservableObject
+    public partial class ViewModelOptionsGeneral : ObservableObject
     {
-        private const string ExtensionConfigFileName = "tab_restarter_config.json";
-
         private const string GeneralErrorKey = "General_Error";
 
-        private const int ExtensionSaveStatusDisplayDurationMilliseconds = 3000;
-
-        private const int MillisecondsPerMinute = 60000;
-
-        private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
-        {
-            WriteIndented = true,
-            TypeInfoResolver = ExtensionConfigJsonContext.Default
-        };
-
-        private readonly IBrowserExtensionDeploymentService _browserExtensionDeploymentService;
-
         private readonly IComputerRestartDateService _computerRestartDateService;
-
         private readonly IComputerRestartScheduler _computerRestartScheduler;
-
         private readonly IConfigureAutoLogonUseCase _configureAutoLogonUseCase;
-
         private readonly IDialogService _dialogService;
-
         private readonly IEVisitorConfigService _eVisitorConfigService;
-
         private readonly ILanguageService _languageService;
-
         private readonly ILocalizationService _localizationService;
-
         private readonly IManageApplicationUpdatesUseCase _manageApplicationUpdatesUseCase;
-
         private readonly IOperatingSystemFacade _operatingSystemFacade;
-
-        private readonly IRemoveApiCredentialsUseCase _removeApiCredentialsUseCase;
-
         private readonly IThemeService _themeService;
-
         private readonly IToggleAppAutoStartUseCase _toggleAppAutoStartUseCase;
-
         private readonly IUIOptionsService _uiOptionsService;
 
         private bool _isInitializing;
-
         private readonly AppConfig _currentConfig;
-
         private readonly DispatcherQueue _dispatcherQueue;
 
         [ObservableProperty]
         public partial int ComputerRestartClockTime { get; set; }
-
-        [ObservableProperty]
-        public partial string ExtensionSaveStatus { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial double ExtensionWaitTimeMinutes { get; set; } = 3;
-
-        [ObservableProperty]
-        public partial string ExtensionUrl { get; set; } = string.Empty;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand))]
@@ -114,27 +71,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public partial ComputerRestartOption SelectedComputerRestartOption { get; set; }
 
         [ObservableProperty]
-        public partial LanguageOption SelectedExtensionLanguage { get; set; }
-
-        [ObservableProperty]
         public partial LanguageOption SelectedLanguageOption { get; set; }
 
         public int ComputerRestartClockTimeMax { get; init; }
-
         public int ComputerRestartClockTimeMin { get; init; }
 
         public ReadOnlyCollection<ComputerRestartOption> ComputerRestartList { get; }
-
-        public ReadOnlyCollection<LanguageOption> ExtensionLanguages { get; }
-
         public ReadOnlyCollection<LanguageOption> LanguageList { get; private set; }
 
-        public ViewModelOptions(
+        public ViewModelOptionsGeneral(
             IDialogService dialogService,
             IConfigureAutoLogonUseCase configureAutoLogonUseCase,
             IToggleAppAutoStartUseCase toggleAppAutoStartUseCase,
             IManageApplicationUpdatesUseCase manageApplicationUpdatesUseCase,
-            IRemoveApiCredentialsUseCase removeApiCredentialsUseCase,
             IOperatingSystemFacade operatingSystemFacade,
             IThemeService themeService,
             IEVisitorConfigService eVisitorConfigService,
@@ -142,27 +91,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             ILocalizationService localizationService,
             IUIOptionsService uiOptionsService,
             IComputerRestartDateService computerRestartDateService,
-            IComputerRestartScheduler computerRestartScheduler,
-            IBrowserExtensionDeploymentService browserExtensionDeploymentService)
+            IComputerRestartScheduler computerRestartScheduler)
         {
-            ArgumentNullException.ThrowIfNull(dialogService);
-            ArgumentNullException.ThrowIfNull(configureAutoLogonUseCase);
-            ArgumentNullException.ThrowIfNull(toggleAppAutoStartUseCase);
-            ArgumentNullException.ThrowIfNull(manageApplicationUpdatesUseCase);
-            ArgumentNullException.ThrowIfNull(removeApiCredentialsUseCase);
-            ArgumentNullException.ThrowIfNull(operatingSystemFacade);
-            ArgumentNullException.ThrowIfNull(themeService);
-            ArgumentNullException.ThrowIfNull(eVisitorConfigService);
-            ArgumentNullException.ThrowIfNull(languageService);
-            ArgumentNullException.ThrowIfNull(localizationService);
-            ArgumentNullException.ThrowIfNull(uiOptionsService);
-            ArgumentNullException.ThrowIfNull(computerRestartDateService);
-            ArgumentNullException.ThrowIfNull(computerRestartScheduler);
-            ArgumentNullException.ThrowIfNull(browserExtensionDeploymentService);
-
             _isInitializing = true;
 
-            _browserExtensionDeploymentService = browserExtensionDeploymentService;
             _computerRestartDateService = computerRestartDateService;
             _computerRestartScheduler = computerRestartScheduler;
             _configureAutoLogonUseCase = configureAutoLogonUseCase;
@@ -172,33 +104,28 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _localizationService = localizationService;
             _manageApplicationUpdatesUseCase = manageApplicationUpdatesUseCase;
             _operatingSystemFacade = operatingSystemFacade;
-            _removeApiCredentialsUseCase = removeApiCredentialsUseCase;
             _themeService = themeService;
             _toggleAppAutoStartUseCase = toggleAppAutoStartUseCase;
             _uiOptionsService = uiOptionsService;
 
-            _dispatcherQueue =
-                DispatcherQueue.GetForCurrentThread()
-                ?? throw new InvalidOperationException(
-                    $"{nameof(ViewModelOptions)} must be constructed on a thread with a WinUI DispatcherQueue (UI thread).");
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread() ?? throw new InvalidOperationException("DispatcherQueue required.");
 
-            _browserExtensionDeploymentService.EnsureExtensionIsDeployed();
             ComputerRestartList = new ReadOnlyCollection<ComputerRestartOption>([.. _uiOptionsService.GetComputerRestartOptions()]);
             LanguageList = new ReadOnlyCollection<LanguageOption>([.. _uiOptionsService.GetAvailableLanguages()]);
 
-            if (ComputerRestartList.Count == 0)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(ViewModelOptions)} requires at least one entry from {nameof(IUIOptionsService.GetComputerRestartOptions)}.");
-            }
-
-            if (LanguageList.Count == 0)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(ViewModelOptions)} requires at least one entry from {nameof(IUIOptionsService.GetAvailableLanguages)} for the language list.");
-            }
-
             _currentConfig = _eVisitorConfigService.LoadConfig();
+
+            if (_currentConfig.Computer.NextRestartDate.HasValue && _currentConfig.Computer.ComputerRestartIntervalDays > 0)
+            {
+                var targetDateTime = _currentConfig.Computer.NextRestartDate.Value.Date.AddHours(_currentConfig.Computer.RestartClockTime);
+                if (DateTime.Now >= targetDateTime)
+                {
+                    _currentConfig.Computer.SetNextRestartDate(_computerRestartDateService.GetNextRestartDate(
+                        _currentConfig.Computer.ComputerRestartIntervalDays,
+                        _currentConfig.Computer.RestartClockTime));
+                    _eVisitorConfigService.SaveConfig(_currentConfig);
+                }
+            }
 
             ComputerRestartClockTimeMin = 1;
             ComputerRestartClockTimeMax = 23;
@@ -213,17 +140,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             _isInitializing = false;
 
             _computerRestartScheduler.OnNextRestartDateChanged += OnNextRestartDateChanged;
-
-            ExtensionLanguages = new ReadOnlyCollection<LanguageOption>([.. _uiOptionsService.GetAvailableLanguages()]);
-            if (ExtensionLanguages.Count == 0)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(ViewModelOptions)} requires at least one entry from {nameof(IUIOptionsService.GetAvailableLanguages)} for extension languages.");
-            }
-
-            SelectedExtensionLanguage = ExtensionLanguages[0];
-
-            LoadExtensionConfig();
 
             InitializeAsync().Forget();
         }
@@ -240,17 +156,14 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 if (response.IsUpdateAvailable)
                 {
                     IsUpdateAvailable = true;
-
                     string messageFormat = _localizationService.GetString("Options_UpdateAvailable");
                     UpdateMessage = string.Format(messageFormat, response.LatestVersion);
-
-                    string title = _localizationService.GetString("Options_UpdateAvailable_Title");
 
                     string promptFormat = _localizationService.GetString("Options_UpdatePrompt_Message");
                     string dialogMessage = string.Format(promptFormat, UpdateMessage);
 
                     bool userWantsUpdate = await _dialogService.ShowConfirmationAsync(
-                        title,
+                        _localizationService.GetString("Options_UpdateAvailable_Title"),
                         dialogMessage,
                         _localizationService.GetString("General_Yes"),
                         _localizationService.GetString("General_No"));
@@ -274,13 +187,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
-
                 string errorFormat = _localizationService.GetString("Options_UpdateCheckError_Message");
-                string errorMessage = string.Format(errorFormat, ex.Message);
-
                 await _dialogService.ShowMessageAsync(
                     _localizationService.GetString("Options_UpdateError_Title"),
-                    errorMessage,
+                    string.Format(errorFormat, ex.Message),
                     DialogIcon.Error);
             }
             finally
@@ -306,17 +216,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 Domain: autoLogonDialogResult.Credentials?.Domain,
                 Password: autoLogonDialogResult.Credentials?.Password);
 
-            var configureAutoLogonResponse = _configureAutoLogonUseCase.Execute(configureAutoLogonRequest);
+            var result = _configureAutoLogonUseCase.Execute(configureAutoLogonRequest);
 
-            if (configureAutoLogonResponse.Success)
+            if (result.IsSuccess)
             {
-                if (configureAutoLogonResponse.Status == AutoLogonResultStatus.Deactivated)
+                if (result.Value == AutoLogonResultStatus.Deactivated)
                 {
                     await _dialogService.ShowMessageAsync(
                         _localizationService.GetString("General_Info"),
                         _localizationService.GetString("Options_AutoLogon_Deactivated"));
                 }
-                else if (configureAutoLogonResponse.Status == AutoLogonResultStatus.Activated)
+                else if (result.Value == AutoLogonResultStatus.Activated)
                 {
                     await _dialogService.ShowMessageAsync(
                         _localizationService.GetString("General_Success"),
@@ -325,20 +235,23 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
             else
             {
-                if (configureAutoLogonResponse.Status == AutoLogonResultStatus.WindowsHelloBlockActive)
-                {
-                    string title = _localizationService.GetString("Options_AutoLogon_WindowsHelloErrorTitle");
-                    string message = _localizationService.GetString("Options_AutoLogon_WindowsHelloErrorMessage");
+                var error = result.Errors[0];
+                var status = error.Metadata.TryGetValue("Status", out var s) ? (AutoLogonResultStatus)s : AutoLogonResultStatus.UnexpectedError;
 
-                    await _dialogService.ShowMessageAsync(title, message, DialogIcon.Error);
+                if (status == AutoLogonResultStatus.WindowsHelloBlockActive)
+                {
+                    await _dialogService.ShowMessageAsync(
+                        _localizationService.GetString("Options_AutoLogon_WindowsHelloErrorTitle"),
+                        _localizationService.GetString("Options_AutoLogon_WindowsHelloErrorMessage"),
+                        DialogIcon.Error);
                 }
-                else if (configureAutoLogonResponse.Status == AutoLogonResultStatus.ValidationError)
+                else if (status == AutoLogonResultStatus.ValidationError)
                 {
                     await _dialogService.ShowMessageAsync(
                         _localizationService.GetString(GeneralErrorKey),
                         _localizationService.GetString("Options_AutoLogon_ValidationError"));
                 }
-                else if (configureAutoLogonResponse.Status == AutoLogonResultStatus.DomainError)
+                else if (status == AutoLogonResultStatus.DomainError)
                 {
                     await _dialogService.ShowMessageAsync(
                         _localizationService.GetString(GeneralErrorKey),
@@ -349,34 +262,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     string errorFormat = _localizationService.GetString("General_UnexpectedError");
                     await _dialogService.ShowMessageAsync(
                         _localizationService.GetString(GeneralErrorKey),
-                        string.Format(errorFormat, configureAutoLogonResponse.ErrorMessage));
+                        string.Format(errorFormat, error.Message));
                 }
-            }
-        }
-
-        [RelayCommand]
-        private async Task OpenExtensionFolder()
-        {
-            try
-            {
-                string extensionPath = _browserExtensionDeploymentService.GetExtensionFolderPath();
-
-                if (!Directory.Exists(extensionPath))
-                {
-                    Directory.CreateDirectory(extensionPath);
-                }
-
-                _operatingSystemFacade.WindowsProcessControlService.OpenExplorer(extensionPath);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-
-                string messageFormat = _localizationService.GetString("Options_ExtensionFolderOpenError_Message");
-                await _dialogService.ShowMessageAsync(
-                    _localizationService.GetString("Options_ExtensionFolderOpenError_Title"),
-                    string.Format(messageFormat, ex.Message),
-                    DialogIcon.Error);
             }
         }
 
@@ -393,63 +280,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         }
 
         [RelayCommand]
-        private async Task RemoveAPICredentials()
-        {
-            _removeApiCredentialsUseCase.Execute();
-
-            _currentConfig.Settings.ApiUsername = string.Empty;
-            _currentConfig.Settings.ApiKey = string.Empty;
-
-            WeakReferenceMessenger.Default.Send(new ApiCredentialsRemovedMessage());
-
-            await _dialogService.ShowMessageAsync(
-                _localizationService.GetString("Options_RemoveCreds_Title"),
-                _localizationService.GetString("Options_RemoveCreds_Message"),
-                DialogIcon.Success);
-        }
-
-        [RelayCommand]
-        private async Task SaveExtensionConfig()
-        {
-            try
-            {
-                string extensionPath = _browserExtensionDeploymentService.GetExtensionFolderPath();
-                string configPath = Path.Combine(extensionPath, ExtensionConfigFileName);
-
-                var extensionConfigDto = new ExtensionConfigDto
-                {
-                    LANGUAGE = SelectedExtensionLanguage?.Index == 0 ? "DE" : "EN",
-                    ZIEL_URL = $"{WebLinks.EVisitorSurflink}{_currentConfig.Username}",
-                    WARTEZEIT_MS = (int)(ExtensionWaitTimeMinutes * MillisecondsPerMinute)
-                };
-
-                string jsonString = JsonSerializer.Serialize(extensionConfigDto, _jsonSerializerOptions);
-
-                if (!Directory.Exists(extensionPath))
-                {
-                    Directory.CreateDirectory(extensionPath);
-                }
-
-                await File.WriteAllTextAsync(configPath, jsonString);
-
-                ExtensionSaveStatus = _localizationService.GetString("Options_SavedSuccessfully") ?? string.Empty;
-
-                await Task.Delay(ExtensionSaveStatusDisplayDurationMilliseconds);
-
-                ExtensionSaveStatus = string.Empty;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-
-                await _dialogService.ShowMessageAsync(
-                    _localizationService.GetString(GeneralErrorKey),
-                    _localizationService.GetString("BrowserExtension_Config_Error_Message") + " " + ex.Message,
-                    DialogIcon.Error);
-            }
-        }
-
-        [RelayCommand]
         private void SetDarkTheme()
         {
             _themeService.SetTheme("Dark");
@@ -461,12 +291,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             _themeService.SetTheme("Light");
             SaveThemeConfig("Light");
-        }
-
-        [RelayCommand]
-        private async Task ShowActivateApiDialog()
-        {
-            await _dialogService.ShowActivateApiDialogAsync();
         }
 
         partial void OnComputerRestartClockTimeChanged(int value)
@@ -481,9 +305,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
             if (_currentConfig.Computer.RestartClockTime != value)
             {
-                _currentConfig.Computer.RestartClockTime = value;
-
-                RecalculateNextRestartDate();
+                _currentConfig.Computer.UpdateRestartSettings(
+                    _currentConfig.Computer.ComputerRestartIntervalDays,
+                    value,
+                    TimeProvider.System);
                 UpdateRestartUiState();
                 SaveSettings();
             }
@@ -493,7 +318,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             _dispatcherQueue.TryEnqueue(() =>
             {
-                _currentConfig.Computer.NextRestartDate = newDate;
+                _currentConfig.Computer.SetNextRestartDate(newDate);
                 UpdateRestartUiState();
             });
         }
@@ -506,9 +331,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                 return;
             }
 
-            _currentConfig.Computer.ComputerRestartIntervalDays = value.Days;
-
-            RecalculateNextRestartDate();
+            _currentConfig.Computer.UpdateRestartSettings(
+                value.Days,
+                _currentConfig.Computer.RestartClockTime,
+                TimeProvider.System);
             UpdateRestartUiState();
             SaveSettings();
         }
@@ -556,7 +382,6 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private async Task InitializeAsync()
         {
             _isInitializing = true;
-
             try
             {
                 StartWithWindows = await _toggleAppAutoStartUseCase.InitializeAndGetStateAsync();
@@ -567,49 +392,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             }
         }
 
-        private void LoadExtensionConfig()
-        {
-            try
-            {
-                string configPath = Path.Combine(_browserExtensionDeploymentService.GetExtensionFolderPath(), ExtensionConfigFileName);
-
-                if (File.Exists(configPath))
-                {
-                    string jsonString = File.ReadAllText(configPath);
-
-                    var extensionConfigDto = JsonSerializer.Deserialize(jsonString, ExtensionConfigJsonContext.Default.ExtensionConfigDto);
-
-                    if (extensionConfigDto != null)
-                    {
-                        ExtensionUrl = extensionConfigDto.ZIEL_URL;
-                        ExtensionWaitTimeMinutes = extensionConfigDto.WARTEZEIT_MS / (double)MillisecondsPerMinute;
-
-                        LanguageOption? matchingExtensionLanguage = extensionConfigDto.LANGUAGE == "EN"
-                            ? ExtensionLanguages.FirstOrDefault(languageOption => languageOption.Index == 1)
-                            : ExtensionLanguages.FirstOrDefault(languageOption => languageOption.Index == 0);
-
-                        if (matchingExtensionLanguage != null)
-                        {
-                            SelectedExtensionLanguage = matchingExtensionLanguage;
-                        }
-                        else
-                        {
-                            Debug.WriteLine(
-                                "Extension tab_restarter_config.json LANGUAGE does not match any UI language option; keeping current selection.");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Could not read existing tab_restarter_config.json: {ex}");
-            }
-        }
-
         private async Task PerformUpdateCoreAsync()
         {
             IsCheckingForUpdates = true;
-
             try
             {
                 await _manageApplicationUpdatesUseCase.PerformUpdateAsync();
@@ -617,13 +402,10 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine(ex);
-
                 string errorFormat = _localizationService.GetString("Options_UpdateFailed_Message");
-                string errorMessage = string.Format(errorFormat, ex.Message);
-
                 await _dialogService.ShowMessageAsync(
                     _localizationService.GetString("Options_UpdateFailed_Title"),
-                    errorMessage,
+                    string.Format(errorFormat, ex.Message),
                     DialogIcon.Error);
             }
             finally
@@ -634,10 +416,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private void RecalculateNextRestartDate()
         {
-            int days = _currentConfig.Computer.ComputerRestartIntervalDays;
-            int hours = _currentConfig.Computer.RestartClockTime;
-
-            _currentConfig.Computer.NextRestartDate = _computerRestartDateService.GetNextRestartDate(days, hours);
+            _currentConfig.Computer.CalculateNextRestartDate(TimeProvider.System);
         }
 
         private void SaveSettings()
@@ -648,22 +427,19 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         private void SaveThemeConfig(string theme)
         {
             var config = _eVisitorConfigService.LoadConfig();
-            var newConfig = config with { Settings = config.Settings with { Theme = theme } };
-
-            _eVisitorConfigService.SaveConfig(newConfig);
+            config.Settings.Theme = theme;
+            _eVisitorConfigService.SaveConfig(config);
         }
 
         private async Task ToggleAutoStartAsync(bool enable)
         {
             await _toggleAppAutoStartUseCase.ToggleAsync(enable);
-
             _currentConfig.Settings.StartWithWindows = enable;
         }
 
         private void UpdateRestartUiState()
         {
             int days = SelectedComputerRestartOption?.Days ?? 0;
-
             IsRestartSliderVisible = days > 0;
 
             if (days == 0)
@@ -673,14 +449,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             else
             {
                 DateTime targetDate = _currentConfig.Computer.NextRestartDate ?? DateTime.MinValue;
-
                 if (targetDate == DateTime.MinValue)
                 {
                     targetDate = DateTime.Today.AddDays(days).AddHours(ComputerRestartClockTime);
                 }
 
                 string messageFormat = _localizationService.GetString("Options_RestartStatus_Scheduled");
-
                 RestartStatusText = string.Format(messageFormat, targetDate.ToString("dd.MM.yyyy"), targetDate.ToString("HH"));
             }
         }
