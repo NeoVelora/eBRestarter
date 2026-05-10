@@ -44,7 +44,6 @@ public partial class ViewModelBrowserItem : ObservableObject
 
     private BrowserInfo _browserInfo;
 
-    private readonly AppConfig _currentConfig;
 
     private readonly IDialogService _dialogService;
 
@@ -143,7 +142,7 @@ public partial class ViewModelBrowserItem : ObservableObject
         _eVisitorConfigService = eVisitorConfigService;
         _dialogService = dialogService;
         _localizationService = localizationService;
-        _currentConfig = _eVisitorConfigService.LoadConfig();
+
         BrowserVersionText = string.Empty;
         DownloadSizeText = string.Empty;
         RefreshBrowserVersionText();
@@ -153,9 +152,11 @@ public partial class ViewModelBrowserItem : ObservableObject
     private void ChooseBrowser()
     {
         var selectedBrowserName = HeaderTitleBrowser ?? string.Empty;
-        _currentConfig.Browser.Selected = selectedBrowserName;
+        var config = _eVisitorConfigService.LoadConfig();
+        config.Browser.Selected = selectedBrowserName;
+        _eVisitorConfigService.SaveConfig(config);
+
         WeakReferenceMessenger.Default.Send(new BrowserChangedMessage(selectedBrowserName));
-        SaveSettings();
     }
 
     [RelayCommand(AllowConcurrentExecutions = true)]
@@ -254,10 +255,6 @@ public partial class ViewModelBrowserItem : ObservableObject
         _downloadCancellationTokenSource = null;
     }
 
-    private void SaveSettings()
-    {
-        _eVisitorConfigService.SaveConfig(_currentConfig);
-    }
 
     private async Task StartDownloadAsync()
     {
@@ -267,8 +264,10 @@ public partial class ViewModelBrowserItem : ObservableObject
         if (string.IsNullOrWhiteSpace(_browserInfo.DownloadUrl))
         {
             Debug.WriteLine($"{nameof(ViewModelBrowserItem)}: {nameof(BrowserInfo.DownloadUrl)} is missing; download was not started.");
+
             _downloadCancellationTokenSource.Dispose();
             _downloadCancellationTokenSource = null;
+
             return;
         }
 
@@ -293,6 +292,7 @@ public partial class ViewModelBrowserItem : ObservableObject
                 downloadPath,
                 progressHandler,
                 _downloadCancellationTokenSource.Token);
+
             await AskToInstall(downloadPath);
         }
         catch (OperationCanceledException)

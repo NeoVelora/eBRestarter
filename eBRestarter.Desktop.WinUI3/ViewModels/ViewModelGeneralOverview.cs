@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Interfaces;
+using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Services;
@@ -56,6 +57,10 @@ public partial class ViewModelGeneralOverview : ObservableObject
 
     private readonly DispatcherTimer _timer;
 
+    private readonly IEVisitorConfigService _configService;
+
+    private bool _isApiConfigured;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(XAxes))]
     [NotifyPropertyChangedFor(nameof(ChartTitle))]
@@ -97,13 +102,24 @@ public partial class ViewModelGeneralOverview : ObservableObject
     [ObservableProperty]
     public partial ObservableCollection<ISeries> Series { get; set; }
 
-    public string ChartTitle => SelectedPivotIndex switch
+    public string ChartTitle
     {
-        0 => string.Format(_localizationService.GetString("Chart_TitleHourly"), DateTime.Now.ToString("dd.MM.yyyy")),
-        1 => string.Format(_localizationService.GetString("Chart_TitleDaily"), DateTime.Now.ToString("MMMM")),
-        2 => string.Format(_localizationService.GetString("Chart_TitleYearly"), DateTime.Now.ToString("yyyy")),
-        _ => _localizationService.GetString("Chart_TitleOverview")
-    };
+        get
+        {
+            if (!_isApiConfigured)
+            {
+                return _localizationService.GetString("API_isNotEnabled");
+            }
+
+            return SelectedPivotIndex switch
+            {
+                0 => string.Format(_localizationService.GetString("Chart_TitleHourly"), DateTime.Now.ToString("dd.MM.yyyy")),
+                1 => string.Format(_localizationService.GetString("Chart_TitleDaily"), DateTime.Now.ToString("MMMM")),
+                2 => string.Format(_localizationService.GetString("Chart_TitleYearly"), DateTime.Now.ToString("yyyy")),
+                _ => _localizationService.GetString("Chart_TitleOverview")
+            };
+        }
+    }
 
     public Axis[] XAxes => GetXAxesForCurrentPivot();
 
@@ -112,16 +128,21 @@ public partial class ViewModelGeneralOverview : ObservableObject
     public ViewModelGeneralOverview(
         INavigationService navigationService,
         IEVisitorApiService eVisitorApiService,
-        ILocalizationService localizationService)
+        ILocalizationService localizationService,
+        IEVisitorConfigService configService)
     {
         ArgumentNullException.ThrowIfNull(navigationService);
+        ArgumentNullException.ThrowIfNull(eVisitorApiService);
         ArgumentNullException.ThrowIfNull(localizationService);
-        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(configService);
 
         _navigationService = navigationService;
         _eVisitorApiService = eVisitorApiService;
         _localizationService = localizationService;
+        _configService = configService;
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+
+        _isApiConfigured = !string.IsNullOrEmpty(_configService.LoadConfig().Settings.ApiKey);
 
         CurrentDay = _localizationService.GetString("General_Today");
 
@@ -161,10 +182,16 @@ public partial class ViewModelGeneralOverview : ObservableObject
 
         Task.Run(LoadDataAsync);
 
-        WeakReferenceMessenger.Default.Register<ApiCredentialsUpdatedMessage>(this, (_, __) => Task.Run(LoadDataAsync));
+        WeakReferenceMessenger.Default.Register<ApiCredentialsUpdatedMessage>(this, (_, __) =>
+        {
+            _isApiConfigured = true;
+            _dispatcherQueue.TryEnqueue(() => OnPropertyChanged(nameof(ChartTitle)));
+            Task.Run(LoadDataAsync);
+        });
 
         WeakReferenceMessenger.Default.Register<ApiCredentialsRemovedMessage>(this, (_, __) =>
         {
+            _isApiConfigured = false;
             _dispatcherQueue.TryEnqueue(() =>
             {
                 ResetChart();
@@ -173,6 +200,8 @@ public partial class ViewModelGeneralOverview : ObservableObject
                 EarningsThisDaySum = "-";
                 EarningsThisMonthSum = "-";
                 EarningsThisYearSum = "-";
+                ClockNextEarningsRefresh = "-";
+                OnPropertyChanged(nameof(ChartTitle));
             });
         });
     }
@@ -241,7 +270,9 @@ public partial class ViewModelGeneralOverview : ObservableObject
 
                 var nextRefresh = now.AddMinutes(60 - now.Minute + EarningsRefreshTriggerMinute);
                 var nextRefreshTimeFormat = _localizationService.GetString("General_NextRefresh");
-                ClockNextEarningsRefresh = string.Format(nextRefreshTimeFormat, nextRefresh.ToString("HH:mm"));
+                ClockNextEarningsRefresh = _isApiConfigured
+                    ? string.Format(nextRefreshTimeFormat, nextRefresh.ToString("HH:mm"))
+                    : "-";
             });
         }
         catch (OperationCanceledException ex)

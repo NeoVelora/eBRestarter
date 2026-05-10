@@ -9,4 +9,5 @@ public interface IOperatingSystemFacade
     IWindowsRegistryService WindowsRegistryService { get; }
     IWindowsStartupManagerService WindowsStartupManagerService { get; }
     IWindowsFileSystemService WindowsFileSystemService { get; }
+    IWindowsAutoLogonService WindowsAutoLogonService { get; }
 }

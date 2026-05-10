@@ -5,6 +5,7 @@ public interface IWindowsAutoLogonService
     void EnableAutoLogon(string username, string domain, string password);
 
     bool IsWindowsHelloPasswordlessEnabled();
+    void SetWindowsHelloPasswordlessState(bool enable);
 
     void DisableAutoLogon();
 

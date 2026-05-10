@@ -17,6 +17,7 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
     public override BrowserType Type => BrowserType.Firefox;
     protected override string ProcessName => "firefox";
     protected override string RegistryKeyVersion => @"Software\Mozilla\Mozilla Firefox";
+
     public override bool IsExtensionInstalled(string? extensionId = null)
     {
         var paths = GetPaths();
@@ -74,8 +75,11 @@ public class FirefoxBrowser(IOperatingSystemFacade os, ILogger<FirefoxBrowser> l
                 fullProfilePathLocal = _os.WindowsFileSystemService.CombinePaths(firefoxLocalRoot, "Profiles", folderName);
             }
             cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathLocal, "cache2", "entries"));
+
             cacheDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathLocal, "startupCache"));
+
             cookiesDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathRoaming, "storage", "default"));
+
             extensionsDirs.Add(_os.WindowsFileSystemService.CombinePaths(fullProfilePathRoaming, "extensions"));
         }
 
