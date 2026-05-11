@@ -101,11 +101,11 @@ public partial class ComputerRestartScheduler(
 
                 if (now.Hour >= config.Computer.RestartClockTime)
                 {
-                    newTargetDate = today.AddDays(config.Computer.ComputerRestartIntervalDays);
+                    newTargetDate = today.AddDays(config.Computer.ComputerRestartIntervalDays).AddHours(config.Computer.RestartClockTime);
                 }
                 else
                 {
-                    newTargetDate = today;
+                    newTargetDate = today.AddHours(config.Computer.RestartClockTime);
                 }
 
                 config.Computer.SetNextRestartDate(newTargetDate);
