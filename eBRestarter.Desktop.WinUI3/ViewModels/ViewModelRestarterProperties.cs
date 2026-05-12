@@ -171,9 +171,11 @@ public partial class ViewModelRestarterProperties : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddUsername))]
     private void AddEVisitorUsername()
     {
-        _currentConfig.Username = Username;
+        var freshConfig = _eVisitorConfigService.LoadConfig();
+        freshConfig.Username = Username;
+        _eVisitorConfigService.SaveConfig(freshConfig);
 
-        SaveSettings();
+        _currentConfig.Username = Username;
 
         WeakReferenceMessenger.Default.Send(new UsernameChangedMessage(Username));
 
@@ -235,7 +237,9 @@ public partial class ViewModelRestarterProperties : ObservableObject
     {
         _currentConfig.Browser.CheckBrowserAliveRoutine = value;
 
-        SaveSettings();
+        var freshConfig = _eVisitorConfigService.LoadConfig();
+        freshConfig.Browser.CheckBrowserAliveRoutine = value;
+        _eVisitorConfigService.SaveConfig(freshConfig);
     }
 
     partial void OnRuntimeHoursChanged(int value)
@@ -251,7 +255,9 @@ public partial class ViewModelRestarterProperties : ObservableObject
         if (_currentConfig.Browser.RuntimeHours != value)
         {
             _currentConfig.Browser.RuntimeHours = value;
-            SaveSettings();
+            var freshConfig = _eVisitorConfigService.LoadConfig();
+            freshConfig.Browser.RuntimeHours = value;
+            _eVisitorConfigService.SaveConfig(freshConfig);
         }
     }
 
@@ -268,7 +274,9 @@ public partial class ViewModelRestarterProperties : ObservableObject
         if (_currentConfig.Browser.RuntimePauseSeconds != value)
         {
             _currentConfig.Browser.RuntimePauseSeconds = value;
-            SaveSettings();
+            var freshConfig = _eVisitorConfigService.LoadConfig();
+            freshConfig.Browser.RuntimePauseSeconds = value;
+            _eVisitorConfigService.SaveConfig(freshConfig);
         }
     }
 
@@ -282,6 +290,11 @@ public partial class ViewModelRestarterProperties : ObservableObject
 
         _currentConfig.Browser.UpdateCleanupSettings(value.Days, TimeProvider.System);
         _currentConfig.Browser.SetNextCleanupDate(scheduleUpdateResponse.NextDate ?? DateTime.MinValue);
+
+        var freshConfig = _eVisitorConfigService.LoadConfig();
+        freshConfig.Browser.UpdateCleanupSettings(value.Days, TimeProvider.System);
+        freshConfig.Browser.SetNextCleanupDate(scheduleUpdateResponse.NextDate ?? DateTime.MinValue);
+        _eVisitorConfigService.SaveConfig(freshConfig);
 
         if (scheduleUpdateResponse.IsActive && scheduleUpdateResponse.NextDate.HasValue)
         {
@@ -305,13 +318,10 @@ public partial class ViewModelRestarterProperties : ObservableObject
     partial void OnStartBrowserWithProgramStartChanged(bool value)
     {
         _currentConfig.Browser.StartBrowserWithProgrammStart = value;
-        SaveSettings();
+        var freshConfig = _eVisitorConfigService.LoadConfig();
+        freshConfig.Browser.StartBrowserWithProgrammStart = value;
+        _eVisitorConfigService.SaveConfig(freshConfig);
     }
 
     private bool CanAddUsername() => !string.IsNullOrWhiteSpace(Username);
-
-    private void SaveSettings()
-    {
-        _eVisitorConfigService.SaveConfig(_currentConfig);
-    }
 }
