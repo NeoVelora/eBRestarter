@@ -13,27 +13,42 @@ public abstract class BrowserBase(IOperatingSystemFacade os, ILogger logger) : I
 
     public abstract BrowserType Type { get; }
 
+    public abstract BrowserPaths ResolvePaths();
+
+    public abstract bool IsExtensionInstalled(string? extensionId = null);
     public abstract string DisplayName { get; }
     public abstract string IconPath { get; }
     public abstract string DownloadUrl { get; }
     public abstract string ExtensionInstallUrl { get; }
-    protected abstract string ProcessName { get; }
+    public abstract string ProcessName { get; }
     protected abstract string RegistryKeyVersion { get; }
     protected abstract List<string> ExecutablePaths { get; }
-    public abstract bool IsExtensionInstalled(string? extensionId = null);
+
+    public virtual string BrowserVersion
+    {
+        get
+        {
+            var raw = _os.WindowsRegistryService.RetrieveCurrentUserValue(RegistryKeyVersion, "version") ?? _os.WindowsRegistryService.RetrieveCurrentUserValue(RegistryKeyVersion, "CurrentVersion");
+
+            return CleanVersionString(raw?.ToString());
+        }
+    }
+
+    public bool IsInstalled => ExecutablePaths.Any(path => _os.WindowsFileSystemService.FileExists(path));
+
 
     public virtual void Start(string url, string arguments = "")
     {
         try
         {
-            var exePath = GetExecutablePath();
+            var exePath = RetrieveExecutablePath();
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation("Starte {BrowserType} mit URL {Url}...", Type, url);
             }
 
-            string finalArguments = $"{url} {arguments}".Trim();
+            var finalArguments = $"{url} {arguments}".Trim();
 
             _os.WindowsProcessControlService.OpenUrlInBrowser(exePath, finalArguments);
         }
@@ -51,32 +66,18 @@ public abstract class BrowserBase(IOperatingSystemFacade os, ILogger logger) : I
         _os.WindowsProcessControlService.CloseApplication(ProcessName);
     }
 
-    public virtual string BrowserVersion
-    {
-        get
-        {
-            var raw = _os.WindowsRegistryService.GetCurrentUserValue(RegistryKeyVersion, "version") ?? _os.WindowsRegistryService.GetCurrentUserValue(RegistryKeyVersion, "CurrentVersion");
-
-            return CleanVersionString(raw?.ToString());
-        }
-    }
-
-    public bool IsInstalled => ExecutablePaths.Any(path => _os.WindowsFileSystemService.FileExists(path));
-
-    protected string GetExecutablePath()
+    protected string RetrieveExecutablePath()
     {
         return ExecutablePaths.FirstOrDefault(path => _os.WindowsFileSystemService.FileExists(path)) ?? throw new FileNotFoundException($"{Type} executable not found.");
     }
 
-    public abstract BrowserPaths GetPaths();
-
     protected void AddPathFromUninstallKey(List<string> paths, string subKey, string exeName, bool isHklm)
     {
         var val = isHklm
-            ? _os.WindowsRegistryService.GetLocalMachineValue(subKey, "InstallLocation")
-            : _os.WindowsRegistryService.GetCurrentUserValue(subKey, "InstallLocation");
+            ? _os.WindowsRegistryService.RetrieveLocalMachineValue(subKey, "InstallLocation")
+            : _os.WindowsRegistryService.RetrieveCurrentUserValue(subKey, "InstallLocation");
 
-        if (val != null && !string.IsNullOrEmpty(val.ToString()))
+        if (val is not null && !string.IsNullOrEmpty(val.ToString()))
         {
             var fullPath = _os.WindowsFileSystemService.CombinePaths(val.ToString()!, exeName);
             paths.Add(fullPath);

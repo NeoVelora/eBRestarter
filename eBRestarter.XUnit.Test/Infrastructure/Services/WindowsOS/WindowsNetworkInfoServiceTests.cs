@@ -25,7 +25,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.WindowsOS
         [InlineData(false)]
         public void IsNetworkAvailable_ShouldReturnResultFromProvider(bool isAvailable)
         {
-            _mockProvider.Setup(p => p.GetIsNetworkAvailable()).Returns(isAvailable);
+            _mockProvider.Setup(p => p.CheckIsNetworkAvailable()).Returns(isAvailable);
 
             var result = _sut.IsNetworkAvailable();
 
@@ -42,7 +42,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.WindowsOS
             var validEthMock = CreateNicMock("Valid Ethernet", OperationalStatus.Up, NetworkInterfaceType.Ethernet, sent: 500, received: 1000);
             var validWifiMock = CreateNicMock("Valid WiFi", OperationalStatus.Up, NetworkInterfaceType.Wireless80211, sent: 0, received: 50);
 
-            _mockProvider.Setup(p => p.GetAllNetworkInterfaces()).Returns(new[]
+            _mockProvider.Setup(p => p.RetrieveAllNetworkInterfaces()).Returns(new[]
             {
                 loopbackMock.Object,
                 downMock.Object,
@@ -51,7 +51,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.WindowsOS
                 validWifiMock.Object
             });
 
-            var result = _sut.GetActiveInterfaces().ToList();
+            var result = _sut.RetrieveActiveInterfaces().ToList();
 
             result.Count.ShouldBe(2);
 

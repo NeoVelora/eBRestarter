@@ -20,7 +20,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
             var mockPathProvider = new Mock<IPathProvider>();
 
-            mockPathProvider.Setup(p => p.GetLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
+                .Returns((string[] paths) => Path.Combine(paths));
 
             var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
             var credentials = new ApiCredentials("TestUser", "TestKey123");
@@ -38,7 +41,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
             var mockPathProvider = new Mock<IPathProvider>();
 
-            mockPathProvider.Setup(p => p.GetLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
+                .Returns((string[] paths) => Path.Combine(paths));
 
             mockFileSystem.Setup(fs => fs.FileExists(_expectedStoragePath)).Returns(true);
 
@@ -62,7 +68,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
             var mockPathProvider = new Mock<IPathProvider>();
 
-            mockPathProvider.Setup(p => p.GetLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
+                .Returns((string[] paths) => Path.Combine(paths));
+
             mockFileSystem.Setup(fs => fs.FileExists(_expectedStoragePath)).Returns(fileExists);
 
             if (fileContent != null)
@@ -83,7 +93,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
             var mockPathProvider = new Mock<IPathProvider>();
 
-            mockPathProvider.Setup(p => p.GetLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
+                .Returns((string[] paths) => Path.Combine(paths));
+
             mockFileSystem.Setup(fs => fs.FileExists(_expectedStoragePath)).Returns(true);
 
             var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
@@ -98,33 +112,30 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         {
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
             var mockPathProvider = new Mock<IPathProvider>();
-            mockPathProvider.Setup(p => p.GetLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            
+            mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
+                .Returns((string[] paths) => Path.Combine(paths));
 
             var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
 
-            string tempFilePath = Path.GetTempFileName();
-
-            try
+            var ms = new MemoryStream();
+            using (var writer = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
             {
-                using (var writer = new BinaryWriter(File.Open(tempFilePath, FileMode.OpenOrCreate)))
-                {
-                    writer.Write("LegacyUser");
-                    writer.Write("LegacyKey999");
-                }
-
-                var result = store.ImportFromLegacyFile(tempFilePath);
-
-                result.ShouldNotBeNull();
-                result.Username.ShouldBe("LegacyUser");
-                result.ApiKey.ShouldBe("LegacyKey999");
+                writer.Write("LegacyUser");
+                writer.Write("LegacyKey999");
             }
-            finally
-            {
-                if (File.Exists(tempFilePath))
-                {
-                    File.Delete(tempFilePath);
-                }
-            }
+            ms.Position = 0;
+
+            mockFileSystem.Setup(fs => fs.FileExists("legacyPath")).Returns(true);
+            mockFileSystem.Setup(fs => fs.OpenRead("legacyPath")).Returns(ms);
+
+            var result = store.ImportFromLegacyFile("legacyPath");
+
+            result.ShouldNotBeNull();
+            result.Username.ShouldBe("LegacyUser");
+            result.ApiKey.ShouldBe("LegacyKey999");
         }
 
         [Fact]
@@ -133,13 +144,16 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
             var mockPathProvider = new Mock<IPathProvider>();
 
-            mockPathProvider.Setup(p => p.GetLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
+                .Returns((string[] paths) => Path.Combine(paths));
+
+            mockFileSystem.Setup(fs => fs.FileExists("nonExistentPath")).Returns(false);
 
             var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
 
-            string nonExistentPath = Path.Combine(Path.GetTempPath(), "definitely_not_existing_file.bin");
-
-            var result = store.ImportFromLegacyFile(nonExistentPath);
+            var result = store.ImportFromLegacyFile("nonExistentPath");
 
             result.ShouldBeNull();
         }

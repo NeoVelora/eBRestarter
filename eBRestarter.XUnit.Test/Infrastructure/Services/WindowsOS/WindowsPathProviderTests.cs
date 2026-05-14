@@ -20,7 +20,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             string expectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-            string actualPath = _sut.GetAppDataDirectory();
+            string actualPath = _sut.RetrieveAppDataDirectory();
 
             actualPath.ShouldBe(expectedPath);
             actualPath.ShouldNotBeNullOrWhiteSpace();
@@ -32,7 +32,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             string expectedPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-            string actualPath = _sut.GetLocalAppDataDirectory();
+            string actualPath = _sut.RetrieveLocalAppDataDirectory();
 
             actualPath.ShouldBe(expectedPath);
             actualPath.ShouldNotBeNullOrWhiteSpace();
@@ -44,7 +44,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             string expectedPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-            string actualPath = _sut.GetUserProfileDirectory();
+            string actualPath = _sut.RetrieveUserProfileDirectory();
 
             actualPath.ShouldBe(expectedPath);
             actualPath.ShouldNotBeNullOrWhiteSpace();
@@ -56,7 +56,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             string expectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 
-            string actualPath = _sut.GetProgramFilesDirectory();
+            string actualPath = _sut.RetrieveProgramFilesDirectory();
 
             actualPath.ShouldBe(expectedPath);
             actualPath.ShouldNotBeNullOrWhiteSpace();
@@ -68,7 +68,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             string expectedPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
-            string actualPath = _sut.GetProgramFilesX86Directory();
+            string actualPath = _sut.RetrieveProgramFilesX86Directory();
 
             actualPath.ShouldBe(expectedPath);
             actualPath.ShouldNotBeNullOrWhiteSpace();

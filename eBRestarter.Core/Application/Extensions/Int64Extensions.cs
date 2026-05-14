@@ -3,7 +3,7 @@ namespace eBRestarter.Core.Application.Extensions;
 using System;
 using System.Globalization;
 
-public static class FormatExtensions
+public static class Int64Extensions
 {
     private static readonly string[] _sizeSuffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB"];
 

@@ -45,7 +45,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                 .Setup(f => f.Create(It.IsAny<BrowserType>()))
                 .Returns(mockInstalledBrowser.Object);
 
-            var result = await service.GetInstalledBrowsersAsync();
+            var result = await service.FindInstalledBrowsersAsync();
 
             var browserList = result.ToList();
 
@@ -73,7 +73,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                 .Setup(f => f.Create(It.IsAny<BrowserType>()))
                 .Returns(mockUninstalledBrowser.Object);
 
-            var result = await service.GetInstalledBrowsersAsync();
+            var result = await service.FindInstalledBrowsersAsync();
 
             var firstBrowser = result.First();
             firstBrowser.IsInstalled.ShouldBeFalse();
@@ -90,7 +90,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                 .Setup(f => f.Create(It.IsAny<BrowserType>()))
                 .Throws<NotSupportedException>();
 
-            var result = await service.GetInstalledBrowsersAsync();
+            var result = await service.FindInstalledBrowsersAsync();
 
             result.ShouldBeEmpty();
         }
@@ -107,7 +107,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                 .Setup(f => f.Create(It.IsAny<BrowserType>()))
                 .Returns(buggyBrowserMock.Object);
 
-            var result = await service.GetInstalledBrowsersAsync();
+            var result = await service.FindInstalledBrowsersAsync();
 
             result.ShouldBeEmpty();
         }

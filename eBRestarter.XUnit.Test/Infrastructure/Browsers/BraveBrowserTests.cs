@@ -17,7 +17,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockLogger = new Mock<ILogger<BraveBrowser>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
             mockFileSystem.Setup(fs => fs.CombinePaths(It.IsAny<string[]>())).Returns<string[]>(paths => string.Join(@"\", paths));
 
             string expectedDefaultProfilePath = @"C:\Local\BraveSoftware\Brave-Browser\User Data\Default";
@@ -26,7 +26,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
             var braveBrowser = new BraveBrowser(mockOs.Object, mockLogger.Object);
 
-            var paths = braveBrowser.GetPaths();
+            var paths = braveBrowser.ResolvePaths();
 
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Cache\Cache_Data");
             paths.CookiesDirs.ShouldContain($@"{expectedDefaultProfilePath}\Local Storage");

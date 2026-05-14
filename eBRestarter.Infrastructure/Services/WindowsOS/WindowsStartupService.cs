@@ -51,11 +51,11 @@ public class WindowsStartupService(
         }
     }
 
-    public Dictionary<string, object> GetStartupEntries()
+    public Dictionary<string, object> RetrieveStartupEntries()
     {
         try
         {
-            return _registry.GetCurrentUserValues(RegistryPathRun);
+            return _registry.RetrieveCurrentUserValues(RegistryPathRun);
         }
         catch (Exception ex)
         {
@@ -92,7 +92,7 @@ public class WindowsStartupService(
     {
         try
         {
-            var value = _registry.GetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled");
+            var value = _registry.RetrieveLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled");
 
             if (value is int intValue)
             {
@@ -145,7 +145,7 @@ public class WindowsStartupService(
     {
         try
         {
-            var entries = GetStartupEntries();
+            var entries = RetrieveStartupEntries();
             bool isEnabled = entries.ContainsKey("eBRestarter");
 
             return Task.FromResult(isEnabled);

@@ -8,7 +8,7 @@ public class BrowserExtensionDeploymentService : IBrowserExtensionDeploymentServ
     public void EnsureExtensionIsDeployed()
     {
 #if !DEBUG
-        string targetPath = GetExtensionFolderPath();
+        string targetPath = RetrieveExtensionFolderPath();
         string sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TabRestarterExtension");
 
         if (!Directory.Exists(targetPath) && Directory.Exists(sourcePath))
@@ -19,11 +19,11 @@ public class BrowserExtensionDeploymentService : IBrowserExtensionDeploymentServ
 #endif
     }
 
-    public string GetExtensionFolderPath()
+    public string RetrieveExtensionFolderPath()
     {
 #if DEBUG
         // Im Debug-Modus gehen wir 6 Ebenen nach oben in den Solution-Root-Ordner.
-        string solutionDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\..\..\"));
+        var solutionDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\..\..\"));
         return Path.Combine(solutionDirectory, "eBRestarter.TabRestarterExtension", "TabRestarterExtension");
 #else
         

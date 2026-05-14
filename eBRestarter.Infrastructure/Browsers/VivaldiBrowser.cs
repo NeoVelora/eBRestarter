@@ -9,21 +9,11 @@ namespace eBRestarter.Infrastructure.Browsers;
 
 public class VivaldiBrowser(IOperatingSystemFacade os, ILogger<VivaldiBrowser> logger) : ChromiumBrowserBase(os, logger)
 {
-    protected override string ExeFileName => "vivaldi.exe";
-    protected override string BrowserRegistryName => "Vivaldi";
-    protected override string UninstallSubKey => "Vivaldi";
-    protected override string ProgramFilesSubPath => @"Vivaldi\Application";
-
     public override BrowserType Type => BrowserType.Vivaldi;
     public override string DisplayName => "Vivaldi";
     public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/icons8_vivaldi.png";
 
     public override string DownloadUrl => WebLinks.VivaldiDownloadLinkDE;
-
-    protected override string ProcessName => "vivaldi";
-
-    protected override string RegistryKeyVersion => @"Software\Vivaldi\BLBeacon";
-    protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
 
     public override string ExtensionInstallUrl => WebLinks.ChromeEVisitorAddOnLink;
 
@@ -35,12 +25,12 @@ public class VivaldiBrowser(IOperatingSystemFacade os, ILogger<VivaldiBrowser> l
             string uninstallPathLM = $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}";
             string uninstallPathWow = $@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}";
 
-            var version = _os.WindowsRegistryService.GetCurrentUserValue(uninstallPathCU, "DisplayVersion");
+            var version = _os.WindowsRegistryService.RetrieveCurrentUserValue(uninstallPathCU, "DisplayVersion");
 
-            version ??= _os.WindowsRegistryService.GetLocalMachineValue(uninstallPathLM, "DisplayVersion")
-                       ?? _os.WindowsRegistryService.GetLocalMachineValue(uninstallPathWow, "DisplayVersion");
+            version ??= _os.WindowsRegistryService.RetrieveLocalMachineValue(uninstallPathLM, "DisplayVersion")
+                ?? _os.WindowsRegistryService.RetrieveLocalMachineValue(uninstallPathWow, "DisplayVersion");
 
-            if (version != null && !string.IsNullOrEmpty(version.ToString()))
+            if (version is not null && !string.IsNullOrEmpty(version.ToString()))
             {
                 return CleanVersionString(version.ToString());
             }
@@ -49,9 +39,20 @@ public class VivaldiBrowser(IOperatingSystemFacade os, ILogger<VivaldiBrowser> l
         }
     }
 
-    public override BrowserPaths GetPaths()
+    protected override string ExeFileName => "vivaldi.exe";
+    protected override string BrowserRegistryName => "Vivaldi";
+    protected override string UninstallSubKey => "Vivaldi";
+    protected override string ProgramFilesSubPath => @"Vivaldi\Application";
+
+    public override string ProcessName => "vivaldi";
+
+    protected override string RegistryKeyVersion => @"Software\Vivaldi\BLBeacon";
+    protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
+
+
+    public override BrowserPaths ResolvePaths()
     {
-        var localAppData = _os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData");
+        var localAppData = _os.WindowsFileSystemService.ResolveEnvironmentPath("LocalAppData");
 
         var userDataRoot = _os.WindowsFileSystemService.CombinePaths(localAppData, "Vivaldi", "User Data");
 
@@ -90,3 +91,5 @@ public class VivaldiBrowser(IOperatingSystemFacade os, ILogger<VivaldiBrowser> l
         return new BrowserPaths(cacheDirs, cookiesDirs, extensionsDirs);
     }
 }
+
+

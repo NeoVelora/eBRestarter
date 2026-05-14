@@ -9,27 +9,27 @@ namespace eBRestarter.Infrastructure.Browsers;
 
 public class BraveBrowser(IOperatingSystemFacade os, ILogger<BraveBrowser> logger) : ChromiumBrowserBase(os, logger)
 {
-
-    protected override string ExeFileName => "brave.exe";
-    protected override string BrowserRegistryName => "Brave";
-    protected override string UninstallSubKey => "BraveSoftware Brave-Browser";
-    protected override string ProgramFilesSubPath => @"BraveSoftware\Brave-Browser\Application";
-
     public override string DisplayName => "Brave";
     public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_brave.png";
     public override string DownloadUrl => WebLinks.BraveDownloadLinkDE;
 
     public override BrowserType Type => BrowserType.Brave;
 
-    protected override string ProcessName => "brave";
+    public override string ExtensionInstallUrl => "https://chrome.google.com/webstore/detail/ebesucher-addon/agchmcconfdfcenopioeilpgjngelefk";
+
+    protected override string ExeFileName => "brave.exe";
+    protected override string BrowserRegistryName => "Brave";
+    protected override string UninstallSubKey => "BraveSoftware Brave-Browser";
+    protected override string ProgramFilesSubPath => @"BraveSoftware\Brave-Browser\Application";
+
+    public override string ProcessName => "brave";
 
     protected override string RegistryKeyVersion => @"Software\BraveSoftware\Brave-Browser\BLBeacon";
     protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
-    public override string ExtensionInstallUrl => "https://chrome.google.com/webstore/detail/ebesucher-addon/agchmcconfdfcenopioeilpgjngelefk";
 
-    public override BrowserPaths GetPaths()
+    public override BrowserPaths ResolvePaths()
     {
-        var localAppData = _os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData");
+        var localAppData = _os.WindowsFileSystemService.ResolveEnvironmentPath("LocalAppData");
 
         var userDataRoot = _os.WindowsFileSystemService.CombinePaths(localAppData, "BraveSoftware", "Brave-Browser", "User Data");
 
@@ -76,3 +76,5 @@ public class BraveBrowser(IOperatingSystemFacade os, ILogger<BraveBrowser> logge
     }
 
 }
+
+

@@ -4,7 +4,7 @@ public class RestartCalculationService(TimeProvider timeProvider) : IRestartCalc
 {
     private readonly TimeProvider _timeProvider = timeProvider;
 
-    public DateTime GetNextRestartDate(int intervalDays, int restartClockTime)
+    public DateTime RetrieveNextRestartDate(int intervalDays, int restartClockTime)
     {
         if (intervalDays > 0)
         {

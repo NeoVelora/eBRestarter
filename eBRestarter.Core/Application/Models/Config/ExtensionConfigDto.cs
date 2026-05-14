@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Constants;
 
-namespace eBRestarter.Core.Domain.Entities;
+namespace eBRestarter.Core.Application.Models.Config;
 
 public sealed record ExtensionConfigDto
 {

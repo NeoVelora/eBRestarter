@@ -17,8 +17,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockLogger = new Mock<ILogger<FirefoxBrowser>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("AppData")).Returns(@"C:\Roaming");
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("AppData")).Returns(@"C:\Roaming");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
 
             mockFileSystem
                 .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
@@ -44,7 +44,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
             var firefoxBrowser = new FirefoxBrowser(mockOs.Object, mockLogger.Object);
-            var paths = firefoxBrowser.GetPaths();
+            var paths = firefoxBrowser.ResolvePaths();
 
             paths.CacheDirs.ShouldContain(@"C:\Local\Mozilla\Firefox\Profiles\abc.default\cache2\entries");
             paths.CookiesDirs.ShouldContain(@"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\storage\default");
@@ -66,8 +66,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string expectedExtensionId = "{fef425dc-a60f-4484-954d-71ecf2544846}.xpi";
             string fullXpiPath = $@"{fakeRoamingExtensionsDir}\{expectedExtensionId}";
 
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("AppData")).Returns(@"C:\Roaming");
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("AppData")).Returns(@"C:\Roaming");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
 
             mockFileSystem
                 .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
@@ -94,8 +94,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             string fakeRoamingExtensionsDir = @"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\extensions";
 
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("AppData")).Returns(@"C:\Roaming");
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("AppData")).Returns(@"C:\Roaming");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
 
             mockFileSystem
                 .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))

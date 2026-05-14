@@ -8,9 +8,9 @@ public interface IWindowsRegistryService
     void DeleteCurrentUserValue(string subKey, string name);
     void SetLocalMachineValue(string subKey, string name, object value, RegistryValueKind kind);
 
-    object? GetCurrentUserValue(string subKey, string valueName);
+    object? RetrieveCurrentUserValue(string subKey, string valueName);
 
-    Dictionary<string, object> GetCurrentUserValues(string subKey);
+    Dictionary<string, object> RetrieveCurrentUserValues(string subKey);
 
-    object? GetLocalMachineValue(string subKey, string valueName);
+    object? RetrieveLocalMachineValue(string subKey, string valueName);
 }

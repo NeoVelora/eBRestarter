@@ -9,7 +9,7 @@ public class RealProcessWrapper : IProcessWrapper
     {
         var process = Process.Start(info);
 
-        if (process != null)
+        if (process is not null)
         {
             return new ProcessAdapter(process);
         }

@@ -92,9 +92,9 @@ public partial class ViewModelDeleteBrowserContent : ObservableObject
         _localizationService = localizationService;
 
         BrowserIconPath = string.Empty;
-        BrowserName = _localizationService.GetString("Cleanup_Loading");
+        BrowserName = _localizationService.RetrieveString("Cleanup_Loading");
         ProgressText = InitialProgressTextDisplay;
-        StatusText = _localizationService.GetString("Cleanup_Ready");
+        StatusText = _localizationService.RetrieveString("Cleanup_Ready");
         ProgressMaximum = 100;
         ProgressValue = 0;
         IsDeleteCookiesChecked = true;
@@ -109,7 +109,7 @@ public partial class ViewModelDeleteBrowserContent : ObservableObject
         }
         else
         {
-            string errorFormat = _localizationService.GetString("Cleanup_ConfigError");
+            string errorFormat = _localizationService.RetrieveString("Cleanup_ConfigError");
             StatusText = string.Format(errorFormat, selectedBrowserString);
         }
     }
@@ -118,14 +118,14 @@ public partial class ViewModelDeleteBrowserContent : ObservableObject
     private void CancelCleaning()
     {
         _deleteBrowserContentCancellationTokenSource?.Cancel();
-        StatusText = _localizationService.GetString("Cleanup_Canceling");
+        StatusText = _localizationService.RetrieveString("Cleanup_Canceling");
     }
 
     [RelayCommand]
     private void CancelConflict()
     {
         IsProcessConflict = false;
-        StatusText = _localizationService.GetString("Cleanup_CanceledByUser");
+        StatusText = _localizationService.RetrieveString("Cleanup_CanceledByUser");
     }
 
     [RelayCommand]
@@ -153,18 +153,18 @@ public partial class ViewModelDeleteBrowserContent : ObservableObject
         }
         catch (NotSupportedException ex)
         {
-            string errorFormat = _localizationService.GetString("General_LoadErrorPrefix");
+            string errorFormat = _localizationService.RetrieveString("General_LoadErrorPrefix");
             StatusText = string.Format(errorFormat, ex.Message);
         }
         catch (InvalidOperationException ex)
         {
-            string errorFormat = _localizationService.GetString("General_LoadErrorPrefix");
+            string errorFormat = _localizationService.RetrieveString("General_LoadErrorPrefix");
             StatusText = string.Format(errorFormat, ex.Message);
         }
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            string errorFormat = _localizationService.GetString("General_LoadErrorPrefix");
+            string errorFormat = _localizationService.RetrieveString("General_LoadErrorPrefix");
             StatusText = string.Format(errorFormat, ex.Message);
         }
     }
@@ -225,17 +225,17 @@ public partial class ViewModelDeleteBrowserContent : ObservableObject
         }
         catch (OperationCanceledException)
         {
-            StatusText = _localizationService.GetString("Cleanup_CanceledByUser");
+            StatusText = _localizationService.RetrieveString("Cleanup_CanceledByUser");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            string errorFormat = _localizationService.GetString("General_ErrorPrefix");
+            string errorFormat = _localizationService.RetrieveString("General_ErrorPrefix");
             StatusText = string.Format(errorFormat, ex.Message);
         }
         catch (Exception ex)
         {
             Debug.WriteLine(ex);
-            string errorFormat = _localizationService.GetString("General_ErrorPrefix");
+            string errorFormat = _localizationService.RetrieveString("General_ErrorPrefix");
             StatusText = string.Format(errorFormat, ex.Message);
         }
         finally

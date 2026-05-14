@@ -4,5 +4,5 @@ namespace eBRestarter.Core.Application.Interfaces.Browser;
 
 public interface IBrowserService
 {
-    Task<IEnumerable<BrowserInfo>> GetInstalledBrowsersAsync();
+    Task<IEnumerable<BrowserInfo>> FindInstalledBrowsersAsync();
 }

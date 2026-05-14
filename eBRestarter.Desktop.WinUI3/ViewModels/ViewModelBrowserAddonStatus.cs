@@ -83,9 +83,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
             AddonStatusColor = NeutralForegroundHex;
             AddonStatusIcon = AddonStatusIconDefault;
             InstallStatusColor = NeutralForegroundHex;
-            AddonStatusText = _localizationService.GetString("Addon_StatusChecking");
-            InstallStatusText = _localizationService.GetString("Addon_StatusChecking");
-            ButtonText = _localizationService.GetString("Addon_Loading");
+            AddonStatusText = _localizationService.RetrieveString("Addon_StatusChecking");
+            InstallStatusText = _localizationService.RetrieveString("Addon_StatusChecking");
+            ButtonText = _localizationService.RetrieveString("Addon_Loading");
 
             RefreshStatus();
         }
@@ -101,8 +101,8 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         {
             _dispatcherQueue.TryEnqueue(() =>
             {
-                string installedFormat = _localizationService.GetString("Addon_BrowserInstalled");
-                string notInstalledFormat = _localizationService.GetString("Addon_BrowserNotInstalled");
+                string installedFormat = _localizationService.RetrieveString("Addon_BrowserInstalled");
+                string notInstalledFormat = _localizationService.RetrieveString("Addon_BrowserNotInstalled");
 
                 if (!_browser.IsInstalled)
                 {
@@ -111,7 +111,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
                     AddonStatusText = AddonPlaceholderDash;
                     AddonStatusIcon = AddonStatusIconEmpty;
                     IsButtonEnabled = false;
-                    ButtonText = _localizationService.GetString("Addon_BtnBrowserMissing");
+                    ButtonText = _localizationService.RetrieveString("Addon_BtnBrowserMissing");
                     return;
                 }
 
@@ -123,17 +123,17 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
                 if (extensionIsInstalled)
                 {
-                    AddonStatusText = _localizationService.GetString("Addon_ExtensionInstalled");
+                    AddonStatusText = _localizationService.RetrieveString("Addon_ExtensionInstalled");
                     AddonStatusIcon = AddonStatusIconExtensionInstalled;
                     AddonStatusColor = AddonStatusColorExtensionInstalledHex;
-                    ButtonText = _localizationService.GetString("Addon_BtnManage");
+                    ButtonText = _localizationService.RetrieveString("Addon_BtnManage");
                 }
                 else
                 {
-                    AddonStatusText = _localizationService.GetString("Addon_ExtensionNotInstalled");
+                    AddonStatusText = _localizationService.RetrieveString("Addon_ExtensionNotInstalled");
                     AddonStatusIcon = AddonStatusIconExtensionNotInstalled;
                     AddonStatusColor = AddonStatusColorExtensionNotInstalledHex;
-                    ButtonText = _localizationService.GetString("Addon_BtnInstall");
+                    ButtonText = _localizationService.RetrieveString("Addon_BtnInstall");
                 }
             });
         }

@@ -18,11 +18,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockRegistry = new Mock<IWindowsRegistryService>();
 
             mockRegistry
-                .Setup(reg => reg.GetCurrentUserValue(It.IsAny<string>(), "DisplayVersion"))
+                .Setup(reg => reg.RetrieveCurrentUserValue(It.IsAny<string>(), "DisplayVersion"))
                 .Returns(null);
 
             mockRegistry
-                .Setup(reg => reg.GetLocalMachineValue(It.IsAny<string>(), "DisplayVersion"))
+                .Setup(reg => reg.RetrieveLocalMachineValue(It.IsAny<string>(), "DisplayVersion"))
                 .Returns("5.3.2679.55 (Stable channel)");
 
             mockOs.Setup(os => os.WindowsRegistryService).Returns(mockRegistry.Object);
@@ -41,7 +41,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockLogger = new Mock<ILogger<VivaldiBrowser>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
             mockFileSystem.Setup(fs => fs.CombinePaths(It.IsAny<string[]>())).Returns<string[]>(paths => string.Join(@"\", paths));
 
             string expectedDefaultProfilePath = @"C:\Local\Vivaldi\User Data\Default";
@@ -50,7 +50,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
             var vivaldiBrowser = new VivaldiBrowser(mockOs.Object, mockLogger.Object);
 
-            var paths = vivaldiBrowser.GetPaths();
+            var paths = vivaldiBrowser.ResolvePaths();
 
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Service Worker");
             paths.CookiesDirs.ShouldContain($@"{expectedDefaultProfilePath}\IndexedDB");

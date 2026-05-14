@@ -1,17 +1,21 @@
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Config;
-using eBRestarter.Core.Application.Interfaces.Security;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace eBRestarter.Infrastructure.Services.Config;
 
-public class EVisitorConfigService(IPathService pathService, IEncryptionService encryptionService, ILogger<EVisitorConfigService> logger) : IEVisitorConfigService
+public class EVisitorConfigService(
+    IPathService pathService, 
+    IWindowsFileSystemService fileSystem,
+    ILogger<EVisitorConfigService> logger) : IEVisitorConfigService
 {
     private readonly IPathService _pathService = pathService;
-    private readonly IEncryptionService _encryptionService = encryptionService;
+    private readonly IWindowsFileSystemService _fileSystem = fileSystem;
     private readonly ILogger<EVisitorConfigService> _logger = logger;
 
     private readonly JsonSerializerOptions _jsonOptions = new()
@@ -23,9 +27,9 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
 
     public AppConfig LoadConfig()
     {
-        var filePath = _pathService.GetConfigFilePath();
+        var filePath = _pathService.RetrieveConfigFilePath();
 
-        if (!File.Exists(filePath))
+        if (!_fileSystem.FileExists(filePath))
         {
             var defaultConfig = new AppConfig();
             SaveConfig(defaultConfig);
@@ -34,35 +38,17 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
 
         try
         {
-            string jsonString = File.ReadAllText(filePath);
-
-            var config = JsonSerializer.Deserialize<AppConfig>(jsonString, _jsonOptions) ?? new AppConfig();
-
-            if (!string.IsNullOrEmpty(config.Settings.ApiKey))
-            {
-                var decryptedKey = _encryptionService.Decrypt(config.Settings.ApiKey);
-
-
-                config.Settings.ApiKey = decryptedKey;
-
-                if (string.IsNullOrEmpty(decryptedKey))
-                {
-                    _logger.LogWarning("API Key konnte nicht entschlüsselt werden (evtl. PC gewechselt). Der Key muss neu eingegeben werden.");
-                }
-            }
-
-            return config;
+            var jsonString = _fileSystem.ReadAllText(filePath);
+            return JsonSerializer.Deserialize<AppConfig>(jsonString, _jsonOptions) ?? new AppConfig();
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            _logger.LogError("Config-Datei ist kein gültiges JSON.");
-
+            _logger.LogError(ex, "Config-Datei ist kein gültiges JSON.");
             return new AppConfig();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Kritischer Fehler beim Laden.");
-
+            _logger.LogError(ex, "Kritischer Fehler beim Laden der Konfiguration.");
             return new AppConfig();
         }
     }
@@ -71,22 +57,16 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
     {
         try
         {
-            var filePath = _pathService.GetConfigFilePath();
-            var directory = Path.GetDirectoryName(filePath);
+            var filePath = _pathService.RetrieveConfigFilePath();
+            var directory = _fileSystem.GetDirectoryName(filePath);
 
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            if (!string.IsNullOrEmpty(directory) && !_fileSystem.DirectoryExists(directory))
             {
-                Directory.CreateDirectory(directory);
+                _fileSystem.CreateDirectory(directory);
             }
-            var encryptedKey = _encryptionService.Encrypt(config.Settings.ApiKey);
 
-            string originalKey = config.Settings.ApiKey;
-            config.Settings.ApiKey = encryptedKey;
-
-            string jsonString = JsonSerializer.Serialize(config, _jsonOptions);
-            File.WriteAllText(filePath, jsonString);
-
-            config.Settings.ApiKey = originalKey;
+            var jsonString = JsonSerializer.Serialize(config, _jsonOptions);
+            _fileSystem.WriteAllText(filePath, jsonString);
 
             _logger.LogInformation("Konfiguration gespeichert.");
         }
@@ -99,11 +79,10 @@ public class EVisitorConfigService(IPathService pathService, IEncryptionService 
     public void ResetConfig()
     {
         _logger.LogWarning("Konfiguration wird auf Standardwerte zurückgesetzt.");
-
         var defaultConfig = new AppConfig();
-
         SaveConfig(defaultConfig);
     }
 }
+
 [JsonSerializable(typeof(AppConfig))]
 internal partial class AppConfigJsonContext : JsonSerializerContext;

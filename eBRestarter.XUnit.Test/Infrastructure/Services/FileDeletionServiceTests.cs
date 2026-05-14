@@ -63,11 +63,11 @@ namespace eBRestarter.Tests.Infrastructure.Services
                 valueReporter,
                 CancellationToken.None);
 
-            File.Exists(normalFile).ShouldBeFalse("Normale Datei sollte gelöscht sein.");
+            File.Exists(normalFile).ShouldBeFalse("Normale Datei sollte gel�scht sein.");
             File.Exists(protectedFile).ShouldBeTrue("moz-extension Datei sollte ignoriert worden sein.");
 
 
-            statusUpdates.ShouldContain("Abschließe Bereinigung...");
+            statusUpdates.ShouldContain("Abschlie�e Bereinigung...");
             progressUpdates.ShouldNotBeEmpty();
         }
 

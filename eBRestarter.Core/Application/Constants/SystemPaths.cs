@@ -5,10 +5,6 @@ public static class SystemPaths
     private const string ManufacturerName = "Skylar";
     private const string AppName = "eBRestarter";
 
-    private static string LocalAppData => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-    private static string UserProfile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
     public static string ApplicationDataBasePath => Path.Combine(LocalAppData, ManufacturerName, AppName);
 
     public static string DownloadsPath => Path.Combine(UserProfile, "Downloads");
@@ -22,6 +18,11 @@ public static class SystemPaths
     public static string File_Path_Time_Stamp_Restart_Process => Path.Combine(ApplicationDataBasePath, "RestartDate.ini");
     public static string File_Path_API => Path.Combine(ApplicationDataBasePath, "EB_API_File.apiaf");
     public static string File_Path_Logging => Path.Combine(ApplicationDataBasePath, "log.txt");
+
+    private static string LocalAppData => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+    private static string UserProfile => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
 
     public static void EnsureApplicationDirectoryExists()
     {

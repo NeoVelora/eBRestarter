@@ -40,16 +40,16 @@ namespace eBRestarter.Tests.Core.Application.UseCases.GetSystemInformation
                 InstalledRam = "32 GB"
             };
 
-            _mockHardwareService.Setup(s => s.GetHardwareInfoAsync()).ReturnsAsync(fakeHardware);
+            _mockHardwareService.Setup(s => s.RetrieveHardwareInfoAsync()).ReturnsAsync(fakeHardware);
 
 
-            _mockHardwareService.Setup(s => s.GetHardwareInfoAsync()).ReturnsAsync(fakeHardware);
+            _mockHardwareService.Setup(s => s.RetrieveHardwareInfoAsync()).ReturnsAsync(fakeHardware);
 
-            _mockOsEditionService.Setup(s => s.GetOsEditionAsync()).ReturnsAsync("Windows 11 Pro");
+            _mockOsEditionService.Setup(s => s.RetrieveOsEditionAsync()).ReturnsAsync("Windows 11 Pro");
 
-            _mockSystemInfoService.Setup(s => s.GetCurrentOsDisplayVersion()).Returns("23H2");
-            _mockSystemInfoService.Setup(s => s.GetCurrentOsBuildVersion()).Returns("22631.3296");
-            _mockSystemInfoService.Setup(s => s.GetCurrentStandardBrowserName()).Returns("Firefox");
+            _mockSystemInfoService.Setup(s => s.RetrieveCurrentOsDisplayVersion()).Returns("23H2");
+            _mockSystemInfoService.Setup(s => s.RetrieveCurrentOsBuildVersion()).Returns("22631.3296");
+            _mockSystemInfoService.Setup(s => s.RetrieveCurrentStandardBrowserName()).Returns("Firefox");
 
             var result = await _sut.ExecuteAsync();
 
@@ -64,18 +64,18 @@ namespace eBRestarter.Tests.Core.Application.UseCases.GetSystemInformation
             result.OsBuildVersion.ShouldBe("22631.3296");
             result.StandardBrowserName.ShouldBe("Firefox");
 
-            _mockHardwareService.Verify(s => s.GetHardwareInfoAsync(), Times.Once);
-            _mockOsEditionService.Verify(s => s.GetOsEditionAsync(), Times.Once);
-            _mockSystemInfoService.Verify(s => s.GetCurrentOsDisplayVersion(), Times.Once);
-            _mockSystemInfoService.Verify(s => s.GetCurrentOsBuildVersion(), Times.Once);
-            _mockSystemInfoService.Verify(s => s.GetCurrentStandardBrowserName(), Times.Once);
+            _mockHardwareService.Verify(s => s.RetrieveHardwareInfoAsync(), Times.Once);
+            _mockOsEditionService.Verify(s => s.RetrieveOsEditionAsync(), Times.Once);
+            _mockSystemInfoService.Verify(s => s.RetrieveCurrentOsDisplayVersion(), Times.Once);
+            _mockSystemInfoService.Verify(s => s.RetrieveCurrentOsBuildVersion(), Times.Once);
+            _mockSystemInfoService.Verify(s => s.RetrieveCurrentStandardBrowserName(), Times.Once);
         }
 
         [Fact]
         public async Task ExecuteAsync_ShouldBubbleUpExceptions_WhenDependencyThrows()
         {
             _mockHardwareService
-                .Setup(s => s.GetHardwareInfoAsync())
+                .Setup(s => s.RetrieveHardwareInfoAsync())
                 .ThrowsAsync(new UnauthorizedAccessException("WMI Access Denied"));
 
             var exception = await Should.ThrowAsync<UnauthorizedAccessException>(() => _sut.ExecuteAsync());

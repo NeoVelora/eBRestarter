@@ -9,25 +9,26 @@ namespace eBRestarter.Infrastructure.Browsers;
 
 public class ChromeBrowser(IOperatingSystemFacade os, ILogger<ChromeBrowser> logger) : ChromiumBrowserBase(os, logger)
 {
+    public override BrowserType Type => BrowserType.Chrome;
+    public override string DisplayName => "Chrome";
+    public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_chrome.png";
+    public override string DownloadUrl => WebLinks.ChromeDownloadLinkDE;
+    public override string ExtensionInstallUrl => WebLinks.ChromeEVisitorAddOnLink;
 
     protected override string ExeFileName => "chrome.exe";
     protected override string BrowserRegistryName => "Google Chrome";
     protected override string UninstallSubKey => "Google Chrome";
     protected override string ProgramFilesSubPath => @"Google\Chrome\Application";
 
-    public override BrowserType Type => BrowserType.Chrome;
-    public override string DisplayName => "Chrome";
-    public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_chrome.png";
-    public override string DownloadUrl => WebLinks.ChromeDownloadLinkDE;
-    protected override string ProcessName => "chrome";
+
+    public override string ProcessName => "chrome";
     protected override string RegistryKeyVersion => @"Software\Google\Chrome\BLBeacon";
     protected override string ExtensionId => "agchmcconfdfcenopioeilpgjngelefk";
-    public override string ExtensionInstallUrl => WebLinks.ChromeEVisitorAddOnLink;
 
 
-    public override BrowserPaths GetPaths()
+    public override BrowserPaths ResolvePaths()
     {
-        var localAppData = _os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData");
+        var localAppData = _os.WindowsFileSystemService.ResolveEnvironmentPath("LocalAppData");
 
         var userDataRoot = _os.WindowsFileSystemService.CombinePaths(localAppData, "Google", "Chrome", "User Data");
 
@@ -70,3 +71,5 @@ public class ChromeBrowser(IOperatingSystemFacade os, ILogger<ChromeBrowser> log
 
 
 }
+
+

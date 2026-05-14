@@ -4,5 +4,5 @@ public interface IBrowserExtensionDeploymentService
 {
     void EnsureExtensionIsDeployed();
 
-    string GetExtensionFolderPath();
+    string RetrieveExtensionFolderPath();
 }

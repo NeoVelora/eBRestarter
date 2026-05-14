@@ -4,7 +4,7 @@ namespace eBRestarter.Core.Application.Interfaces;
 
 public interface IEVisitorApiService
 {
-    Task<IpInfoData?> GetIpInfoAsync();
+    Task<IpInfoData?> RetrieveIpInfoAsync();
 
-    Task<EarningsData?> GetEarningsAsync();
+    Task<EarningsData?> RetrieveEarningsAsync();
 }

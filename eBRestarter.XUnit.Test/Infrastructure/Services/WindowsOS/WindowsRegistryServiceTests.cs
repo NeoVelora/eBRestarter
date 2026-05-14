@@ -27,7 +27,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             string expectedValue = "Hallo Registry!";
 
             _sut.SetCurrentUserValue(_tempTestKey, valueName, expectedValue);
-            var actualValue = _sut.GetCurrentUserValue(_tempTestKey, valueName);
+            var actualValue = _sut.RetrieveCurrentUserValue(_tempTestKey, valueName);
 
             actualValue.ShouldNotBeNull();
             actualValue.ToString().ShouldBe(expectedValue);
@@ -40,7 +40,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut.SetCurrentUserValue(_tempTestKey, valueName, "Trash");
 
             _sut.DeleteCurrentUserValue(_tempTestKey, valueName);
-            var resultAfterDelete = _sut.GetCurrentUserValue(_tempTestKey, valueName);
+            var resultAfterDelete = _sut.RetrieveCurrentUserValue(_tempTestKey, valueName);
 
             resultAfterDelete.ShouldBeNull();
 
@@ -54,7 +54,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             _sut.SetCurrentUserValue(_tempTestKey, "Wert2", 42);
             _sut.SetCurrentUserValue(_tempTestKey, "Wert3", "C");
 
-            Dictionary<string, object> results = _sut.GetCurrentUserValues(_tempTestKey);
+            Dictionary<string, object> results = _sut.RetrieveCurrentUserValues(_tempTestKey);
 
             results.ShouldNotBeNull();
             results.Count.ShouldBeGreaterThanOrEqualTo(3);
@@ -66,7 +66,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentUserValues_ShouldReturnEmptyDictionary_WhenKeyDoesNotExist()
         {
-            var results = _sut.GetCurrentUserValues($@"Software\GhostKey_{Guid.NewGuid()}");
+            var results = _sut.RetrieveCurrentUserValues($@"Software\GhostKey_{Guid.NewGuid()}");
 
             results.ShouldNotBeNull();
             results.ShouldBeEmpty();
@@ -78,7 +78,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             string winNtPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
             string valueName = "ProductName";
 
-            var result = _sut.GetLocalMachineValue(winNtPath, valueName);
+            var result = _sut.RetrieveLocalMachineValue(winNtPath, valueName);
 
             result.ShouldNotBeNull();
             result.ToString().ShouldContain("Windows");
@@ -93,7 +93,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             {
                 _sut.SetLocalMachineValue(hklmTestKey, "AdminTest", "Success", RegistryValueKind.String);
 
-                var result = _sut.GetLocalMachineValue(hklmTestKey, "AdminTest");
+                var result = _sut.RetrieveLocalMachineValue(hklmTestKey, "AdminTest");
                 result.ShouldNotBeNull();
                 result.ToString().ShouldBe("Success");
 
@@ -102,7 +102,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             catch (Exception ex)
             {
                 (ex is UnauthorizedAccessException || ex is SecurityException)
-                    .ShouldBeTrue("Erwartete fehlende Berechtigung, da der Test-Runner nicht als Administrator läuft.");
+                    .ShouldBeTrue("Erwartete fehlende Berechtigung, da der Test-Runner nicht als Administrator l�uft.");
             }
         }
         public void Dispose()

@@ -1,142 +1,93 @@
 using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.Interfaces.Config;
-using eBRestarter.Core.Application.Interfaces.Security;
+using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Infrastructure.Services.Config;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using System;
-using System.IO;
-using System.Text.Json;
 using Xunit;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
 {
-    public class EVisitorConfigServiceTests : IDisposable
+    public class EVisitorConfigServiceTests
     {
-        private readonly string _tempFilePath;
         private readonly Mock<IPathService> _mockPathService;
-        private readonly Mock<IEncryptionService> _mockEncryptionService;
+        private readonly Mock<IWindowsFileSystemService> _mockFileSystem;
         private readonly Mock<ILogger<EVisitorConfigService>> _mockLogger;
+        private readonly EVisitorConfigService _service;
+        private const string FakeFilePath = @"C:\AppData\eBRestarter\config.json";
 
         public EVisitorConfigServiceTests()
         {
-            _tempFilePath = Path.Combine(Path.GetTempPath(), $"TestConfig_{Guid.NewGuid()}.json");
-
             _mockPathService = new Mock<IPathService>();
-            _mockEncryptionService = new Mock<IEncryptionService>();
+            _mockFileSystem = new Mock<IWindowsFileSystemService>();
             _mockLogger = new Mock<ILogger<EVisitorConfigService>>();
 
-            _mockPathService.Setup(p => p.GetConfigFilePath()).Returns(_tempFilePath);
+            _mockPathService.Setup(p => p.RetrieveConfigFilePath()).Returns(FakeFilePath);
+
+            _service = new EVisitorConfigService(
+                _mockPathService.Object, 
+                _mockFileSystem.Object, 
+                _mockLogger.Object
+            );
         }
 
         [Fact]
-        public void SaveConfig_ShouldEncryptApiKey_AndWriteJsonToFile()
+        public void SaveConfig_ShouldWriteJsonToFileSystem()
         {
-            var service = new EVisitorConfigService(_mockPathService.Object, _mockEncryptionService.Object, _mockLogger.Object);
-
             var configToSave = new AppConfig();
-            configToSave.Settings.ApiKey = "SecretPlaintextKey123";
+            configToSave.Settings.ApiKey = "PlaintextKey123";
 
-            _mockEncryptionService
-                .Setup(e => e.Encrypt(It.IsAny<string>()))
-                .Returns("EncryptedSecretData789");
+            string capturedJson = null!;
+            _mockFileSystem
+                .Setup(f => f.WriteAllText(FakeFilePath, It.IsAny<string>()))
+                .Callback<string, string>((path, content) => capturedJson = content);
 
-            service.SaveConfig(configToSave);
+            _mockFileSystem.Setup(f => f.GetDirectoryName(FakeFilePath)).Returns(@"C:\AppData\eBRestarter");
+            _mockFileSystem.Setup(f => f.DirectoryExists(@"C:\AppData\eBRestarter")).Returns(true);
 
-            File.Exists(_tempFilePath).ShouldBeTrue();
+            _service.SaveConfig(configToSave);
 
-            string savedJson = File.ReadAllText(_tempFilePath);
-
-            savedJson.ShouldContain("EncryptedSecretData789");
-            savedJson.ShouldNotContain("SecretPlaintextKey123");
+            _mockFileSystem.Verify(f => f.WriteAllText(FakeFilePath, It.IsAny<string>()), Times.Once);
+            capturedJson.ShouldNotBeNull();
+            capturedJson.ShouldContain("PlaintextKey123");
         }
 
         [Fact]
         public void LoadConfig_ShouldCreateAndReturnDefault_WhenFileDoesNotExist()
         {
-            if (File.Exists(_tempFilePath)) File.Delete(_tempFilePath);
+            _mockFileSystem.Setup(f => f.FileExists(FakeFilePath)).Returns(false);
+            _mockFileSystem.Setup(f => f.GetDirectoryName(FakeFilePath)).Returns(@"C:\AppData\eBRestarter");
+            _mockFileSystem.Setup(f => f.DirectoryExists(@"C:\AppData\eBRestarter")).Returns(true);
 
-            var service = new EVisitorConfigService(_mockPathService.Object, _mockEncryptionService.Object, _mockLogger.Object);
-
-            var result = service.LoadConfig();
-
-            result.ShouldNotBeNull();
-            File.Exists(_tempFilePath).ShouldBeTrue();
-        }
-
-        [Fact]
-        public void LoadConfig_ShouldDecryptApiKey_WhenFileIsValid()
-        {
-            string fakeEncryptedJson = @"{
-                ""Settings"": {
-                    ""ApiKey"": ""VerschlüsselterWert""
-                }
-            }";
-            File.WriteAllText(_tempFilePath, fakeEncryptedJson);
-
-            _mockEncryptionService
-                .Setup(e => e.Decrypt("VerschlüsselterWert"))
-                .Returns("EntschlüsselterKlartext");
-
-            var service = new EVisitorConfigService(_mockPathService.Object, _mockEncryptionService.Object, _mockLogger.Object);
-
-            var result = service.LoadConfig();
-
-            result.Settings.ApiKey.ShouldBe("EntschlüsselterKlartext");
-        }
-
-        [Fact]
-        public void LoadConfig_ShouldHandleDecryptionFailure_Gracefully()
-        {
-            string fakeEncryptedJson = @"{ ""Settings"": { ""ApiKey"": ""FalscherPC_Key"" } }";
-            File.WriteAllText(_tempFilePath, fakeEncryptedJson);
-
-            _mockEncryptionService
-                .Setup(e => e.Decrypt(It.IsAny<string>()))
-                .Returns(string.Empty);
-
-            var service = new EVisitorConfigService(_mockPathService.Object, _mockEncryptionService.Object, _mockLogger.Object);
-
-            var result = service.LoadConfig();
+            var result = _service.LoadConfig();
 
             result.ShouldNotBeNull();
-            result.Settings.ApiKey.ShouldBeEmpty();
-
+            _mockFileSystem.Verify(f => f.WriteAllText(FakeFilePath, It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
         public void LoadConfig_ShouldReturnDefault_WhenJsonIsBroken()
         {
-            File.WriteAllText(_tempFilePath, "Das hier ist definitiv { kein gültiges ] JSON!");
+            _mockFileSystem.Setup(f => f.FileExists(FakeFilePath)).Returns(true);
+            _mockFileSystem.Setup(f => f.ReadAllText(FakeFilePath)).Returns("Das hier ist kein JSON!");
 
-            var service = new EVisitorConfigService(_mockPathService.Object, _mockEncryptionService.Object, _mockLogger.Object);
-
-            var result = service.LoadConfig();
+            var result = _service.LoadConfig();
 
             result.ShouldNotBeNull();
+            result.Settings.ApiKey.ShouldBeEmpty();
         }
 
         [Fact]
-        public void ResetConfig_ShouldWriteDefaultConfigToFile()
+        public void ResetConfig_ShouldWriteDefaultConfigToFileSystem()
         {
-            File.WriteAllText(_tempFilePath, "Alte, kaputte Daten");
+            _mockFileSystem.Setup(f => f.GetDirectoryName(FakeFilePath)).Returns(@"C:\AppData\eBRestarter");
+            _mockFileSystem.Setup(f => f.DirectoryExists(@"C:\AppData\eBRestarter")).Returns(true);
 
-            var service = new EVisitorConfigService(_mockPathService.Object, _mockEncryptionService.Object, _mockLogger.Object);
+            _service.ResetConfig();
 
-            service.ResetConfig();
-
-            string newContent = File.ReadAllText(_tempFilePath);
-            newContent.ShouldNotContain("Alte, kaputte Daten");
-            newContent.ShouldContain("{");
-        }
-        public void Dispose()
-        {
-            if (File.Exists(_tempFilePath))
-            {
-                File.Delete(_tempFilePath);
-            }
+            _mockFileSystem.Verify(f => f.WriteAllText(FakeFilePath, It.IsAny<string>()), Times.Once);
         }
     }
 }

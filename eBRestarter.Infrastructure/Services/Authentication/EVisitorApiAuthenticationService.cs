@@ -11,7 +11,7 @@ public class EVisitorApiAuthenticationService(IRestClientService restClient) : I
 
     private readonly IRestClientService _restClient = restClient;
 
-    public async Task<(bool IsValid, string Message)> VerifyCredentialsAsync(string username, string apiKey)
+    public async Task<VerificationResult> VerifyCredentialsAsync(string username, string apiKey)
     {
 
         var request = new ApiRequest
@@ -26,15 +26,15 @@ public class EVisitorApiAuthenticationService(IRestClientService restClient) : I
 
         if (response.IsSuccess)
         {
-            return (true, "Verbindung erfolgreich!");
+            return new VerificationResult(true, "Verbindung erfolgreich!");
         }
         else if (response.StatusCode == ResponseCode.HttpRE401)
         {
-            return (false, "Benutzername oder API-Schlüssel falsch.");
+            return new VerificationResult(false, "Benutzername oder API-Schlüssel falsch.");
         }
         else
         {
-            return (false, $"Fehler: {response.ErrorMessage}");
+            return new VerificationResult(false, $"Fehler: {response.ErrorMessage}");
         }
     }
 }

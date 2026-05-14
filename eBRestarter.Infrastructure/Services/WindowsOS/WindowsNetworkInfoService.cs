@@ -2,35 +2,34 @@ using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.Models.Records;
 using System.Net.NetworkInformation;
 
-namespace eBRestarter.Infrastructure.Services.WindowsOS
+namespace eBRestarter.Infrastructure.Services.WindowsOS;
+
+public class WindowsNetworkInfoService(INetworkProvider networkProvider) : IWindowsNetworkInfoService
 {
-    public class WindowsNetworkInfoService(INetworkProvider networkProvider) : IWindowsNetworkInfoService
+    private readonly INetworkProvider _networkProvider = networkProvider;
+
+    public bool IsNetworkAvailable() => _networkProvider.CheckIsNetworkAvailable();
+
+    public IEnumerable<NetworkStats> RetrieveActiveInterfaces()
     {
-        private readonly INetworkProvider _networkProvider = networkProvider;
+        var interfaces = _networkProvider.RetrieveAllNetworkInterfaces();
 
-        public bool IsNetworkAvailable() => _networkProvider.GetIsNetworkAvailable();
-
-        public IEnumerable<NetworkStats> GetActiveInterfaces()
+        foreach (var nic in interfaces)
         {
-            var interfaces = _networkProvider.GetAllNetworkInterfaces();
+            if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+                continue;
 
-            foreach (var nic in interfaces)
-            {
-                if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
-                    continue;
+            var stats = nic.GetIPv4Statistics();
 
-                var stats = nic.GetIPv4Statistics();
+            if (stats.BytesSent == 0 && stats.BytesReceived == 0)
+                continue;
 
-                if (stats.BytesSent == 0 && stats.BytesReceived == 0)
-                    continue;
-
-                yield return new NetworkStats(
-                    Name: nic.Name,
-                    BytesReceived: stats.BytesReceived,
-                    BytesSent: stats.BytesSent,
-                    IsActive: true
-                );
-            }
+            yield return new NetworkStats(
+                Name: nic.Name,
+                BytesReceived: stats.BytesReceived,
+                BytesSent: stats.BytesSent,
+                IsActive: true
+            );
         }
     }
 }

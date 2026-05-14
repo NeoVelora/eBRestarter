@@ -42,7 +42,7 @@ namespace eBRestarter.Tests.Infrastructure.Services
                 .Setup(r => r.ExecuteGetAsync(It.Is<ApiRequest>(req => req.Url == ApiWebLinks.IpLink)))
                 .ReturnsAsync(new ApiResponse { IsSuccess = true, Content = json });
 
-            var result = await _sut.GetIpInfoAsync();
+            var result = await _sut.RetrieveIpInfoAsync();
 
             result.ShouldNotBeNull();
             result.IpAddress.ShouldBe("192.168.1.1");
@@ -58,13 +58,13 @@ namespace eBRestarter.Tests.Infrastructure.Services
                 .Setup(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()))
                 .ReturnsAsync(new ApiResponse { IsSuccess = false });
 
-            var resultFail = await _sut.GetIpInfoAsync();
+            var resultFail = await _sut.RetrieveIpInfoAsync();
 
             _mockRestClient
                 .Setup(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()))
                 .ReturnsAsync(new ApiResponse { IsSuccess = true, Content = "Kein { gueltiges ] JSON" });
 
-            var resultInvalid = await _sut.GetIpInfoAsync();
+            var resultInvalid = await _sut.RetrieveIpInfoAsync();
 
             resultFail.ShouldBeNull();
             resultInvalid.ShouldBeNull();
@@ -76,7 +76,7 @@ namespace eBRestarter.Tests.Infrastructure.Services
             var emptyConfig = new AppConfig();
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(emptyConfig);
 
-            var result = await _sut.GetEarningsAsync();
+            var result = await _sut.RetrieveEarningsAsync();
 
             result.ShouldBeNull();
             _mockRestClient.Verify(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()), Times.Never);
@@ -108,7 +108,7 @@ namespace eBRestarter.Tests.Infrastructure.Services
                     return new ApiResponse { IsSuccess = true, Content = historicalJson };
                 });
 
-            var result = await _sut.GetEarningsAsync();
+            var result = await _sut.RetrieveEarningsAsync();
 
             result.ShouldNotBeNull();
             result.HourlyEarnings[0].ShouldBe(10.5);
@@ -143,7 +143,7 @@ namespace eBRestarter.Tests.Infrastructure.Services
                     return new ApiResponse { IsSuccess = true, Content = "[]" };
                 });
 
-            var result = await _sut.GetEarningsAsync();
+            var result = await _sut.RetrieveEarningsAsync();
 
             result.ShouldNotBeNull();
             result.HourlyEarnings[0].ShouldBe(15.0);

@@ -12,15 +12,15 @@ public class EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger)
     public override string DisplayName => "Edge";
     public override string IconPath => "ms-appx:///Resources/Visuals/Icons/Intersection/fa_edge.png";
     public override string DownloadUrl => WebLinks.EdgeDownloadLinkDE;
+    public override string ExtensionInstallUrl => WebLinks.EdgeEVisitorAddOnLink;
 
     public override BrowserType Type => BrowserType.Edge;
 
-    protected override string ProcessName => "msedge";
+    public override string ProcessName => "msedge";
 
     protected override string RegistryKeyVersion => @"Software\Microsoft\Edge\BLBeacon";
     protected override string ExtensionId => "kjhejmaladginnedpoppohfnkionnghi";
 
-    public override string ExtensionInstallUrl => WebLinks.EdgeEVisitorAddOnLink;
 
     protected override string ExeFileName => "msedge.exe";
 
@@ -30,9 +30,9 @@ public class EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger)
 
     protected override string ProgramFilesSubPath => @"Microsoft\Edge\Application";
 
-    public override BrowserPaths GetPaths()
+    public override BrowserPaths ResolvePaths()
     {
-        var localAppData = _os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData");
+        var localAppData = _os.WindowsFileSystemService.ResolveEnvironmentPath("LocalAppData");
 
         var userDataRoot = _os.WindowsFileSystemService.CombinePaths(localAppData, "Microsoft", "Edge", "User Data");
 
@@ -76,3 +76,5 @@ public class EdgeBrowser(IOperatingSystemFacade os, ILogger<EdgeBrowser> logger)
     }
 
 }
+
+

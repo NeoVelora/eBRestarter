@@ -2,6 +2,7 @@ using eBRestarter.Core.Application.Interfaces.OperatingSystem;
 using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Browsers.Abstract;
+
 public abstract class ChromiumBrowserBase(IOperatingSystemFacade os, ILogger logger) : BrowserBase(os, logger)
 {
 
@@ -11,13 +12,44 @@ public abstract class ChromiumBrowserBase(IOperatingSystemFacade os, ILogger log
     protected abstract string ProgramFilesSubPath { get; }
 
     protected abstract string ExtensionId { get; }
+
+    protected override List<string> ExecutablePaths
+    {
+        get
+        {
+            var paths = new List<string>();
+
+            var appPathKey = $@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{ExeFileName}";
+            var appPath = _os.WindowsRegistryService.RetrieveLocalMachineValue(appPathKey, "")?.ToString();
+
+            if (!string.IsNullOrEmpty(appPath)) { paths.Add(appPath); }
+
+            var clientKey = $@"SOFTWARE\Clients\StartMenuInternet\{BrowserRegistryName}\shell\open\command";
+            var clientPath = _os.WindowsRegistryService.RetrieveLocalMachineValue(clientKey, "")?.ToString();
+
+            if (!string.IsNullOrEmpty(clientPath)) { paths.Add(clientPath.Replace("\"", "").Trim()); }
+
+            AddPathFromUninstallKey(paths, $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, true);
+            AddPathFromUninstallKey(paths, $@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, true);
+            AddPathFromUninstallKey(paths, $@"Software\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, false);
+
+            var pathPart = _os.WindowsFileSystemService.CombinePaths(ProgramFilesSubPath, ExeFileName);
+
+            paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.ResolveEnvironmentPath("ProgramFiles"), pathPart));
+            paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.ResolveEnvironmentPath("ProgramFiles(x86)"), pathPart));
+            paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.ResolveEnvironmentPath("LocalAppData"), pathPart));
+
+            return [.. paths.Distinct()];
+        }
+    }
+
     public override bool IsExtensionInstalled(string? extensionId = null)
     {
         var idToCheck = string.IsNullOrEmpty(extensionId) ? ExtensionId : extensionId;
 
         if (string.IsNullOrEmpty(idToCheck)) return false;
 
-        var paths = GetPaths();
+        var paths = ResolvePaths();
 
         if (paths.ExtensionsDirs == null || paths.ExtensionsDirs.Count == 0) return false;
 
@@ -41,34 +73,6 @@ public abstract class ChromiumBrowserBase(IOperatingSystemFacade os, ILogger log
 
         return false;
     }
-
-    protected override List<string> ExecutablePaths
-    {
-        get
-        {
-            var paths = new List<string>();
-
-            var appPathKey = $@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\{ExeFileName}";
-            var appPath = _os.WindowsRegistryService.GetLocalMachineValue(appPathKey, "")?.ToString();
-
-            if (!string.IsNullOrEmpty(appPath)) { paths.Add(appPath); }
-
-            var clientKey = $@"SOFTWARE\Clients\StartMenuInternet\{BrowserRegistryName}\shell\open\command";
-            var clientPath = _os.WindowsRegistryService.GetLocalMachineValue(clientKey, "")?.ToString();
-
-            if (!string.IsNullOrEmpty(clientPath)) { paths.Add(clientPath.Replace("\"", "").Trim()); }
-
-            AddPathFromUninstallKey(paths, $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, true);
-            AddPathFromUninstallKey(paths, $@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, true);
-            AddPathFromUninstallKey(paths, $@"Software\Microsoft\Windows\CurrentVersion\Uninstall\{UninstallSubKey}", ExeFileName, false);
-
-            var pathPart = _os.WindowsFileSystemService.CombinePaths(ProgramFilesSubPath, ExeFileName);
-
-            paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles"), pathPart));
-            paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("ProgramFiles(x86)"), pathPart));
-            paths.Add(_os.WindowsFileSystemService.CombinePaths(_os.WindowsFileSystemService.GetEnvironmentPath("LocalAppData"), pathPart));
-
-            return [.. paths.Distinct()];
-        }
-    }
 }
+
+

@@ -1,14 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Extensions;
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Core.Application.Interfaces.Browser;
 using eBRestarter.Core.Application.Interfaces.Config;
 using eBRestarter.Core.Application.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.Enums;
-using eBRestarter.Core.Application.Extensions;
 using eBRestarter.Core.Application.Models;
-using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
@@ -86,8 +85,8 @@ public partial class ViewModelBrowserItem : ObservableObject
 
 
     public string DownloadButtonContent => IsDownloadActive
-        ? _localizationService.GetString("General_Cancel")
-        : _localizationService.GetString("General_Download");
+        ? _localizationService.RetrieveString("General_Cancel")
+        : _localizationService.RetrieveString("General_Download");
 
     public string DownloadButtonStyleKey => IsDownloadActive
         ? DownloadBrowserToggleButtonRedStyleKey
@@ -184,15 +183,15 @@ public partial class ViewModelBrowserItem : ObservableObject
         ArgumentException.ThrowIfNullOrWhiteSpace(installerFilePath);
 
         bool installNow = await _dialogService.ShowYesNoDialogAsync(
-            _localizationService.GetString("Install_DialogTitle"),
-            _localizationService.GetString("Install_DialogQuestion"));
+            _localizationService.RetrieveString("Install_DialogTitle"),
+            _localizationService.RetrieveString("Install_DialogQuestion"));
 
         if (installNow)
         {
             await _operatingSystemFacade.WindowsProcessControlService.StartExecutableAsync(installerFilePath);
             await _dialogService.ShowMessageAsync(
-                _localizationService.GetString("Install_FinishedTitle"),
-                _localizationService.GetString("Install_FinishedMessage"));
+                _localizationService.RetrieveString("Install_FinishedTitle"),
+                _localizationService.RetrieveString("Install_FinishedMessage"));
         }
     }
 
@@ -233,7 +232,7 @@ public partial class ViewModelBrowserItem : ObservableObject
     {
         if (_browserInfo.IsInstalled && !IsDownloading)
         {
-            string versionDisplayPrefix = _localizationService.GetString("Browser_VersionPrefix");
+            string versionDisplayPrefix = _localizationService.RetrieveString("Browser_VersionPrefix");
             BrowserVersionText = $"{versionDisplayPrefix} {_browserInfo.Version}";
         }
         else if (IsDownloading)
@@ -242,7 +241,7 @@ public partial class ViewModelBrowserItem : ObservableObject
         }
         else
         {
-            BrowserVersionText = _localizationService.GetString("Browser_NotInstalled");
+            BrowserVersionText = _localizationService.RetrieveString("Browser_NotInstalled");
         }
     }
 
@@ -275,7 +274,7 @@ public partial class ViewModelBrowserItem : ObservableObject
         RefreshBrowserVersionText();
 
         var fileName = $"{_browserInfo.Name}{BrowserInstallerFileNameSuffix}";
-        var userProfile = _operatingSystemFacade.WindowsFileSystemService.GetEnvironmentPath(UserProfileEnvironmentVariableName);
+        var userProfile = _operatingSystemFacade.WindowsFileSystemService.ResolveEnvironmentPath(UserProfileEnvironmentVariableName);
         var downloadPath = _operatingSystemFacade.WindowsFileSystemService.CombinePaths(userProfile, UserDownloadsFolderName, fileName);
 
         var progressHandler = new Progress<DownloadProgressStatus>(downloadProgressStatus =>

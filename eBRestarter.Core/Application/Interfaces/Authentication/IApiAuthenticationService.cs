@@ -1,6 +1,8 @@
 namespace eBRestarter.Core.Application.Interfaces.Authentication;
 
+public record VerificationResult(bool IsValid, string Message);
+
 public interface IApiAuthenticationService
 {
-    Task<(bool IsValid, string Message)> VerifyCredentialsAsync(string username, string apiKey);
+    Task<VerificationResult> VerifyCredentialsAsync(string username, string apiKey);
 }

@@ -19,7 +19,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             string localAppData = @"C:\Users\Test\AppData\Local";
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("LocalAppData")).Returns(localAppData);
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(localAppData);
 
             mockFileSystem
                 .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
@@ -49,7 +49,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockLogger = new Mock<ILogger<ChromeBrowser>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath(It.IsAny<string>())).Returns(@"C:\FakeAppData");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath(It.IsAny<string>())).Returns(@"C:\FakeAppData");
 
             mockFileSystem.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns(false);
 

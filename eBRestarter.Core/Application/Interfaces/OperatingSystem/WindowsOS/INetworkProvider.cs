@@ -1,10 +1,9 @@
 using System.Net.NetworkInformation;
 
-namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS
+namespace eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+
+public interface INetworkProvider
 {
-    public interface INetworkProvider
-    {
-        bool GetIsNetworkAvailable();
-        NetworkInterface[] GetAllNetworkInterfaces();
-    }
+    bool CheckIsNetworkAvailable();
+    NetworkInterface[] RetrieveAllNetworkInterfaces();
 }

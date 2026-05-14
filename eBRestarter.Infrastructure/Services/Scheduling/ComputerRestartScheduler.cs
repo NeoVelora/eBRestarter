@@ -12,6 +12,7 @@ public partial class ComputerRestartScheduler(
     TimeProvider timeProvider,
     ILogger<ComputerRestartScheduler> logger) : IComputerRestartScheduler, IDisposable
 {
+    private bool _disposed;
     private readonly IEVisitorConfigService _configService = configService;
     private readonly IWindowsProcessControlService _processService = processService;
     private readonly IApplicationLifetime _applicationLifetime = applicationLifetime;
@@ -26,7 +27,7 @@ public partial class ComputerRestartScheduler(
 
     public void StartScheduler()
     {
-        if (_backgroundTask != null) return;
+        if (_backgroundTask is not null) return;
 
         _logger.LogInformation("Computer Restart Scheduler gestartet.");
 
@@ -39,14 +40,14 @@ public partial class ComputerRestartScheduler(
 
     public async Task StopSchedulerAsync()
     {
-        if (_cts != null)
+        if (_cts is not null)
         {
             await _cts.CancelAsync();
             _cts.Dispose();
             _cts = null;
         }
 
-        if (_backgroundTask != null)
+        if (_backgroundTask is not null)
         {
             try
             {
@@ -58,6 +59,27 @@ public partial class ComputerRestartScheduler(
         }
 
         _logger.LogInformation("Computer Restart Scheduler gestoppt.");
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _timer?.Dispose();
+                _cts?.Dispose();
+            }
+
+            _disposed = true;
+        }
     }
 
     private async Task LoopAsync(CancellationToken token)
@@ -82,7 +104,7 @@ public partial class ComputerRestartScheduler(
     {
         var config = _configService.LoadConfig();
 
-        if (config.Computer.NextRestartDate == null || config.Computer.ComputerRestartIntervalDays <= 0)
+        if (config.Computer.NextRestartDate is null || config.Computer.ComputerRestartIntervalDays <= 0)
         {
             return;
         }
@@ -146,25 +168,4 @@ public partial class ComputerRestartScheduler(
         }
     }
 
-    private bool _disposed;
-    public void Dispose()
-    {
-        Dispose(true);
-
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                _timer?.Dispose();
-                _cts?.Dispose();
-            }
-
-            _disposed = true;
-        }
-    }
 }

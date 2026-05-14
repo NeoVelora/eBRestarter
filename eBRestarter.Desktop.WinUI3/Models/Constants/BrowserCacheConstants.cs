@@ -6,7 +6,7 @@ public static class BrowserCacheConstants
 {
     public static readonly ReadOnlyCollection<BrowserCacheDeleteOption> Options = new(
     [
-        new("Cache und Cookies nicht löschen", 0),
+            new("Cache und Cookies nicht löschen", 0),
             new("Cache und Cookies jeden Tag löschen", 1),
             new("Cache und Cookies alle 3 Tage löschen", 3),
             new("Cache und Cookies alle 7 Tage löschen", 7),

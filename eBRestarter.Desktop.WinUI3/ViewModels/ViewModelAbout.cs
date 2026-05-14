@@ -26,14 +26,14 @@ public partial class ViewModelAbout : ObservableObject
         _appInfoService = appInfoService;
         _localizationService = localizationService;
         _iconCreditService = iconCreditService;
-        AppVersion = _localizationService.GetString("About_Loading");
+        AppVersion = _localizationService.RetrieveString("About_Loading");
         LoadVersionAndIconCredits();
     }
 
     private void LoadVersionAndIconCredits()
     {
-        string prefix = _localizationService.GetString("About_VersionPrefix");
-        AppVersion = $"{prefix} {_appInfoService.GetAppVersion()}";
+        string prefix = _localizationService.RetrieveString("About_VersionPrefix");
+        AppVersion = $"{prefix} {_appInfoService.RetrieveAppVersion()}";
         var credits = _iconCreditService.GetIconCredits();
         IconCredits.Clear();
         foreach (var iconCredit in credits)

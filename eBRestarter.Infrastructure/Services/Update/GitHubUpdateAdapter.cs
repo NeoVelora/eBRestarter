@@ -1,4 +1,3 @@
-using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
 using eBRestarter.Core.Application.Interfaces.RestClient;
 using eBRestarter.Core.Application.Interfaces.Update;
 using eBRestarter.Core.Application.Models.Api;
@@ -14,13 +13,13 @@ public class GitHubUpdateAdapter(
     IRestClientService restClient,
     ILogger<GitHubUpdateAdapter> logger) : IUpdateService
 {
-    private readonly IRestClientService _restClient = restClient;
-    private readonly ILogger<GitHubUpdateAdapter> _logger = logger;
-
     private const string RepoOwner = "DamonHelheim";
     private const string RepoName = "eBRestarter";
 
     private const string GitHubApiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest";
+
+    private readonly IRestClientService _restClient = restClient;
+    private readonly ILogger<GitHubUpdateAdapter> _logger = logger;
 
     public async Task<UpdateInfo> CheckForUpdateAsync()
     {
@@ -47,14 +46,14 @@ public class GitHubUpdateAdapter(
             var root = doc.RootElement;
 
             string tagName = root.GetProperty("tag_name").GetString() ?? "0.0.0";
-            string cleanVersion = tagName.TrimStart('v');
+            var cleanVersion = tagName.TrimStart('v');
 
             if (!Version.TryParse(cleanVersion, out Version? latestVersion))
             {
                 return new UpdateInfo { IsUpdateAvailable = false, CurrentVersion = currentVersion.ToString() };
             }
 
-            string downloadUrl = string.Empty;
+            var downloadUrl = string.Empty;
 
             if (root.TryGetProperty("assets", out JsonElement assets) && assets.ValueKind == JsonValueKind.Array)
             {
@@ -103,7 +102,7 @@ public class GitHubUpdateAdapter(
 
         try
         {
-            string tempFile = Path.Combine(Path.GetTempPath(), $"eBRestarter_Update_{updateInfo.LatestVersion}.exe");
+            var tempFile = Path.Combine(Path.GetTempPath(), $"eBRestarter_Update_{updateInfo.LatestVersion}.exe");
 
 
             using (var httpClient = new HttpClient())

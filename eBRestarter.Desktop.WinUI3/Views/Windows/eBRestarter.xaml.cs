@@ -1,7 +1,6 @@
 using eBRestarter.Core.Application.Interfaces;
 using eBRestarter.Desktop.WinUI3.Helpers;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
-using eBRestarter.Desktop.WinUI3.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -53,7 +52,7 @@ namespace eBRestarter.Desktop.WinUI3
                 presenter.Maximize();
             }
 
-            TxbVersion.Text = "v" + _iAppVersionInfoService?.GetAppVersion();
+            TxbVersion.Text = "v" + _iAppVersionInfoService?.RetrieveAppVersion();
 
 
         }
@@ -75,7 +74,6 @@ namespace eBRestarter.Desktop.WinUI3
         {
             ArgumentNullException.ThrowIfNull(sender);
             ArgumentNullException.ThrowIfNull(args);
-
 
             if (args.InvokedItemContainer is NavigationViewItem nvi
                 && nvi.Tag is string tag)

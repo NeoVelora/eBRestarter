@@ -5,11 +5,11 @@ namespace eBRestarter.Infrastructure.Services;
 
 public class WindowsAppVersionInfoService : IAppVersionInfoService
 {
-    public string GetAppVersion()
+    public string RetrieveAppVersion()
     {
         var assemblyVersion = Assembly.GetEntryAssembly()?.GetName().Version;
 
-        if (assemblyVersion != null)
+        if (assemblyVersion is not null)
         {
             return $"{assemblyVersion.Major}.{assemblyVersion.Minor}.{assemblyVersion.Build}.{assemblyVersion.Revision}";
         }

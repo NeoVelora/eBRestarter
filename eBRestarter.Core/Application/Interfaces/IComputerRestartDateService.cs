@@ -2,5 +2,5 @@ namespace eBRestarter.Core.Application.Interfaces;
 
 public interface IComputerRestartDateService
 {
-    DateTime GetNextRestartDate(int intervalDays, int restartClockTime);
+    DateTime RetrieveNextRestartDate(int intervalDays, int restartClockTime);
 }

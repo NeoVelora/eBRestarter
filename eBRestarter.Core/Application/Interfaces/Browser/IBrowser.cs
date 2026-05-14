@@ -10,15 +10,15 @@ public interface IBrowser
     string DownloadUrl { get; }
 
     BrowserType Type { get; }
+    string ProcessName { get; }
     string BrowserVersion { get; }
     bool IsInstalled { get; }
+    string ExtensionInstallUrl { get; }
+
     void Start(string url, string arguments = "");
     void Close();
 
-    BrowserPaths GetPaths();
+    BrowserPaths ResolvePaths();
 
-    bool IsExtensionInstalled(string extensionId);
-    string ExtensionInstallUrl { get; }
-
-
+    bool IsExtensionInstalled(string? extensionId = null);
 }

@@ -28,48 +28,24 @@ public class FileDeletionService : IFileDeletionService
     {
         await Task.Run(() =>
         {
-            int deletedCount = 0;
-            const int reportInterval = 10;
-            int updateCounter = 0;
+            var context = new DeletionContext
+            {
+                DeletedCount = 0,
+                UpdateCounter = 0,
+                ReportInterval = 10,
+                StatusReporter = statusReporter,
+                ValueReporter = valueReporter,
+                Token = token
+            };
 
             foreach (var dir in directories)
             {
-                if (!Directory.Exists(dir)) continue;
-
-                string[] files;
-
-                try { files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories); }
-
-                catch { continue; }
-
-                foreach (var file in files)
-                {
-                    if (token.IsCancellationRequested) return;
-
-                    try
-                    {
-                        if (file.Contains("moz-extension")) continue;
-
-                        File.Delete(file);
-                        deletedCount++;
-                        updateCounter++;
-                        if (updateCounter >= reportInterval)
-                        {
-                            statusReporter.Report($"Lösche: {Path.GetFileName(file)}");
-                            valueReporter.Report(deletedCount);
-                            updateCounter = 0;
-                        }
-                    }
-                    catch { }
-                }
-
                 if (token.IsCancellationRequested) return;
-
-                try { Directory.Delete(dir, false); } catch { }
+                ProcessDirectory(dir, context);
             }
 
             statusReporter.Report("Abschließe Bereinigung...");
-            valueReporter.Report(deletedCount);
+            valueReporter.Report(context.DeletedCount);
 
         }, token);
     }
@@ -81,5 +57,56 @@ public class FileDeletionService : IFileDeletionService
             try { File.Delete(filePath); } catch { }
         }
     }
+
+    private static void ProcessDirectory(string dir, DeletionContext context)
+    {
+        if (!Directory.Exists(dir)) return;
+
+        string[] files;
+
+        try { files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories); }
+        catch { return; }
+
+        foreach (var file in files)
+        {
+            if (context.Token.IsCancellationRequested) return;
+            ProcessFile(file, context);
+        }
+
+        if (context.Token.IsCancellationRequested) return;
+
+        try { Directory.Delete(dir, false); } catch { }
+    }
+
+    private static void ProcessFile(string file, DeletionContext context)
+    {
+        try
+        {
+            if (file.Contains("moz-extension")) return;
+
+            File.Delete(file);
+            context.DeletedCount++;
+            context.UpdateCounter++;
+
+            if (context.UpdateCounter >= context.ReportInterval)
+            {
+                context.StatusReporter.Report($"Lösche: {Path.GetFileName(file)}");
+                context.ValueReporter.Report(context.DeletedCount);
+                context.UpdateCounter = 0;
+            }
+        }
+        catch { }
+    }
+
+    private sealed class DeletionContext
+    {
+        public int DeletedCount { get; set; }
+        public int UpdateCounter { get; set; }
+        public int ReportInterval { get; set; }
+        public IProgress<string> StatusReporter { get; set; } = null!;
+        public IProgress<int> ValueReporter { get; set; } = null!;
+        public CancellationToken Token { get; set; }
+    }
+
 }
 

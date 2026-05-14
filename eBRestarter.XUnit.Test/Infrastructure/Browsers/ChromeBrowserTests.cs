@@ -17,7 +17,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockLogger = new Mock<ILogger<ChromeBrowser>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
-            mockFileSystem.Setup(fs => fs.GetEnvironmentPath("LocalAppData")).Returns(@"C:\Users\Test\AppData\Local");
+            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Users\Test\AppData\Local");
 
             mockFileSystem
                 .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
@@ -29,7 +29,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
             var chromeBrowser = new ChromeBrowser(mockOs.Object, mockLogger.Object);
 
-            var paths = chromeBrowser.GetPaths();
+            var paths = chromeBrowser.ResolvePaths();
 
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Cache\Cache_Data");
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Service Worker");

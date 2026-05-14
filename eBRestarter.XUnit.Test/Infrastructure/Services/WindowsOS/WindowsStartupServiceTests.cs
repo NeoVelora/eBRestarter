@@ -78,7 +78,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             }
             fakeRegistryEntries.Add("SomeOtherApp", @"C:\Other\app.exe");
 
-            _mockRegistry.Setup(r => r.GetCurrentUserValues(RegistryPathRun)).Returns(fakeRegistryEntries);
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValues(RegistryPathRun)).Returns(fakeRegistryEntries);
 
             bool result = await _sut.IsAutoStartEnabledAsync();
 
@@ -107,7 +107,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [InlineData("InvalidString", true)]
         public void IsEdgeStartupBoostEnabled_ShouldReturnExpectedResult(object? registryValue, bool expectedResult)
         {
-            _mockRegistry.Setup(r => r.GetLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled"))
+            _mockRegistry.Setup(r => r.RetrieveLocalMachineValue(RegistryPathEdgePolicies, "StartupBoostEnabled"))
                          .Returns(registryValue);
 
             bool result = _sut.IsEdgeStartupBoostEnabled();

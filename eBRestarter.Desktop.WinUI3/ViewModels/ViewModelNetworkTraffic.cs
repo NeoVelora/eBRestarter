@@ -80,9 +80,9 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
             return;
         }
 
-        string adapterNamePrefix = _localizationService.GetString("Network_CardPrefix");
-        string receivedPrefix = _localizationService.GetString("Network_Received");
-        string sentPrefix = _localizationService.GetString("Network_Sent");
+        string adapterNamePrefix = _localizationService.RetrieveString("Network_CardPrefix");
+        string receivedPrefix = _localizationService.RetrieveString("Network_Received");
+        string sentPrefix = _localizationService.RetrieveString("Network_Sent");
 
         var activeIds = stats.Select(networkStat => $"{adapterNamePrefix}: {networkStat.Name}").ToList();
 
@@ -136,7 +136,7 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
             isAvailable = _networkService.IsNetworkAvailable();
 
             if (isAvailable)
-                currentStats = [.. _networkService.GetActiveInterfaces()];
+                currentStats = [.. _networkService.RetrieveActiveInterfaces()];
         }
         catch (Exception ex)
         {
@@ -149,10 +149,10 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
 
     private void ShowOfflineState()
     {
-        string adapterNamePrefix = _localizationService.GetString("Network_CardPrefix");
-        string notAvailableLabel = _localizationService.GetString("Network_NotAvailable");
-        string receivedPrefix = _localizationService.GetString("Network_Received");
-        string sentPrefix = _localizationService.GetString("Network_Sent");
+        string adapterNamePrefix = _localizationService.RetrieveString("Network_CardPrefix");
+        string notAvailableLabel = _localizationService.RetrieveString("Network_NotAvailable");
+        string receivedPrefix = _localizationService.RetrieveString("Network_Received");
+        string sentPrefix = _localizationService.RetrieveString("Network_Sent");
 
         string fullName = $"{adapterNamePrefix}: {notAvailableLabel}";
 

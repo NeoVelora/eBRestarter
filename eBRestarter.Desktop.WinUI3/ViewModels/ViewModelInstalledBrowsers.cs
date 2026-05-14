@@ -77,7 +77,7 @@ public partial class ViewModelInstalledBrowsers : ObservableObject, IDisposable
 
     public async Task LoadBrowsersSmartAsync()
     {
-        var freshBrowserInfos = await _browserService.GetInstalledBrowsersAsync();
+        var freshBrowserInfos = await _browserService.FindInstalledBrowsersAsync();
 
         foreach (var installedBrowserInfo in freshBrowserInfos)
         {

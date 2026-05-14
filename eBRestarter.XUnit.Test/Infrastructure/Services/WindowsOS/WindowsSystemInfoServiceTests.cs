@@ -29,10 +29,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentOsDisplayVersion_ShouldReturnVersion_WhenRegistryKeyExists()
         {
-            _mockRegistry.Setup(r => r.GetLocalMachineValue(RegistryPathCurrentVersion, "DisplayVersion"))
+            _mockRegistry.Setup(r => r.RetrieveLocalMachineValue(RegistryPathCurrentVersion, "DisplayVersion"))
                          .Returns("22H2");
 
-            var result = _sut.GetCurrentOsDisplayVersion();
+            var result = _sut.RetrieveCurrentOsDisplayVersion();
 
             result.ShouldBe("22H2");
         }
@@ -43,10 +43,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [InlineData("   ")]
         public void GetCurrentOsDisplayVersion_ShouldReturnUnknown_WhenKeyIsMissingOrEmpty(object? invalidValue)
         {
-            _mockRegistry.Setup(r => r.GetLocalMachineValue(RegistryPathCurrentVersion, "DisplayVersion"))
+            _mockRegistry.Setup(r => r.RetrieveLocalMachineValue(RegistryPathCurrentVersion, "DisplayVersion"))
                          .Returns(invalidValue);
 
-            var result = _sut.GetCurrentOsDisplayVersion();
+            var result = _sut.RetrieveCurrentOsDisplayVersion();
 
             result.ShouldBe("Unknown");
         }
@@ -54,10 +54,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentOsDisplayVersion_ShouldReturnError_OnException()
         {
-            _mockRegistry.Setup(r => r.GetLocalMachineValue(It.IsAny<string>(), It.IsAny<string>()))
+            _mockRegistry.Setup(r => r.RetrieveLocalMachineValue(It.IsAny<string>(), It.IsAny<string>()))
                          .Throws(new UnauthorizedAccessException("No rights"));
 
-            var result = _sut.GetCurrentOsDisplayVersion();
+            var result = _sut.RetrieveCurrentOsDisplayVersion();
 
             result.ShouldBe("Error");
         }
@@ -65,12 +65,12 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentOsBuildVersion_ShouldCombineEnvironmentBuild_WithUbrFromRegistry()
         {
-            _mockRegistry.Setup(r => r.GetLocalMachineValue(RegistryPathCurrentVersion, "UBR"))
+            _mockRegistry.Setup(r => r.RetrieveLocalMachineValue(RegistryPathCurrentVersion, "UBR"))
                          .Returns(1234);
 
             string expectedBuild = $"{Environment.OSVersion.Version.Build}.1234";
 
-            var result = _sut.GetCurrentOsBuildVersion();
+            var result = _sut.RetrieveCurrentOsBuildVersion();
 
             result.ShouldBe(expectedBuild);
         }
@@ -78,12 +78,12 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentOsBuildVersion_ShouldDefaultToZero_WhenUbrIsMissing()
         {
-            _mockRegistry.Setup(r => r.GetLocalMachineValue(RegistryPathCurrentVersion, "UBR"))
+            _mockRegistry.Setup(r => r.RetrieveLocalMachineValue(RegistryPathCurrentVersion, "UBR"))
                          .Returns(null);
 
             string expectedBuild = $"{Environment.OSVersion.Version.Build}.0";
 
-            var result = _sut.GetCurrentOsBuildVersion();
+            var result = _sut.RetrieveCurrentOsBuildVersion();
 
             result.ShouldBe(expectedBuild);
         }
@@ -91,10 +91,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentOsBuildVersion_ShouldReturnError_OnException()
         {
-            _mockRegistry.Setup(r => r.GetLocalMachineValue(It.IsAny<string>(), It.IsAny<string>()))
+            _mockRegistry.Setup(r => r.RetrieveLocalMachineValue(It.IsAny<string>(), It.IsAny<string>()))
                          .Throws(new Exception("Registry defekt"));
 
-            var result = _sut.GetCurrentOsBuildVersion();
+            var result = _sut.RetrieveCurrentOsBuildVersion();
 
             result.ShouldBe("Error");
         }
@@ -108,10 +108,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [InlineData("UnbekannterBrowserXYZ", "-")]
         public void GetCurrentStandardBrowserName_ShouldMapProgIdCorrectly(string progId, string expectedBrowserName)
         {
-            _mockRegistry.Setup(r => r.GetCurrentUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns(progId);
-            _mockRegistry.Setup(r => r.GetCurrentUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns(progId);
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns(progId);
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns(progId);
 
-            var result = _sut.GetCurrentStandardBrowserName();
+            var result = _sut.RetrieveCurrentStandardBrowserName();
 
             result.ShouldBe(expectedBrowserName);
         }
@@ -119,10 +119,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentStandardBrowserName_ShouldHandleMismatch_BetweenHttpAndHttps()
         {
-            _mockRegistry.Setup(r => r.GetCurrentUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns("ChromeHTML");
-            _mockRegistry.Setup(r => r.GetCurrentUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns("FirefoxURL");
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns("ChromeHTML");
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns("FirefoxURL");
 
-            var result = _sut.GetCurrentStandardBrowserName();
+            var result = _sut.RetrieveCurrentStandardBrowserName();
 
             result.ShouldBe("Chrome");
         }
@@ -133,10 +133,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [InlineData(null, null)]
         public void GetCurrentStandardBrowserName_ShouldReturnDash_WhenAnyProgIdIsMissing(string? httpProgId, string? httpsProgId)
         {
-            _mockRegistry.Setup(r => r.GetCurrentUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns(httpProgId);
-            _mockRegistry.Setup(r => r.GetCurrentUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns(httpsProgId);
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns(httpProgId);
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns(httpsProgId);
 
-            var result = _sut.GetCurrentStandardBrowserName();
+            var result = _sut.RetrieveCurrentStandardBrowserName();
 
             result.ShouldBe("-");
         }
@@ -144,10 +144,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [Fact]
         public void GetCurrentStandardBrowserName_ShouldReturnDash_OnException()
         {
-            _mockRegistry.Setup(r => r.GetCurrentUserValue(It.IsAny<string>(), It.IsAny<string>()))
+            _mockRegistry.Setup(r => r.RetrieveCurrentUserValue(It.IsAny<string>(), It.IsAny<string>()))
                          .Throws(new UnauthorizedAccessException("No rights for HKCU"));
 
-            var result = _sut.GetCurrentStandardBrowserName();
+            var result = _sut.RetrieveCurrentStandardBrowserName();
 
             result.ShouldBe("-");
         }

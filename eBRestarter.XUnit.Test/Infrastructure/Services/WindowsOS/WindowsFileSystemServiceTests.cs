@@ -55,16 +55,16 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [InlineData("programfiles")]
         public void GetEnvironmentPath_ShouldReturnValidPath_ForKnownVariables(string variable)
         {
-            string result = _sut.GetEnvironmentPath(variable);
+            string result = _sut.ResolveEnvironmentPath(variable);
 
             result.ShouldNotBeNullOrWhiteSpace();
-            Path.IsPathRooted(result).ShouldBeTrue("Der zurückgegebene Pfad muss ein absoluter Systempfad sein.");
+            Path.IsPathRooted(result).ShouldBeTrue("Der zur�ckgegebene Pfad muss ein absoluter Systempfad sein.");
         }
 
         [Fact]
         public void GetEnvironmentPath_ShouldReturnEmptyString_ForUnknownVariables()
         {
-            string result = _sut.GetEnvironmentPath("GibtsNicht_12345");
+            string result = _sut.ResolveEnvironmentPath("GibtsNicht_12345");
 
             result.ShouldBeEmpty();
         }

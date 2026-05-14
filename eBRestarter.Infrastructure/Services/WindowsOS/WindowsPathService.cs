@@ -11,24 +11,24 @@ public class WindowsPathService(IPathProvider pathProvider) : IPathService
     private const string AppFolderName = "eBRestarter";
     private const string ConfigFileName = "eBRestarterConfig.json";
 
-    public string GetAppDataPath()
+    public string RetrieveAppDataPath()
     {
-        string localAppData = _pathProvider.GetLocalAppDataDirectory();
+        string localAppData = _pathProvider.RetrieveLocalAppDataDirectory();
         return Path.Combine(localAppData, "Skylar", AppFolderName);
     }
 
-    public string GetDownloadsPath()
+    public string RetrieveDownloadsPath()
     {
-        return Path.Combine(_pathProvider.GetUserProfileDirectory(), "Downloads");
+        return Path.Combine(_pathProvider.RetrieveUserProfileDirectory(), "Downloads");
     }
 
-    public string GetConfigFilePath()
+    public string RetrieveConfigFilePath()
     {
-        return Path.Combine(GetAppDataPath(), ConfigFileName);
+        return Path.Combine(RetrieveAppDataPath(), ConfigFileName);
     }
 
-    public string GetLogFilePath()
+    public string RetrieveLogFilePath()
     {
-        return Path.Combine(GetAppDataPath(), "log.txt");
+        return Path.Combine(RetrieveAppDataPath(), "log.txt");
     }
 }

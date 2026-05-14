@@ -28,7 +28,7 @@ public class WindowsRegistryService : IWindowsRegistryService
         key.SetValue(name, value, kind);
     }
 
-    public Dictionary<string, object> GetCurrentUserValues(string subKey)
+    public Dictionary<string, object> RetrieveCurrentUserValues(string subKey)
     {
         var result = new Dictionary<string, object>();
 
@@ -45,14 +45,14 @@ public class WindowsRegistryService : IWindowsRegistryService
         return result;
     }
 
-    public object? GetCurrentUserValue(string subKey, string valueName)
+    public object? RetrieveCurrentUserValue(string subKey, string valueName)
     {
         using var key = Registry.CurrentUser.OpenSubKey(subKey, false);
 
         return key?.GetValue(valueName);
     }
 
-    public object? GetLocalMachineValue(string subKey, string valueName)
+    public object? RetrieveLocalMachineValue(string subKey, string valueName)
     {
         using var key = Registry.LocalMachine.OpenSubKey(subKey, false);
 

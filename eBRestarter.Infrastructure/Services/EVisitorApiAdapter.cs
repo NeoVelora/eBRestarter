@@ -19,7 +19,7 @@ public class EVisitorApiAdapter(
     private readonly IEVisitorConfigService _configService = configService;
     private readonly ILogger<EVisitorApiAdapter> _logger = logger;
 
-    public async Task<IpInfoData?> GetIpInfoAsync()
+    public async Task<IpInfoData?> RetrieveIpInfoAsync()
     {
         var request = new ApiRequest
         {
@@ -38,10 +38,10 @@ public class EVisitorApiAdapter(
             var root = doc.RootElement;
 
             return new IpInfoData(
-                IpAddress: GetStringSafe(root, "ip"),
-                Hostname: GetStringSafe(root, "host"),
-                CountryCode: GetStringSafe(root, "countryCode"),
-                CountryName: GetStringSafe(root, "countryName")
+                IpAddress: RetrieveStringSafe(root, "ip"),
+                Hostname: RetrieveStringSafe(root, "host"),
+                CountryCode: RetrieveStringSafe(root, "countryCode"),
+                CountryName: RetrieveStringSafe(root, "countryName")
             );
         }
         catch (Exception ex)
@@ -51,12 +51,12 @@ public class EVisitorApiAdapter(
         }
     }
 
-    public async Task<EarningsData?> GetEarningsAsync()
+    public async Task<EarningsData?> RetrieveEarningsAsync()
     {
         var config = _configService.LoadConfig();
 
-        if (string.IsNullOrWhiteSpace(config.Settings.ApiUsername) ||
-            string.IsNullOrWhiteSpace(config.Settings.ApiKey))
+        if (string.IsNullOrWhiteSpace(config.Settings.ApiUsername)
+            || string.IsNullOrWhiteSpace(config.Settings.ApiKey))
         {
             return null;
         }
@@ -64,27 +64,26 @@ public class EVisitorApiAdapter(
         var username = config.Settings.ApiUsername;
         var apiKey = config.Settings.ApiKey;
         var now = DateTime.Now;
-        var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0);
+        var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Local);
 
-        var startOfYear = new DateTime(now.Year, 1, 1, 0, 0, 0);
+        var startOfYear = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Local);
 
         try
         {
-            var tHourly = GetHourlyEarningsRawAsync(username, apiKey);
+            var tHourly = RetrieveHourlyEarningsRawAsync(username, apiKey);
 
-            var tMonthlyDetails = GetDailyEarningsRawAsync(username, apiKey, startOfMonth, now);
+            var tMonthlyDetails = RetrieveDailyEarningsRawAsync(username, apiKey, startOfMonth, now);
 
-            var tYearlyDetails = GetMonthlyEarningsRawAsync(username, apiKey, startOfYear, now);
+            var tYearlyDetails = RetrieveMonthlyEarningsRawAsync(username, apiKey, startOfYear, now);
 
             await Task.WhenAll(tHourly, tMonthlyDetails, tYearlyDetails);
-            double[] hourlyArray = tHourly.Result;
-            double[] dailyArray = tMonthlyDetails.Result;
-            double[] monthlyArray = tYearlyDetails.Result;
+            var hourlyArray = tHourly.Result;
+            var dailyArray = tMonthlyDetails.Result;
+            var monthlyArray = tYearlyDetails.Result;
 
-            double monthlySum = dailyArray.Sum();
-            double yearlySum = monthlyArray.Sum();
-            double todaySum = hourlyArray.Sum();
-
+            var monthlySum = dailyArray.Sum();
+            var yearlySum = monthlyArray.Sum();
+            var todaySum = hourlyArray.Sum();
 
             return new EarningsData(hourlyArray, dailyArray, monthlyArray , yearlySum, monthlySum, todaySum);
         }
@@ -95,7 +94,7 @@ public class EVisitorApiAdapter(
         }
     }
 
-    private async Task<double[]> GetHourlyEarningsRawAsync(string username, string apiKey)
+    private async Task<double[]> RetrieveHourlyEarningsRawAsync(string username, string apiKey)
     {
         var request = new ApiRequest
         {
@@ -112,30 +111,7 @@ public class EVisitorApiAdapter(
 
         try
         {
-            using var doc = JsonDocument.Parse(response.Content);
-            var root = doc.RootElement;
-
-            double[] hourly = new double[24];
-            if (root.ValueKind == JsonValueKind.Object)
-            {
-                foreach (var property in root.EnumerateObject())
-                {
-                    if (int.TryParse(property.Name, out int hour) && hour >= 1 && hour <= 24)
-                    {
-                        hourly[hour - 1] = property.Value.TryGetDouble(out double val) ? Math.Round(val, 2) : 0.0;
-                    }
-                }
-            }
-            else if (root.ValueKind == JsonValueKind.Array)
-            {
-                var parsedArray = root.EnumerateArray()
-                                      .Select(element => element.TryGetDouble(out double val) ? Math.Round(val, 2) : 0.0)
-                                      .ToArray();
-
-                Array.Copy(parsedArray, hourly, Math.Min(parsedArray.Length, 24));
-            }
-
-            return hourly;
+            return ParseHourlyEarningsJson(response.Content);
         }
         catch (Exception ex)
         {
@@ -144,10 +120,49 @@ public class EVisitorApiAdapter(
         }
     }
 
-    private async Task<double[]> GetDailyEarningsRawAsync(string username, string apiKey, DateTime start, DateTime end)
+    private static double[] ParseHourlyEarningsJson(string content)
     {
-        long unixStart = ((DateTimeOffset)start).ToUnixTimeSeconds();
-        long unixEnd = ((DateTimeOffset)end).ToUnixTimeSeconds();
+        using var doc = JsonDocument.Parse(content);
+        var root = doc.RootElement;
+
+        double[] hourly = new double[24];
+
+        if (root.ValueKind == JsonValueKind.Object)
+        {
+            ParseHourlyEarningsFromJsonObject(root, hourly);
+        }
+        else if (root.ValueKind == JsonValueKind.Array)
+        {
+            ParseHourlyEarningsFromJsonArray(root, hourly);
+        }
+
+        return hourly;
+    }
+
+    private static void ParseHourlyEarningsFromJsonObject(JsonElement root, double[] hourly)
+    {
+        foreach (var property in root.EnumerateObject())
+        {
+            if (int.TryParse(property.Name, out int hour) && hour >= 1 && hour <= 24)
+            {
+                hourly[hour - 1] = property.Value.TryGetDouble(out double val) ? Math.Round(val, 2) : 0.0;
+            }
+        }
+    }
+
+    private static void ParseHourlyEarningsFromJsonArray(JsonElement root, double[] hourly)
+    {
+        var parsedArray = root.EnumerateArray()
+            .Select(x => x.TryGetDouble(out double val) ? Math.Round(val, 2) : 0.0)
+            .ToArray();
+
+        Array.Copy(parsedArray, hourly, Math.Min(parsedArray.Length, 24));
+    }
+
+    private async Task<double[]> RetrieveDailyEarningsRawAsync(string username, string apiKey, DateTime start, DateTime end)
+    {
+        var unixStart = ((DateTimeOffset)start).ToUnixTimeSeconds();
+        var unixEnd = ((DateTimeOffset)end).ToUnixTimeSeconds();
 
         string url = $"{ApiWebLinks.EarningsThisMonth}{unixStart}-{unixEnd}";
 
@@ -159,7 +174,7 @@ public class EVisitorApiAdapter(
             Password = apiKey
         };
 
-        int daysInMonth = DateTime.DaysInMonth(start.Year, start.Month);
+        var daysInMonth = DateTime.DaysInMonth(start.Year, start.Month);
         var dailyEarnings = new double[daysInMonth];
 
         var response = await _restClient.ExecuteGetAsync(request);
@@ -170,27 +185,7 @@ public class EVisitorApiAdapter(
         try
         {
             using var doc = JsonDocument.Parse(response.Content);
-            var root = doc.RootElement;
-
-            if (root.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var item in root.EnumerateArray())
-                {
-                    if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
-                    {
-                        string dateStr = dateProp.GetString() ?? "";
-
-                        if (DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime date))
-                        {
-                            int dayIndex = date.Day - 1;
-                            if (dayIndex >= 0 && dayIndex < daysInMonth)
-                            {
-                                dailyEarnings[dayIndex] += GetValueSafe(item);
-                            }
-                        }
-                    }
-                }
-            }
+            ParseDailyEarningsFromJsonArray(doc.RootElement, dailyEarnings, daysInMonth);
 
             for (int i = 0; i < dailyEarnings.Length; i++)
             {
@@ -205,10 +200,11 @@ public class EVisitorApiAdapter(
             return dailyEarnings;
         }
     }
-    private async Task<double[]> GetMonthlyEarningsRawAsync(string username, string apiKey, DateTime start, DateTime end)
+
+    private async Task<double[]> RetrieveMonthlyEarningsRawAsync(string username, string apiKey, DateTime start, DateTime end)
     {
-        long unixStart = ((DateTimeOffset)start).ToUnixTimeSeconds();
-        long unixEnd = ((DateTimeOffset)end).ToUnixTimeSeconds();
+        var unixStart = ((DateTimeOffset)start).ToUnixTimeSeconds();
+        var unixEnd = ((DateTimeOffset)end).ToUnixTimeSeconds();
 
         string url = $"{ApiWebLinks.EarningsThisMonth}{unixStart}-{unixEnd}";
 
@@ -230,27 +226,7 @@ public class EVisitorApiAdapter(
         try
         {
             using var doc = JsonDocument.Parse(response.Content);
-            var root = doc.RootElement;
-
-            if (root.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var item in root.EnumerateArray())
-                {
-                    if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
-                    {
-                        string dateStr = dateProp.GetString() ?? "";
-
-                        if (DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime date))
-                        {
-                            int monthIndex = date.Month - 1;
-                            if (monthIndex >= 0 && monthIndex < 12)
-                            {
-                                monthlyEarnings[monthIndex] += GetValueSafe(item);
-                            }
-                        }
-                    }
-                }
-            }
+            ParseMonthlyEarningsFromJsonArray(doc.RootElement, monthlyEarnings);
 
             for (int i = 0; i < monthlyEarnings.Length; i++)
             {
@@ -266,7 +242,51 @@ public class EVisitorApiAdapter(
         }
     }
 
-    private static double GetValueSafe(JsonElement item)
+    private static void ParseDailyEarningsFromJsonArray(JsonElement root, double[] dailyEarnings, int daysInMonth)
+    {
+        if (root.ValueKind != JsonValueKind.Array) return;
+
+        foreach (var item in root.EnumerateArray())
+        {
+            if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
+            {
+                string dateStr = dateProp.GetString() ?? "";
+
+                if (DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime date))
+                {
+                    int dayIndex = date.Day - 1;
+                    if (dayIndex >= 0 && dayIndex < daysInMonth)
+                    {
+                        dailyEarnings[dayIndex] += RetrieveValueSafe(item);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void ParseMonthlyEarningsFromJsonArray(JsonElement root, double[] monthlyEarnings)
+    {
+        if (root.ValueKind != JsonValueKind.Array) return;
+
+        foreach (var item in root.EnumerateArray())
+        {
+            if (item.TryGetProperty("from_w3c", out JsonElement dateProp))
+            {
+                string dateStr = dateProp.GetString() ?? "";
+
+                if (DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime date))
+                {
+                    int monthIndex = date.Month - 1;
+                    if (monthIndex >= 0 && monthIndex < 12)
+                    {
+                        monthlyEarnings[monthIndex] += RetrieveValueSafe(item);
+                    }
+                }
+            }
+        }
+    }
+
+    private static double RetrieveValueSafe(JsonElement item)
     {
         if (item.TryGetProperty("value", out JsonElement valProp))
         {
@@ -274,8 +294,8 @@ public class EVisitorApiAdapter(
             {
                 return valProp.GetDouble();
             }
-            else if (valProp.ValueKind == JsonValueKind.String &&
-                     double.TryParse(valProp.GetString()?.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double dVal))
+            else if (valProp.ValueKind == JsonValueKind.String
+                      && double.TryParse(valProp.GetString()?.Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out double dVal))
             {
                 return dVal;
             }
@@ -283,10 +303,10 @@ public class EVisitorApiAdapter(
         return 0.0;
     }
 
-    private static string GetStringSafe(JsonElement element, string propertyName)
+    private static string RetrieveStringSafe(JsonElement element, string propertyName)
     {
-        if (element.TryGetProperty(propertyName, out JsonElement prop) &&
-            prop.ValueKind == JsonValueKind.String)
+        if (element.TryGetProperty(propertyName, out JsonElement prop)
+            && prop.ValueKind == JsonValueKind.String)
         {
             return prop.GetString() ?? "-";
         }

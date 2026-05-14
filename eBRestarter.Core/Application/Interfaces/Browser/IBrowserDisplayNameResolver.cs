@@ -6,6 +6,6 @@ public interface IBrowserDisplayNameResolver
 {
 
 
-    BrowserType GetBrowserTypeFromDisplayName(string displayName, string defaultDisplayText);
+    BrowserType ResolveBrowserTypeFromDisplayName(string displayName, string defaultDisplayText);
 
 }

@@ -6,7 +6,7 @@ namespace eBRestarter.Infrastructure.Services;
 
 public class AppInfoService : IAppInfoService
 {
-    public string GetAppVersion()
+    public string RetrieveAppVersion()
     {
         var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
         var fvi = FileVersionInfo.GetVersionInfo(assembly.Location);

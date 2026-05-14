@@ -67,7 +67,7 @@ public class ManageRestarterCycleService(
 
     public void Stop()
     {
-        if (_cts != null)
+        if (_cts is not null)
         {
             _cts.Cancel();
             _cts.Dispose();
@@ -86,7 +86,7 @@ public class ManageRestarterCycleService(
             {
                 BrowserDisplayName = string.IsNullOrWhiteSpace(appConfig.Browser?.Selected) ? request.BrowserDisplayName : appConfig.Browser.Selected,
                 Username = string.IsNullOrWhiteSpace(appConfig.Username) ? request.Username : appConfig.Username,
-                RuntimeSeconds = appConfig.Browser != null ? appConfig.Browser.RuntimeHours * 3600 : request.RuntimeSeconds,
+                RuntimeSeconds = appConfig.Browser is not null ? appConfig.Browser.RuntimeHours * 3600 : request.RuntimeSeconds,
                 PauseSeconds = appConfig.Browser?.RuntimePauseSeconds ?? request.PauseSeconds,
                 CheckBrowserAliveRoutine = appConfig.Browser?.CheckBrowserAliveRoutine ?? request.CheckBrowserAliveRoutine
             };
@@ -117,7 +117,7 @@ public class ManageRestarterCycleService(
 
     private async Task<BrowserPhaseResult> RunBrowserPhaseAsync(ManageRestarterCycleRequest request, CancellationToken token)
     {
-        string processName = GetProcessNameFromDisplayName(request.BrowserDisplayName);
+        var processName = _currentBrowser?.ProcessName ?? string.Empty;
         var appConfig = _configService.LoadConfig();
         bool isCleanupActive = appConfig.Browser?.DeleteBrowserCacheIntervalDays > 0;
         DateTime nextCleanupDate = appConfig.Browser?.NextBrowserDeleteCacheDate ?? DateTime.MaxValue;
@@ -165,8 +165,8 @@ public class ManageRestarterCycleService(
     {
         try
         {
-            string defaultText = _localizationService.GetString("Task_DefaultBrowser");
-            var browserType = _browserDisplayNameResolver.GetBrowserTypeFromDisplayName(request.BrowserDisplayName, defaultText);
+            var defaultText = _localizationService.RetrieveString("Task_DefaultBrowser");
+            var browserType = _browserDisplayNameResolver.ResolveBrowserTypeFromDisplayName(request.BrowserDisplayName, defaultText);
 
             _currentBrowser = _browserFactory.Create(browserType);
             string url = $"{BaseUrl}{request.Username}";
@@ -175,8 +175,8 @@ public class ManageRestarterCycleService(
         }
         catch (Exception ex)
         {
-            string errorFormat = _localizationService.GetString("General_ErrorPrefix");
-            string errorMsg = string.Format(errorFormat, ex.Message);
+            var errorFormat = _localizationService.RetrieveString("General_ErrorPrefix");
+            var errorMsg = string.Format(errorFormat, ex.Message);
             ReportProgress(RestartTaskState.Idle, 0, errorMsg);
             throw;
         }
@@ -193,7 +193,7 @@ public class ManageRestarterCycleService(
         var appConfig = _configService.LoadConfig();
 
         var browser = appConfig.Browser;
-        if (browser == null || !_browserCleanupScheduleService.ShouldRunCleanupNow(browser.DeleteBrowserCacheIntervalDays, browser.NextBrowserDeleteCacheDate))
+        if (browser is null || !_browserCleanupScheduleService.ShouldRunCleanupNow(browser.DeleteBrowserCacheIntervalDays, browser.NextBrowserDeleteCacheDate))
             return;
 
         CloseCurrentBrowser();
@@ -203,7 +203,7 @@ public class ManageRestarterCycleService(
         await performCleanupCallback();
 
         var today = _timeProvider.GetLocalNow().Date;
-        var newDate = _browserCleanupScheduleService.GetNextCleanupDateAfterRun(today, appConfig.Browser.DeleteBrowserCacheIntervalDays);
+        var newDate = _browserCleanupScheduleService.CalculateNextCleanupDateAfterRun(today, appConfig.Browser.DeleteBrowserCacheIntervalDays);
 
         appConfig.Browser.SetNextCleanupDate(newDate);
         _configService.SaveConfig(appConfig);
@@ -211,34 +211,21 @@ public class ManageRestarterCycleService(
 
     private void ReportProgress(RestartTaskState state, int secondsRemaining, string? customMessage = null)
     {
-        string statusMessage = customMessage ?? GetStatusMessageForState(state, secondsRemaining);
+        string statusMessage = customMessage ?? RetrieveStatusMessageForState(state, secondsRemaining);
         ProgressChanged?.Invoke(this, new RestarterCycleProgress(state, secondsRemaining, statusMessage));
     }
 
-    private string GetStatusMessageForState(RestartTaskState state, int secondsRemaining)
+    private string RetrieveStatusMessageForState(RestartTaskState state, int secondsRemaining)
     {
         return state switch
         {
-            RestartTaskState.Idle => _localizationService.GetString("Task_StatusStopped"),
-            RestartTaskState.InitialDelay => string.Format(_localizationService.GetString("Task_StatusStartIn"), secondsRemaining),
-            RestartTaskState.Running => _localizationService.GetString("Task_StatusRunning"),
-            RestartTaskState.Cooldown => string.Format(_localizationService.GetString("Task_StatusRestartIn"), secondsRemaining),
+            RestartTaskState.Idle => _localizationService.RetrieveString("Task_StatusStopped"),
+            RestartTaskState.InitialDelay => string.Format(_localizationService.RetrieveString("Task_StatusStartIn"), secondsRemaining),
+            RestartTaskState.Running => _localizationService.RetrieveString("Task_StatusRunning"),
+            RestartTaskState.Cooldown => string.Format(_localizationService.RetrieveString("Task_StatusRestartIn"), secondsRemaining),
             _ => string.Empty
         };
     }
 
-    private static string GetProcessNameFromDisplayName(string displayName)
-    {
-        if (string.IsNullOrEmpty(displayName)) return "";
-        var lower = displayName.ToLowerInvariant();
 
-        if (lower.Contains("firefox")) return "firefox";
-        if (lower.Contains("chrome")) return "chrome";
-        if (lower.Contains("edge")) return "msedge";
-        if (lower.Contains("vivaldi")) return "vivaldi";
-        if (lower.Contains("brave")) return "brave";
-        if (lower.Contains("opera")) return "opera";
-
-        return lower;
-    }
 }

@@ -215,10 +215,10 @@ public partial class ViewModelRestarterProperties : ObservableObject
     private async Task CheckInstalledBrowsersAsync()
     {
         IEnumerable<BrowserInfo>? installedBrowsers =
-            await Task.Run(() => _browserService.GetInstalledBrowsersAsync()).ConfigureAwait(false);
+            await Task.Run(() => _browserService.FindInstalledBrowsersAsync()).ConfigureAwait(false);
 
         bool hasInstalledBrowsers =
-            installedBrowsers != null && installedBrowsers.Any(browser => browser.IsInstalled);
+            installedBrowsers?.Any(browser => browser.IsInstalled) == true;
 
         _dispatcherQueue.TryEnqueue(() =>
         {
@@ -298,19 +298,19 @@ public partial class ViewModelRestarterProperties : ObservableObject
 
         if (scheduleUpdateResponse.IsActive && scheduleUpdateResponse.NextDate.HasValue)
         {
-            string formatPattern = _localizationService.GetString("Browser_NextDeleteDate_Format");
+            string formatPattern = _localizationService.RetrieveString("Browser_NextDeleteDate_Format");
             string formattedDateString = string.Format(formatPattern, scheduleUpdateResponse.NextDate.Value);
 
-            WeakReferenceMessenger.Default.Send(new NextDeletionProcess(_localizationService.GetString("NextDeletionProcess")));
+            WeakReferenceMessenger.Default.Send(new NextDeletionProcess(_localizationService.RetrieveString("NextDeletionProcess")));
             WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(formattedDateString));
-            WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.GetString("Activate")));
+            WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.RetrieveString("Activate")));
             WeakReferenceMessenger.Default.Send(new DeleteBrowserContentIsActive(true));
         }
         else
         {
             WeakReferenceMessenger.Default.Send(new NextDeletionProcess(string.Empty));
             WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(string.Empty));
-            WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.GetString("Disabled")));
+            WeakReferenceMessenger.Default.Send(new DeleteBrowserContentActivateMessage(_localizationService.RetrieveString("Disabled")));
             WeakReferenceMessenger.Default.Send(new DeleteBrowserContentIsActive(false));
         }
     }
