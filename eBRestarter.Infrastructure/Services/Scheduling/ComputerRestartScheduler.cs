@@ -8,14 +8,14 @@ namespace eBRestarter.Infrastructure.Services.Scheduling;
 public partial class ComputerRestartScheduler(
     IEVisitorConfigService configService,
     IWindowsProcessControlService processService,
-    IApplicationLifetime applicationLifetime,
+    IApplicationLifetimeUseCase applicationLifetime,
     TimeProvider timeProvider,
     ILogger<ComputerRestartScheduler> logger) : IComputerRestartScheduler, IDisposable
 {
     private bool _disposed;
     private readonly IEVisitorConfigService _configService = configService;
     private readonly IWindowsProcessControlService _processService = processService;
-    private readonly IApplicationLifetime _applicationLifetime = applicationLifetime;
+    private readonly IApplicationLifetimeUseCase _applicationLifetime = applicationLifetime;
     private readonly TimeProvider _timeProvider = timeProvider;
     private readonly ILogger<ComputerRestartScheduler> _logger = logger;
 

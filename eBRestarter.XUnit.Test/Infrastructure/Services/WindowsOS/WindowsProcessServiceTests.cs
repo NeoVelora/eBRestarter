@@ -14,16 +14,16 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsProcessServiceTests
     {
-        private readonly Mock<ILogger<WindowsProcessService>> _mockLogger;
+        private readonly Mock<ILogger<WindowsProcessAdapter>> _mockLogger;
         private readonly Mock<IProcessWrapper> _mockProcessWrapper;
-        private readonly WindowsProcessService _sut;
+        private readonly WindowsProcessAdapter _sut;
 
         public WindowsProcessServiceTests()
         {
-            _mockLogger = new Mock<ILogger<WindowsProcessService>>();
+            _mockLogger = new Mock<ILogger<WindowsProcessAdapter>>();
             _mockProcessWrapper = new Mock<IProcessWrapper>();
 
-            _sut = new WindowsProcessService(_mockLogger.Object, _mockProcessWrapper.Object);
+            _sut = new WindowsProcessAdapter(_mockLogger.Object, _mockProcessWrapper.Object);
         }
 
         [Fact]
@@ -191,3 +191,4 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
+

@@ -15,7 +15,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void IsExtensionInstalled_ShouldReturnTrue_WhenExtensionFolderExists()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<ChromeBrowser>>();
+            var mockLogger = new Mock<ILogger<ChromeBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             string localAppData = @"C:\Users\Test\AppData\Local";
@@ -33,11 +33,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             mockFileSystem.Setup(fs => fs.DirectoryExists(expectedExtensionDir)).Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
 
-            var chromeBrowser = new ChromeBrowser(mockOs.Object, mockLogger.Object);
+            var ChromeBrowserAdapter = new ChromeBrowserAdapter(mockOs.Object, mockLogger.Object);
 
-            bool result = chromeBrowser.IsExtensionInstalled();
+            bool result = ChromeBrowserAdapter.IsExtensionInstalled();
 
             result.ShouldBeTrue();
         }
@@ -46,20 +46,22 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void IsExtensionInstalled_ShouldReturnFalse_WhenExtensionFolderIsMissing()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<ChromeBrowser>>();
+            var mockLogger = new Mock<ILogger<ChromeBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath(It.IsAny<string>())).Returns(@"C:\FakeAppData");
 
             mockFileSystem.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns(false);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
 
-            var chromeBrowser = new ChromeBrowser(mockOs.Object, mockLogger.Object);
+            var ChromeBrowserAdapter = new ChromeBrowserAdapter(mockOs.Object, mockLogger.Object);
 
-            bool result = chromeBrowser.IsExtensionInstalled();
+            bool result = ChromeBrowserAdapter.IsExtensionInstalled();
 
             result.ShouldBeFalse();
         }
     }
 }
+
+

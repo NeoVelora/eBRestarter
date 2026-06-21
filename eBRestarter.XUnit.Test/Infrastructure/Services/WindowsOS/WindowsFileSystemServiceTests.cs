@@ -8,12 +8,12 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsFileSystemServiceTests : IDisposable
     {
-        private readonly WindowsFileSystemService _sut;
+        private readonly WindowsFileSystemServiceAdapter _sut;
         private readonly string _tempTestDirectory;
 
         public WindowsFileSystemServiceTests()
         {
-            _sut = new WindowsFileSystemService();
+            _sut = new WindowsFileSystemServiceAdapter();
 
             _tempTestDirectory = Path.Combine(Path.GetTempPath(), $"eB_FS_Test_{Guid.NewGuid()}");
             Directory.CreateDirectory(_tempTestDirectory);
@@ -58,7 +58,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             string result = _sut.ResolveEnvironmentPath(variable);
 
             result.ShouldNotBeNullOrWhiteSpace();
-            Path.IsPathRooted(result).ShouldBeTrue("Der zur�ckgegebene Pfad muss ein absoluter Systempfad sein.");
+            Path.IsPathRooted(result).ShouldBeTrue("Der zurückgegebene Pfad muss ein absoluter Systempfad sein.");
         }
 
         [Fact]
@@ -133,3 +133,4 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
+

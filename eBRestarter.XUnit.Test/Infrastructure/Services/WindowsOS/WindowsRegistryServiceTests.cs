@@ -10,12 +10,12 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsRegistryServiceTests : IDisposable
     {
-        private readonly WindowsRegistryService _sut;
+        private readonly WindowsRegistryAdapter _sut;
         private readonly string _tempTestKey;
 
         public WindowsRegistryServiceTests()
         {
-            _sut = new WindowsRegistryService();
+            _sut = new WindowsRegistryAdapter();
 
             _tempTestKey = $@"Software\eBRestarter_TestSandbox_{Guid.NewGuid()}";
         }
@@ -102,7 +102,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             catch (Exception ex)
             {
                 (ex is UnauthorizedAccessException || ex is SecurityException)
-                    .ShouldBeTrue("Erwartete fehlende Berechtigung, da der Test-Runner nicht als Administrator l�uft.");
+                    .ShouldBeTrue("Erwartete fehlende Berechtigung, da der Test-Runner nicht als Administrator läuft.");
             }
         }
         public void Dispose()
@@ -122,3 +122,4 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
+

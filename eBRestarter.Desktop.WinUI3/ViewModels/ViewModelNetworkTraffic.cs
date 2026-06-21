@@ -31,7 +31,7 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
 
     private readonly ILocalizationService _localizationService;
 
-    private readonly IWindowsNetworkInfoService _networkService;
+    private readonly IWindowsNetworkInfoUseCase _networkService;
 
     private readonly DispatcherQueue _dispatcherQueue;
 
@@ -41,7 +41,7 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
 
 
     public ViewModelNetworkTraffic(
-        IWindowsNetworkInfoService networkService,
+        IWindowsNetworkInfoUseCase networkService,
         ILocalizationService localizationService)
     {
         ArgumentNullException.ThrowIfNull(networkService);

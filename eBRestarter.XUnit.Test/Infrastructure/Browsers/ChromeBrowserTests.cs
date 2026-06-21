@@ -14,7 +14,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void GetPaths_ShouldGenerateCorrectCacheAndCookieDirectories_ForDefaultProfile()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<ChromeBrowser>>();
+            var mockLogger = new Mock<ILogger<ChromeBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Users\Test\AppData\Local");
@@ -26,10 +26,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string expectedDefaultProfilePath = @"C:\Users\Test\AppData\Local\Google\Chrome\User Data\Default";
             mockFileSystem.Setup(fs => fs.DirectoryExists(expectedDefaultProfilePath)).Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
-            var chromeBrowser = new ChromeBrowser(mockOs.Object, mockLogger.Object);
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
+            var ChromeBrowserAdapter = new ChromeBrowserAdapter(mockOs.Object, mockLogger.Object);
 
-            var paths = chromeBrowser.ResolvePaths();
+            var paths = ChromeBrowserAdapter.ResolvePaths();
 
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Cache\Cache_Data");
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Service Worker");
@@ -39,3 +39,5 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         }
     }
 }
+
+

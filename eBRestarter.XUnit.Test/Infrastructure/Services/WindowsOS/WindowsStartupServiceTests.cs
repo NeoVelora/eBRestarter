@@ -14,10 +14,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsStartupServiceTests
     {
-        private readonly Mock<ILogger<WindowsStartupService>> _mockLogger;
+        private readonly Mock<ILogger<WindowsStartupServiceAdapter>> _mockLogger;
         private readonly Mock<IWindowsRegistryService> _mockRegistry;
-        private readonly Mock<IProcessInfoService> _mockProcessInfo;
-        private readonly WindowsStartupService _sut;
+        private readonly Mock<IProcessInfoUseCase> _mockProcessInfo;
+        private readonly WindowsStartupServiceAdapter _sut;
 
         private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
         private const string RegistryPathEdgePolicies = @"SOFTWARE\Policies\Microsoft\Edge";
@@ -25,11 +25,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
         public WindowsStartupServiceTests()
         {
-            _mockLogger = new Mock<ILogger<WindowsStartupService>>();
+            _mockLogger = new Mock<ILogger<WindowsStartupServiceAdapter>>();
             _mockRegistry = new Mock<IWindowsRegistryService>();
-            _mockProcessInfo = new Mock<IProcessInfoService>();
+            _mockProcessInfo = new Mock<IProcessInfoUseCase>();
 
-            _sut = new WindowsStartupService(_mockLogger.Object, _mockRegistry.Object, _mockProcessInfo.Object);
+            _sut = new WindowsStartupServiceAdapter(_mockLogger.Object, _mockRegistry.Object, _mockProcessInfo.Object);
         }
 
         [Fact]
@@ -140,3 +140,4 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
+

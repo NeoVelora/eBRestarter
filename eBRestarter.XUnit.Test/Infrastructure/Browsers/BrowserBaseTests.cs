@@ -14,7 +14,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
     public class BrowserBaseTests
     {
 
-        private class TestDummyBrowser : BrowserBase
+        private class TestDummyBrowser : BrowserBaseAdapter
         {
             public TestDummyBrowser(IOperatingSystemFacade os, ILogger logger) : base(os, logger) { }
 
@@ -66,7 +66,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
                 Setup(fs => fs.FileExists(@"C:\FakePath\browser.exe")).
                 Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
 
             var mockProcessService = new Mock<IWindowsProcessControlService>();
             mockOs.Setup(os => os.WindowsProcessControlService).Returns(mockProcessService.Object);
@@ -95,7 +95,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
                 .Setup(fs => fs.FileExists(It.IsAny<string>()))
                 .Returns(false);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
 
             var mockProcessService = new Mock<IWindowsProcessControlService>();
             mockOs.Setup(os => os.WindowsProcessControlService).Returns(mockProcessService.Object);
@@ -108,4 +108,5 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         }
     }
 }
+
 

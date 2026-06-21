@@ -13,28 +13,28 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
     public class BrowserFactoryTests
     {
         [Theory]
-        [InlineData(BrowserType.Chrome, typeof(ChromeBrowser))]
-        [InlineData(BrowserType.Firefox, typeof(FirefoxBrowser))]
-        [InlineData(BrowserType.Edge, typeof(EdgeBrowser))]
-        [InlineData(BrowserType.Brave, typeof(BraveBrowser))]
-        [InlineData(BrowserType.Vivaldi, typeof(VivaldiBrowser))]
+        [InlineData(BrowserType.Chrome, typeof(ChromeBrowserAdapter))]
+        [InlineData(BrowserType.Firefox, typeof(FirefoxBrowserAdapter))]
+        [InlineData(BrowserType.Edge, typeof(EdgeBrowserAdapter))]
+        [InlineData(BrowserType.Brave, typeof(BraveBrowserAdapter))]
+        [InlineData(BrowserType.Vivaldi, typeof(VivaldiBrowserAdapter))]
         public void Create_ShouldReturnCorrectBrowserInstance_ForValidBrowserType(BrowserType inputType, Type expectedClassType)
         {
             var mockServiceProvider = new Mock<IServiceProvider>();
 
             var mockOs = new Mock<IOperatingSystemFacade>();
 
-            var fakeChrome = new ChromeBrowser(mockOs.Object, new Mock<ILogger<ChromeBrowser>>().Object);
-            var fakeFirefox = new FirefoxBrowser(mockOs.Object, new Mock<ILogger<FirefoxBrowser>>().Object);
-            var fakeEdge = new EdgeBrowser(mockOs.Object, new Mock<ILogger<EdgeBrowser>>().Object);
-            var fakeBrave = new BraveBrowser(mockOs.Object, new Mock<ILogger<BraveBrowser>>().Object);
-            var fakeVivaldi = new VivaldiBrowser(mockOs.Object, new Mock<ILogger<VivaldiBrowser>>().Object);
+            var fakeChrome = new ChromeBrowserAdapter(mockOs.Object, new Mock<ILogger<ChromeBrowserAdapter>>().Object);
+            var fakeFirefox = new FirefoxBrowserAdapter(mockOs.Object, new Mock<ILogger<FirefoxBrowserAdapter>>().Object);
+            var fakeEdge = new EdgeBrowserAdapter(mockOs.Object, new Mock<ILogger<EdgeBrowserAdapter>>().Object);
+            var fakeBrave = new BraveBrowserAdapter(mockOs.Object, new Mock<ILogger<BraveBrowserAdapter>>().Object);
+            var fakeVivaldi = new VivaldiBrowserAdapter(mockOs.Object, new Mock<ILogger<VivaldiBrowserAdapter>>().Object);
 
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(ChromeBrowser))).Returns(fakeChrome);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(FirefoxBrowser))).Returns(fakeFirefox);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(EdgeBrowser))).Returns(fakeEdge);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(BraveBrowser))).Returns(fakeBrave);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(VivaldiBrowser))).Returns(fakeVivaldi);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(ChromeBrowserAdapter))).Returns(fakeChrome);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(FirefoxBrowserAdapter))).Returns(fakeFirefox);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(EdgeBrowserAdapter))).Returns(fakeEdge);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(BraveBrowserAdapter))).Returns(fakeBrave);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(VivaldiBrowserAdapter))).Returns(fakeVivaldi);
 
             var factory = new BrowserFactory(mockServiceProvider.Object);
             var result = factory.Create(inputType);
@@ -59,3 +59,5 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
         }
     }
 }
+
+

@@ -16,11 +16,11 @@ namespace eBRestarter.Desktop.WinUI3
     {
         private readonly INavigationService _navigationService;
 
-        private readonly IAppVersionInfoService? _iAppVersionInfoService;
+        private readonly IAppVersionInfoUseCase? _iAppVersionInfoService;
 
         private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
-        public EBRestarter(INavigationService navigationService, IAppVersionInfoService iAppVersionInfoService)
+        public EBRestarter(INavigationService navigationService, IAppVersionInfoUseCase iAppVersionInfoService)
         {
             InitializeComponent();
 

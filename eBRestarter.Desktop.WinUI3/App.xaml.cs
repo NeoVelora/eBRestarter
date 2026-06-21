@@ -43,15 +43,15 @@ namespace eBRestarter.Desktop.WinUI3
                  services.AddInfrastructureServices();
                  services.AddApplicationServices();
                  services.AddNavigationService();
-                 services.AddDialoglServiceExtensions();
-                 services.AddThemeService();
+                 services.AddDialogServiceExtensions();
+                 services.AddThemeHandler();
 
                  services.AddViewModels();
 
-                 services.AddSingleton<ILanguageService, LanguageService>();
+                 services.AddSingleton<ILanguageHandler, LanguageHandler>();
                  services.AddSingleton<ILocalizationService, LocalizationService>();
                  services.AddSingleton<IUIOptionsService>(sp => (LocalizationService)sp.GetRequiredService<ILocalizationService>());
-                 services.AddSingleton<IIconCreditService, IconCreditService>();
+                 services.AddSingleton<IIconCreditHandler, IconCreditHelper>();
              });
 
         protected override async void OnLaunched(LaunchActivatedEventArgs args)
@@ -59,7 +59,7 @@ namespace eBRestarter.Desktop.WinUI3
             StartupDisplayPreferences? launchConfig = null;
             try
             {
-                launchConfig = AppHost!.Services.GetRequiredService<IApplicationLaunchConfigService>().PrepareConfigForLaunch();
+                launchConfig = AppHost!.Services.GetRequiredService<IPrepareConfigForLaunchUseCase>().PrepareConfigForLaunch();
                 string languageCode = launchConfig.LanguageCode;
 
                 ApplicationLanguages.PrimaryLanguageOverride = languageCode;
@@ -89,7 +89,7 @@ namespace eBRestarter.Desktop.WinUI3
 
             try
             {
-                var themeService = AppHost!.Services.GetRequiredService<IThemeService>();
+                var themeService = AppHost!.Services.GetRequiredService<IThemeHandler>();
                 string themeToSet = launchConfig != null && !string.IsNullOrEmpty(launchConfig.ThemeName)
                     ? launchConfig.ThemeName
                     : "Light";
@@ -105,3 +105,4 @@ namespace eBRestarter.Desktop.WinUI3
         }
     }
 }
+

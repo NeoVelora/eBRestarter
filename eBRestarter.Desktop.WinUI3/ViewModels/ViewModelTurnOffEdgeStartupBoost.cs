@@ -49,17 +49,17 @@ public partial class ViewModelTurnOffEdgeStartupBoost : ObservableObject
         IToggleEdgeStartupBoostUseCase toggleEdgeStartupBoostUseCase,
         IDialogService dialogService,
         ILocalizationService localizationService,
-        IOperatingSystemFacade operatingSystemFacade)
+        IOperatingSystemFacade OperatingSystemFacadeAdapter)
     {
         ArgumentNullException.ThrowIfNull(toggleEdgeStartupBoostUseCase);
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(localizationService);
-        ArgumentNullException.ThrowIfNull(operatingSystemFacade);
+        ArgumentNullException.ThrowIfNull(OperatingSystemFacadeAdapter);
 
         _toggleEdgeStartupBoostUseCase = toggleEdgeStartupBoostUseCase;
         _dialogService = dialogService;
         _localizationService = localizationService;
-        _operatingSystemFacade = operatingSystemFacade;
+        _operatingSystemFacade = OperatingSystemFacadeAdapter;
 
         IsAdministrator = _operatingSystemFacade.WindowsSystemInfoService.IsUserAdministrator();
         IsStartupBoostEnabled = _toggleEdgeStartupBoostUseCase.IsEnabled();
@@ -121,3 +121,4 @@ public partial class ViewModelTurnOffEdgeStartupBoost : ObservableObject
         IsInfoBarOpen = true;
     }
 }
+

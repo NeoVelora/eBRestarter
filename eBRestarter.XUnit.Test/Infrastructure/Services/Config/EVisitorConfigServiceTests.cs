@@ -12,7 +12,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
 {
     public class EVisitorConfigServiceTests
     {
-        private readonly Mock<IPathService> _mockPathService;
+        private readonly Mock<IPathUseCase> _mockPathUseCase;
         private readonly Mock<IWindowsFileSystemService> _mockFileSystem;
         private readonly Mock<ILogger<EVisitorConfigService>> _mockLogger;
         private readonly EVisitorConfigService _service;
@@ -20,14 +20,14 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
 
         public EVisitorConfigServiceTests()
         {
-            _mockPathService = new Mock<IPathService>();
+            _mockPathUseCase = new Mock<IPathUseCase>();
             _mockFileSystem = new Mock<IWindowsFileSystemService>();
             _mockLogger = new Mock<ILogger<EVisitorConfigService>>();
 
-            _mockPathService.Setup(p => p.RetrieveConfigFilePath()).Returns(FakeFilePath);
+            _mockPathUseCase.Setup(p => p.RetrieveConfigFilePath()).Returns(FakeFilePath);
 
             _service = new EVisitorConfigService(
-                _mockPathService.Object, 
+                _mockPathUseCase.Object, 
                 _mockFileSystem.Object, 
                 _mockLogger.Object
             );
@@ -91,3 +91,4 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Config
         }
     }
 }
+

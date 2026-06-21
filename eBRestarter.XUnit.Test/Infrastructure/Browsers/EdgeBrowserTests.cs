@@ -14,7 +14,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void GetPaths_ShouldGenerateCorrectDirectories_ForEdge()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<EdgeBrowser>>();
+            var mockLogger = new Mock<ILogger<EdgeBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
@@ -23,13 +23,15 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string expectedDefaultProfilePath = @"C:\Local\Microsoft\Edge\User Data\Default";
             mockFileSystem.Setup(fs => fs.DirectoryExists(expectedDefaultProfilePath)).Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
-            var edgeBrowser = new EdgeBrowser(mockOs.Object, mockLogger.Object);
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
+            var EdgeBrowserAdapter = new EdgeBrowserAdapter(mockOs.Object, mockLogger.Object);
 
-            var paths = edgeBrowser.ResolvePaths();
+            var paths = EdgeBrowserAdapter.ResolvePaths();
 
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\GPUCache");
             paths.CookiesDirs.ShouldContain($@"{expectedDefaultProfilePath}\Network");
         }
     }
 }
+
+

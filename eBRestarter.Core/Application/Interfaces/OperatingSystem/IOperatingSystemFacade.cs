@@ -6,8 +6,10 @@ public interface IOperatingSystemFacade
 {
     IWindowsProcessControlService WindowsProcessControlService { get; }
     IWindowsSystemInfoService WindowsSystemInfoService { get; }
-    IWindowsRegistryService WindowsRegistryService { get; }
+    IWindowsRegistryService WindowsRegistryAdapter { get; }
     IWindowsStartupManagerService WindowsStartupManagerService { get; }
-    IWindowsFileSystemService WindowsFileSystemService { get; }
-    IWindowsAutoLogonService WindowsAutoLogonService { get; }
+    IWindowsFileSystemService WindowsFileSystemServiceAdapter { get; }
+    IWindowsAutoLogonService WindowsAutoLogonAdapter { get; }
 }
+
+

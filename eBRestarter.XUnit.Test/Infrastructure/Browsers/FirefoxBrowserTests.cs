@@ -14,7 +14,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void GetPaths_ShouldParseProfilesIni_AndGeneratePathsForRelativeAndAbsoluteProfiles()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<FirefoxBrowser>>();
+            var mockLogger = new Mock<ILogger<FirefoxBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("AppData")).Returns(@"C:\Roaming");
@@ -42,9 +42,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             mockFileSystem.Setup(fs => fs.ReadAllLines(fakeIniPath)).Returns(fakeIniContent);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
-            var firefoxBrowser = new FirefoxBrowser(mockOs.Object, mockLogger.Object);
-            var paths = firefoxBrowser.ResolvePaths();
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
+            var FirefoxBrowserAdapter = new FirefoxBrowserAdapter(mockOs.Object, mockLogger.Object);
+            var paths = FirefoxBrowserAdapter.ResolvePaths();
 
             paths.CacheDirs.ShouldContain(@"C:\Local\Mozilla\Firefox\Profiles\abc.default\cache2\entries");
             paths.CookiesDirs.ShouldContain(@"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\storage\default");
@@ -59,7 +59,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void IsExtensionInstalled_ShouldReturnTrue_WhenXpiFileExists()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<FirefoxBrowser>>();
+            var mockLogger = new Mock<ILogger<FirefoxBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             string fakeRoamingExtensionsDir = @"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\extensions";
@@ -79,9 +79,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             mockFileSystem.Setup(fs => fs.DirectoryExists(fakeRoamingExtensionsDir)).Returns(true);
             mockFileSystem.Setup(fs => fs.FileExists(fullXpiPath)).Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
-            var firefoxBrowser = new FirefoxBrowser(mockOs.Object, mockLogger.Object);
-            bool isInstalled = firefoxBrowser.IsExtensionInstalled();
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
+            var FirefoxBrowserAdapter = new FirefoxBrowserAdapter(mockOs.Object, mockLogger.Object);
+            bool isInstalled = FirefoxBrowserAdapter.IsExtensionInstalled();
             isInstalled.ShouldBeTrue();
         }
 
@@ -89,7 +89,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void IsExtensionInstalled_ShouldReturnTrue_WhenExtractedFolderExists()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<FirefoxBrowser>>();
+            var mockLogger = new Mock<ILogger<FirefoxBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             string fakeRoamingExtensionsDir = @"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\extensions";
@@ -111,10 +111,12 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string extractedFolderPath = $@"{fakeRoamingExtensionsDir}\{{fef425dc-a60f-4484-954d-71ecf2544846}}";
             mockFileSystem.Setup(fs => fs.DirectoryExists(extractedFolderPath)).Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
-            var firefoxBrowser = new FirefoxBrowser(mockOs.Object, mockLogger.Object);
-            bool isInstalled = firefoxBrowser.IsExtensionInstalled();
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
+            var FirefoxBrowserAdapter = new FirefoxBrowserAdapter(mockOs.Object, mockLogger.Object);
+            bool isInstalled = FirefoxBrowserAdapter.IsExtensionInstalled();
             isInstalled.ShouldBeTrue();
         }
     }
 }
+
+

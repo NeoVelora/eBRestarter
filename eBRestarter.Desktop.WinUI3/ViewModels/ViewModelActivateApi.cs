@@ -13,7 +13,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public partial class ViewModelActivateApi : ObservableObject
 {
-    private readonly IApiAuthenticationService _apiAuthenticationService;
+    private readonly IApiAuthenticationUseCase _apiAuthenticationService;
 
     private readonly IEVisitorConfigService _configService;
 
@@ -39,7 +39,7 @@ public partial class ViewModelActivateApi : ObservableObject
     private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
 
     public ViewModelActivateApi(
-        IApiAuthenticationService apiAuthenticationService,
+        IApiAuthenticationUseCase apiAuthenticationService,
         IEVisitorConfigService configService,
         ILocalizationService localizationService)
     {

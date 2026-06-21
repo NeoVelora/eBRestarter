@@ -25,7 +25,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
                 .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
                 .Returns((string[] paths) => Path.Combine(paths));
 
-            var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
+            var store = new JsonCredentialStoreRepository(mockFileSystem.Object, mockPathProvider.Object);
             var credentials = new ApiCredentials("TestUser", "TestKey123");
 
             string expectedJson = JsonSerializer.Serialize(credentials);
@@ -51,7 +51,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             string fakeJson = "{\"Username\":\"TestUser\",\"ApiKey\":\"TestKey123\"}";
             mockFileSystem.Setup(fs => fs.ReadAllText(_expectedStoragePath)).Returns(fakeJson);
 
-            var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
+            var store = new JsonCredentialStoreRepository(mockFileSystem.Object, mockPathProvider.Object);
 
             var result = store.LoadCredentials();
 
@@ -62,7 +62,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 
         [Theory]
         [InlineData(false, null)]
-        [InlineData(true, "Kein Gültiges JSON {")]
+        [InlineData(true, "Kein GÃ¼ltiges JSON {")]
         public void LoadCredentials_ShouldReturnNull_WhenFileIsMissingOrBroken(bool fileExists, string? fileContent)
         {
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
@@ -80,7 +80,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
                 mockFileSystem.Setup(fs => fs.ReadAllText(_expectedStoragePath)).Returns(fileContent);
             }
 
-            var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
+            var store = new JsonCredentialStoreRepository(mockFileSystem.Object, mockPathProvider.Object);
 
             var result = store.LoadCredentials();
 
@@ -100,7 +100,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 
             mockFileSystem.Setup(fs => fs.FileExists(_expectedStoragePath)).Returns(true);
 
-            var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
+            var store = new JsonCredentialStoreRepository(mockFileSystem.Object, mockPathProvider.Object);
 
             store.ClearCredentials();
 
@@ -118,7 +118,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
                 .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
                 .Returns((string[] paths) => Path.Combine(paths));
 
-            var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
+            var store = new JsonCredentialStoreRepository(mockFileSystem.Object, mockPathProvider.Object);
 
             var ms = new MemoryStream();
             using (var writer = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
@@ -151,7 +151,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 
             mockFileSystem.Setup(fs => fs.FileExists("nonExistentPath")).Returns(false);
 
-            var store = new JsonCredentialStore(mockFileSystem.Object, mockPathProvider.Object);
+            var store = new JsonCredentialStoreRepository(mockFileSystem.Object, mockPathProvider.Object);
 
             var result = store.ImportFromLegacyFile("nonExistentPath");
 
@@ -159,3 +159,4 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         }
     }
 }
+

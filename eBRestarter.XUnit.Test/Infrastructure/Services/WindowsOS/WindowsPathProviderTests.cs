@@ -8,11 +8,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsPathProviderTests
     {
-        private readonly WindowsPathProvider _sut;
+        private readonly WindowsPathProviderAdapter _sut;
 
         public WindowsPathProviderTests()
         {
-            _sut = new WindowsPathProvider();
+            _sut = new WindowsPathProviderAdapter();
         }
 
         [Fact]
@@ -76,3 +76,4 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
+

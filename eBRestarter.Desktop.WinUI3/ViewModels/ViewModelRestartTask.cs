@@ -27,7 +27,7 @@ public partial class ViewModelRestartTask : ObservableObject,
                                             IRecipient<BrowserChangedMessage>,
                                             IRecipient<DeleteBrowserContentActivateMessage>,
                                             IRecipient<DeleteBrowserContentIsActive>,
-                                            IRecipient<NextDeletionProcess>,
+                                            IRecipient<NextDeletionProcessMessage>,
                                             IRecipient<NextDeletionProcessDate>
 {
     private readonly IEVisitorConfigService _configService;
@@ -40,7 +40,7 @@ public partial class ViewModelRestartTask : ObservableObject,
 
     private readonly IManageRestarterCycleUseCase _manageRestarterCycleUseCase;
 
-    private readonly IRestartTaskDisplayStateService _restartTaskDisplayStateService;
+    private readonly IRestartTaskDisplayStateUseCase _restartTaskDisplayStateUseCase;
 
     private bool _checkBrowserAliveRoutine;
 
@@ -87,21 +87,21 @@ public partial class ViewModelRestartTask : ObservableObject,
         IEVisitorConfigService configService,
         IDialogService dialogService,
         ILocalizationService localizationService,
-        IRestartTaskDisplayStateService restartTaskDisplayStateService,
+        IRestartTaskDisplayStateUseCase restartTaskDisplayStateUseCase,
         IBrowserService browserService)
     {
         ArgumentNullException.ThrowIfNull(manageRestarterCycleUseCase);
         ArgumentNullException.ThrowIfNull(configService);
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(localizationService);
-        ArgumentNullException.ThrowIfNull(restartTaskDisplayStateService);
+        ArgumentNullException.ThrowIfNull(restartTaskDisplayStateUseCase);
         ArgumentNullException.ThrowIfNull(browserService);
 
         _manageRestarterCycleUseCase = manageRestarterCycleUseCase;
         _configService = configService;
         _dialogService = dialogService;
         _localizationService = localizationService;
-        _restartTaskDisplayStateService = restartTaskDisplayStateService;
+        _restartTaskDisplayStateUseCase = restartTaskDisplayStateUseCase;
         _browserService = browserService;
 
         _dispatcherQueue =
@@ -187,8 +187,8 @@ public partial class ViewModelRestartTask : ObservableObject,
     public void Receive(DeleteBrowserContentIsActive message) =>
         _dispatcherQueue.TryEnqueue(() => DeleteBrowserContentIsActive = message.IsActiveOrNot);
 
-    public void Receive(NextDeletionProcess message) =>
-        _dispatcherQueue.TryEnqueue(() => NextDeletionProcessMessage = message.NextDeletionProcessMessage ?? "-");
+    public void Receive(NextDeletionProcessMessage message) =>
+        _dispatcherQueue.TryEnqueue(() => NextDeletionProcessMessage = message.Message ?? "-");
 
     public void Receive(NextDeletionProcessDate message) =>
         _dispatcherQueue.TryEnqueue(() => NextDeletionProcessDateMessage = message.NextDeletionProcessDateMessage ?? "-");
@@ -200,7 +200,7 @@ public partial class ViewModelRestartTask : ObservableObject,
     {
         var appConfig = _configService.LoadConfig();
 
-        var currentConfigState = _restartTaskDisplayStateService.RetrieveInitialState(appConfig);
+        var currentConfigState = _restartTaskDisplayStateUseCase.RetrieveInitialState(appConfig);
 
         Username = currentConfigState.Username;
         ChosenBrowser = currentConfigState.ChosenBrowser;
@@ -292,3 +292,4 @@ public partial class ViewModelRestartTask : ObservableObject,
         });
     }
 }
+

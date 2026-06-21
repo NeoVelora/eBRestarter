@@ -14,7 +14,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         public void GetPaths_ShouldGenerateCorrectDirectories_ForBrave()
         {
             var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<BraveBrowser>>();
+            var mockLogger = new Mock<ILogger<BraveBrowserAdapter>>();
             var mockFileSystem = new Mock<IWindowsFileSystemService>();
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
@@ -23,13 +23,15 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string expectedDefaultProfilePath = @"C:\Local\BraveSoftware\Brave-Browser\User Data\Default";
             mockFileSystem.Setup(fs => fs.DirectoryExists(expectedDefaultProfilePath)).Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemService).Returns(mockFileSystem.Object);
-            var braveBrowser = new BraveBrowser(mockOs.Object, mockLogger.Object);
+            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
+            var BraveBrowserAdapter = new BraveBrowserAdapter(mockOs.Object, mockLogger.Object);
 
-            var paths = braveBrowser.ResolvePaths();
+            var paths = BraveBrowserAdapter.ResolvePaths();
 
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Cache\Cache_Data");
             paths.CookiesDirs.ShouldContain($@"{expectedDefaultProfilePath}\Local Storage");
         }
     }
 }
+
+

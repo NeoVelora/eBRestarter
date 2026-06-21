@@ -10,11 +10,11 @@ using System.Text.Json.Serialization;
 namespace eBRestarter.Infrastructure.Services.Config;
 
 public class EVisitorConfigService(
-    IPathService pathService, 
+    IPathUseCase pathUseCase, 
     IWindowsFileSystemService fileSystem,
     ILogger<EVisitorConfigService> logger) : IEVisitorConfigService
 {
-    private readonly IPathService _pathService = pathService;
+    private readonly IPathUseCase _pathUseCase = pathUseCase;
     private readonly IWindowsFileSystemService _fileSystem = fileSystem;
     private readonly ILogger<EVisitorConfigService> _logger = logger;
 
@@ -27,7 +27,7 @@ public class EVisitorConfigService(
 
     public AppConfig LoadConfig()
     {
-        var filePath = _pathService.RetrieveConfigFilePath();
+        var filePath = _pathUseCase.RetrieveConfigFilePath();
 
         if (!_fileSystem.FileExists(filePath))
         {
@@ -57,7 +57,7 @@ public class EVisitorConfigService(
     {
         try
         {
-            var filePath = _pathService.RetrieveConfigFilePath();
+            var filePath = _pathUseCase.RetrieveConfigFilePath();
             var directory = _fileSystem.GetDirectoryName(filePath);
 
             if (!string.IsNullOrEmpty(directory) && !_fileSystem.DirectoryExists(directory))
@@ -86,3 +86,4 @@ public class EVisitorConfigService(
 
 [JsonSerializable(typeof(AppConfig))]
 internal partial class AppConfigJsonContext : JsonSerializerContext;
+

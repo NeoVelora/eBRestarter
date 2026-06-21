@@ -8,9 +8,9 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public partial class ViewModelAbout : ObservableObject
 {
-    private readonly IAppInfoService _appInfoService;
+    private readonly IAppInfoUseCase _appInfoUseCase;
 
-    private readonly IIconCreditService _iconCreditService;
+    private readonly IIconCreditHandler _iconCreditService;
 
     private readonly ILocalizationService _localizationService;
 
@@ -19,11 +19,11 @@ public partial class ViewModelAbout : ObservableObject
     public ObservableCollection<IconCredit> IconCredits { get; } = [];
 
     public ViewModelAbout(
-        IAppInfoService appInfoService,
+        IAppInfoUseCase AppInfoAdapter,
         ILocalizationService localizationService,
-        IIconCreditService iconCreditService)
+        IIconCreditHandler iconCreditService)
     {
-        _appInfoService = appInfoService;
+        _appInfoUseCase = AppInfoAdapter;
         _localizationService = localizationService;
         _iconCreditService = iconCreditService;
         AppVersion = _localizationService.RetrieveString("About_Loading");
@@ -33,10 +33,11 @@ public partial class ViewModelAbout : ObservableObject
     private void LoadVersionAndIconCredits()
     {
         string prefix = _localizationService.RetrieveString("About_VersionPrefix");
-        AppVersion = $"{prefix} {_appInfoService.RetrieveAppVersion()}";
+        AppVersion = $"{prefix} {_appInfoUseCase.RetrieveAppVersion()}";
         var credits = _iconCreditService.GetIconCredits();
         IconCredits.Clear();
         foreach (var iconCredit in credits)
             IconCredits.Add(iconCredit);
     }
 }
+
