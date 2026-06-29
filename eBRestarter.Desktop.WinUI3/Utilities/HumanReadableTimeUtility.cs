@@ -4,7 +4,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Utilities;
 
-public sealed class HumanReadableTimeUtility : ITimeFormatter
+public sealed class HumanReadableTimeUtility : ITimeFormatterPort
 {
     public string Format(int seconds)
     {

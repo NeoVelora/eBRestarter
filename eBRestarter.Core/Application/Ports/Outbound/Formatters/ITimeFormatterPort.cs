@@ -1,6 +1,6 @@
 namespace eBRestarter.Core.Application.Ports.Outbound.Formatters;
 
-public interface ITimeFormatter
+public interface ITimeFormatterPort
 {
     string Format(int seconds);
 }

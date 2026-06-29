@@ -1,5 +1,3 @@
-using eBRestarter.Infrastructure.Network;
-using eBRestarter.Infrastructure.Api;
 namespace eBRestarter.Infrastructure.Network;
 
 public sealed class ApiRequest
