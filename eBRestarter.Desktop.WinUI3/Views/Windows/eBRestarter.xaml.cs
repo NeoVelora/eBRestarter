@@ -1,5 +1,7 @@
-using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Desktop.WinUI3.Helpers;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Desktop.WinUI3.Helpers.Interfaces;
+using eBRestarter.Desktop.WinUI3.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
@@ -16,15 +18,26 @@ namespace eBRestarter.Desktop.WinUI3
     {
         private readonly INavigationService _navigationService;
 
-        private readonly IAppVersionInfoUseCase? _iAppVersionInfoService;
+        private readonly IAppVersionInfoPort? _iAppVersionInfoService;
+        private readonly IMainWindowProvider _mainWindowProvider;
+        private readonly IAppWindowHelper _appWindowHelper;
 
         private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
 
-        public EBRestarter(INavigationService navigationService, IAppVersionInfoUseCase iAppVersionInfoService)
+        public EBRestarter(
+            INavigationService navigationService,
+            IAppVersionInfoPort iAppVersionInfoService,
+            IMainWindowProvider mainWindowProvider,
+            IAppWindowHelper appWindowHelper)
         {
             InitializeComponent();
 
-            this.ConfigureTitleBarColors();
+            _mainWindowProvider = mainWindowProvider;
+            _appWindowHelper = appWindowHelper;
+
+            _mainWindowProvider.SetMainWindow(this);
+
+            _appWindowHelper.ConfigureTitleBarColors(this);
 
             NavigationFrame.CacheSize = 10;
 
@@ -87,4 +100,5 @@ namespace eBRestarter.Desktop.WinUI3
         }
     }
 }
+
 

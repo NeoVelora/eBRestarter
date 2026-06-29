@@ -1,9 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Providers;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.Interfaces.Authentication;
-using eBRestarter.Core.Application.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Authentication;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Desktop.WinUI3.Messages;
 using System;
 using System.IO;
@@ -11,13 +14,13 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public partial class ViewModelActivateApi : ObservableObject
+public sealed partial class ViewModelActivateApi : ObservableObject
 {
-    private readonly IApiAuthenticationUseCase _apiAuthenticationService;
+    private readonly IApiAuthenticationPort _apiAuthenticationService;
 
-    private readonly IEVisitorConfigService _configService;
+    private readonly IEVisitorConfigPort _configService;
 
-    private readonly ILocalizationService _localizationService;
+    private readonly ILocalizationProvider _localizationService;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
@@ -39,17 +42,17 @@ public partial class ViewModelActivateApi : ObservableObject
     private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
 
     public ViewModelActivateApi(
-        IApiAuthenticationUseCase apiAuthenticationService,
-        IEVisitorConfigService configService,
-        ILocalizationService localizationService)
+        IApiAuthenticationPort apiAuthenticationService,
+        IEVisitorConfigPort configService,
+        ILocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(apiAuthenticationService);
         ArgumentNullException.ThrowIfNull(configService);
-        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(LocalizationProvider);
 
         _apiAuthenticationService = apiAuthenticationService;
         _configService = configService;
-        _localizationService = localizationService;
+        _localizationService = LocalizationProvider;
 
         var config = _configService.LoadConfig();
         Username = config.Settings.ApiUsername;
@@ -120,3 +123,5 @@ public partial class ViewModelActivateApi : ObservableObject
         }
     }
 }
+
+

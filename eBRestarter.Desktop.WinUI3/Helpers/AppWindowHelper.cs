@@ -1,10 +1,11 @@
+using eBRestarter.Desktop.WinUI3.Helpers.Interfaces;
 using Microsoft.UI.Xaml;
 
 namespace eBRestarter.Desktop.WinUI3.Helpers;
 
-public static class AppWindowHelper
+public sealed class AppWindowHelper : IAppWindowHelper
 {
-    public static void ConfigureTitleBarColors(this Window window)
+    public void ConfigureTitleBarColors(Window window)
     {
         var appWindow = window.AppWindow;
         var titleBar = appWindow.TitleBar;
@@ -18,7 +19,7 @@ public static class AppWindowHelper
         window.SetTitleBar(null);
     }
 
-    public static void UpdateTitleBarTheme(this Window window, ElementTheme theme)
+    public void UpdateTitleBarTheme(Window window, ElementTheme theme)
     {
         var titleBar = window.AppWindow.TitleBar;
 

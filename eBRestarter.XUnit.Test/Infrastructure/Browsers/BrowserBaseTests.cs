@@ -1,8 +1,10 @@
-using eBRestarter.Core.Application.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Browsers;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Infrastructure.Adapters.WindowsOS;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Infrastructure.Browsers.Abstract;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -14,9 +16,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
     public class BrowserBaseTests
     {
 
-        private class TestDummyBrowser : BrowserBaseAdapter
+        private class TestDummyBrowser : BrowserBase
         {
-            public TestDummyBrowser(IOperatingSystemFacade os, ILogger logger) : base(os, logger) { }
+            public TestDummyBrowser(IOsProcessControlPort os, ISettingsPort settings, IFileSystemPort fs, ILogger logger) : base(os, settings, fs, logger) { }
 
             public override BrowserType Type => BrowserType.Firefox;
             public override string DisplayName => "TestBrowser";
@@ -46,9 +48,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [InlineData("", "Unknown")]
         public void CleanVersionString_ShouldExtractVersionNumberCorrectly(string? rawVersion, string expectedResult)
         {
-            var mockOs = new Mock<IOperatingSystemFacade>();
+            var mockProcess = new Mock<IOsProcessControlPort>();
+            var mockSettings = new Mock<ISettingsPort>();
+            var mockFileSystem = new Mock<IFileSystemPort>();
             var mockLogger = new Mock<ILogger>();
-            var dummyBrowser = new TestDummyBrowser(mockOs.Object, mockLogger.Object);
+            var dummyBrowser = new TestDummyBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
 
             var result = dummyBrowser.ExposeCleanVersionString(rawVersion);
 
@@ -58,27 +62,25 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void Start_ShouldFindExecutableAndCallProcessService_WithUrlAndArguments()
         {
-            var mockOs = new Mock<IOperatingSystemFacade>();
+            var mockProcess = new Mock<IOsProcessControlPort>();
+            var mockSettings = new Mock<ISettingsPort>();
+            
             var mockLogger = new Mock<ILogger>();
 
-            var mockFileSystem = new Mock<IWindowsFileSystemService>();
+            var mockFileSystem = new Mock<IFileSystemPort>();
             mockFileSystem.
                 Setup(fs => fs.FileExists(@"C:\FakePath\browser.exe")).
                 Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
-
-            var mockProcessService = new Mock<IWindowsProcessControlService>();
-            mockOs.Setup(os => os.WindowsProcessControlService).Returns(mockProcessService.Object);
-
-            var dummyBrowser = new TestDummyBrowser(mockOs.Object, mockLogger.Object);
+            
+            var dummyBrowser = new TestDummyBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
 
             const string testUrl = "https://www.ebesucher.com/surfbar/test";
             const string testArgs = "--incognito";
 
             dummyBrowser.Start(testUrl, testArgs);
 
-            mockProcessService.Verify(p => p.OpenUrlInBrowser(
+            mockProcess.Verify(p => p.OpenUrlInBrowser(
                 @"C:\FakePath\browser.exe",
                 "https://www.ebesucher.com/surfbar/test --incognito"
             ), Times.Once);
@@ -87,24 +89,22 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void Start_ShouldLogError_WhenExecutableIsNotFound()
         {
-            var mockOs = new Mock<IOperatingSystemFacade>();
+            var mockProcess = new Mock<IOsProcessControlPort>();
+            var mockSettings = new Mock<ISettingsPort>();
+            
             var mockLogger = new Mock<ILogger>();
 
-            var mockFileSystem = new Mock<IWindowsFileSystemService>();
+            var mockFileSystem = new Mock<IFileSystemPort>();
             mockFileSystem
                 .Setup(fs => fs.FileExists(It.IsAny<string>()))
                 .Returns(false);
 
-            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
-
-            var mockProcessService = new Mock<IWindowsProcessControlService>();
-            mockOs.Setup(os => os.WindowsProcessControlService).Returns(mockProcessService.Object);
-
-            var dummyBrowser = new TestDummyBrowser(mockOs.Object, mockLogger.Object);
+            
+            var dummyBrowser = new TestDummyBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
 
             dummyBrowser.Start("https://test.com");
 
-            mockProcessService.Verify(p => p.OpenUrlInBrowser(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            mockProcess.Verify(p => p.OpenUrlInBrowser(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
     }
 }

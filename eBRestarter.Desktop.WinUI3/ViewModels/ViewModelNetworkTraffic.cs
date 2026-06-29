@@ -1,8 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Providers;
 using eBRestarter.Core.Application.Extensions;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Models.Records;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Desktop.WinUI3.Models.UI;
 using Microsoft.UI.Dispatching;
 using System;
@@ -15,7 +17,7 @@ using System.Timers;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
+public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
 {
     private const string NetworkCardDefaultForegroundHex = "#FFFFFF";
 
@@ -29,9 +31,9 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
 
     private const string SentDataIconPath = "/Resources/Visuals/Icons/LightTheme/send-data-light_theme.png";
 
-    private readonly ILocalizationService _localizationService;
+    private readonly ILocalizationProvider _localizationService;
 
-    private readonly IWindowsNetworkInfoUseCase _networkService;
+    private readonly INetworkInfoPort _networkService;
 
     private readonly DispatcherQueue _dispatcherQueue;
 
@@ -41,14 +43,14 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
 
 
     public ViewModelNetworkTraffic(
-        IWindowsNetworkInfoUseCase networkService,
-        ILocalizationService localizationService)
+        INetworkInfoPort networkService,
+        ILocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(networkService);
-        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(LocalizationProvider);
 
         _networkService = networkService;
-        _localizationService = localizationService;
+        _localizationService = LocalizationProvider;
 
         _dispatcherQueue =
             DispatcherQueue.GetForCurrentThread()
@@ -173,3 +175,5 @@ public partial class ViewModelNetworkTraffic : ObservableObject, IDisposable
         });
     }
 }
+
+

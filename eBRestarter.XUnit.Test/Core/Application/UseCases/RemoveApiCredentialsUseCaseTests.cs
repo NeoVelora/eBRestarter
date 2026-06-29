@@ -1,5 +1,9 @@
-using eBRestarter.Core.Application.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.RemoveApiCredentials;
 using eBRestarter.Core.Application.UseCases.RemoveApiCredentials;
+using eBRestarter.Core.Application.Models.Errors;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Domain.Entities;
 using Moq;
 using Shouldly;
@@ -10,12 +14,12 @@ namespace eBRestarter.Tests.Core.Application.UseCases.RemoveApiCredentials
 {
     public class RemoveApiCredentialsUseCaseTests
     {
-        private readonly Mock<IEVisitorConfigService> _mockConfigService;
+        private readonly Mock<IEVisitorConfigPort> _mockConfigService;
         private readonly RemoveApiCredentialsUseCase _sut;
 
         public RemoveApiCredentialsUseCaseTests()
         {
-            _mockConfigService = new Mock<IEVisitorConfigService>();
+            _mockConfigService = new Mock<IEVisitorConfigPort>();
             _sut = new RemoveApiCredentialsUseCase(_mockConfigService.Object);
         }
 
@@ -30,7 +34,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.RemoveApiCredentials
                     ApiUsername = "MeinApiUser123",
                     ApiKey = "GeheimerSchluessel",
                     Theme = "Dark",
-                    Language = 1
+Language = 1
                 }
             };
 
@@ -82,3 +86,4 @@ namespace eBRestarter.Tests.Core.Application.UseCases.RemoveApiCredentials
         }
     }
 }
+

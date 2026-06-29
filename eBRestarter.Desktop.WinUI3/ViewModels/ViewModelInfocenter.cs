@@ -1,7 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Providers;
 using CommunityToolkit.Mvvm.Input;
-using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.UseCases.GetSystemInformation;
+using eBRestarter.Core.Application.Ports.Outbound.SystemInfo;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using System;
 using System.Diagnostics;
@@ -9,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public partial class ViewModelInfocenter : ObservableObject
+public sealed partial class ViewModelInfocenter : ObservableObject
 {
     private const string InfocenterLoadFailedResourceKey = "Infocenter_LoadFailed";
 
@@ -17,9 +20,9 @@ public partial class ViewModelInfocenter : ObservableObject
 
     private readonly IDialogService _dialogService;
 
-    private readonly IGetSystemInformationUseCase _getSystemInformationUseCase;
+    private readonly ISystemInformationPort _getSystemInformationUseCase;
 
-    private readonly ILocalizationService _localizationService;
+    private readonly ILocalizationProvider _localizationService;
 
     [ObservableProperty]
     public partial string BrowserText { get; set; }
@@ -43,17 +46,17 @@ public partial class ViewModelInfocenter : ObservableObject
     public partial string RamText { get; set; }
 
     public ViewModelInfocenter(
-        IGetSystemInformationUseCase getSystemInformationUseCase,
+        ISystemInformationPort SystemInformationProvider,
         IDialogService dialogService,
-        ILocalizationService localizationService)
+        ILocalizationProvider LocalizationProvider)
     {
-        ArgumentNullException.ThrowIfNull(getSystemInformationUseCase);
+        ArgumentNullException.ThrowIfNull(SystemInformationProvider);
         ArgumentNullException.ThrowIfNull(dialogService);
-        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(LocalizationProvider);
 
-        _getSystemInformationUseCase = getSystemInformationUseCase;
+        _getSystemInformationUseCase = SystemInformationProvider;
         _dialogService = dialogService;
-        _localizationService = localizationService;
+        _localizationService = LocalizationProvider;
 
         string loadingPlaceholder = _localizationService.RetrieveString(InfocenterLoadingResourceKey);
         BrowserText = loadingPlaceholder;
@@ -116,3 +119,5 @@ public partial class ViewModelInfocenter : ObservableObject
         }
     }
 }
+
+

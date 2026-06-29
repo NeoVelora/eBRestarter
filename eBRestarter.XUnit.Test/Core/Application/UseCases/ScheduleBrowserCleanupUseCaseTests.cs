@@ -1,5 +1,9 @@
-using eBRestarter.Core.Application.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.ScheduleBrowserCleanup;
 using eBRestarter.Core.Application.UseCases.ScheduleBrowserCleanup;
+using eBRestarter.Core.Application.Models.Errors;
+using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Domain.Entities;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
@@ -11,13 +15,13 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
 {
     public class ScheduleBrowserCleanupUseCaseTests
     {
-        private readonly Mock<IEVisitorConfigService> _mockConfigService;
+        private readonly Mock<IEVisitorConfigPort> _mockConfigService;
         private readonly FakeTimeProvider _fakeTimeProvider;
         private readonly ScheduleBrowserCleanupUseCase _sut;
 
         public ScheduleBrowserCleanupUseCaseTests()
         {
-            _mockConfigService = new Mock<IEVisitorConfigService>();
+            _mockConfigService = new Mock<IEVisitorConfigPort>();
             _fakeTimeProvider = new FakeTimeProvider();
 
             _sut = new ScheduleBrowserCleanupUseCase(
@@ -83,7 +87,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
             response.NextDate.ShouldBeNull();
 
             savedConfig.ShouldNotBeNull();
-            savedConfig.Browser.DeleteBrowserCacheIntervalDays.ShouldBe(invalidIntervalDays);
+            savedConfig.Browser.DeleteBrowserCacheIntervalDays.ShouldBe(0);
             savedConfig.Browser.NextBrowserDeleteCacheDate.ShouldBe(DateTime.MinValue);
 
             _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Once);
@@ -103,3 +107,4 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
         }
     }
 }
+

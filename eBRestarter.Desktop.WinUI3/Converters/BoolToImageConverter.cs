@@ -4,7 +4,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Converters;
 
-public partial class BoolToImageConverter : IValueConverter
+public sealed partial class BoolToImageConverter : IValueConverter
 {
     public string? ImagePathWhenFalse { get; set; }
     public string? ImagePathWhenTrue { get; set; }

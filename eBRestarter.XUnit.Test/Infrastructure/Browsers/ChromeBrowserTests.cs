@@ -1,6 +1,8 @@
-using eBRestarter.Core.Application.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
-using eBRestarter.Infrastructure.Browsers;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Infrastructure.Adapters.WindowsOS;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Infrastructure.Adapters.Browsers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -13,9 +15,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void GetPaths_ShouldGenerateCorrectCacheAndCookieDirectories_ForDefaultProfile()
         {
-            var mockOs = new Mock<IOperatingSystemFacade>();
-            var mockLogger = new Mock<ILogger<ChromeBrowserAdapter>>();
-            var mockFileSystem = new Mock<IWindowsFileSystemService>();
+            var mockProcess = new Mock<IOsProcessControlPort>();
+            var mockSettings = new Mock<ISettingsPort>();
+            var mockFileSystem = new Mock<IFileSystemPort>();
+            var mockLogger = new Mock<ILogger<ChromeBrowser>>();
+            
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Users\Test\AppData\Local");
 
@@ -26,10 +30,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string expectedDefaultProfilePath = @"C:\Users\Test\AppData\Local\Google\Chrome\User Data\Default";
             mockFileSystem.Setup(fs => fs.DirectoryExists(expectedDefaultProfilePath)).Returns(true);
 
-            mockOs.Setup(os => os.WindowsFileSystemServiceAdapter).Returns(mockFileSystem.Object);
-            var ChromeBrowserAdapter = new ChromeBrowserAdapter(mockOs.Object, mockLogger.Object);
+            var ChromeBrowser = new ChromeBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
 
-            var paths = ChromeBrowserAdapter.ResolvePaths();
+            var paths = ChromeBrowser.ResolvePaths();
 
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Cache\Cache_Data");
             paths.CacheDirs.ShouldContain($@"{expectedDefaultProfilePath}\Service Worker");

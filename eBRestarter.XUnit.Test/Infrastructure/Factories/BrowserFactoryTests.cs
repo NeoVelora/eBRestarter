@@ -1,6 +1,8 @@
-using eBRestarter.Core.Application.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Enums;
-using eBRestarter.Infrastructure.Browsers;
+using eBRestarter.Infrastructure.Adapters.Browsers;
 using eBRestarter.Infrastructure.Factories;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -10,31 +12,33 @@ using Xunit;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Factories
 {
-    public class BrowserFactoryTests
+    public class BrowserFactoryProviderAdapterTests
     {
         [Theory]
-        [InlineData(BrowserType.Chrome, typeof(ChromeBrowserAdapter))]
-        [InlineData(BrowserType.Firefox, typeof(FirefoxBrowserAdapter))]
-        [InlineData(BrowserType.Edge, typeof(EdgeBrowserAdapter))]
-        [InlineData(BrowserType.Brave, typeof(BraveBrowserAdapter))]
-        [InlineData(BrowserType.Vivaldi, typeof(VivaldiBrowserAdapter))]
+        [InlineData(BrowserType.Chrome, typeof(ChromeBrowser))]
+        [InlineData(BrowserType.Firefox, typeof(FirefoxBrowser))]
+        [InlineData(BrowserType.Edge, typeof(EdgeBrowser))]
+        [InlineData(BrowserType.Brave, typeof(BraveBrowser))]
+        [InlineData(BrowserType.Vivaldi, typeof(VivaldiBrowser))]
         public void Create_ShouldReturnCorrectBrowserInstance_ForValidBrowserType(BrowserType inputType, Type expectedClassType)
         {
             var mockServiceProvider = new Mock<IServiceProvider>();
 
-            var mockOs = new Mock<IOperatingSystemFacade>();
+            var mockProcess = new Mock<IOsProcessControlPort>();
+            var mockSettings = new Mock<ISettingsPort>();
+            var mockFs = new Mock<IFileSystemPort>();
 
-            var fakeChrome = new ChromeBrowserAdapter(mockOs.Object, new Mock<ILogger<ChromeBrowserAdapter>>().Object);
-            var fakeFirefox = new FirefoxBrowserAdapter(mockOs.Object, new Mock<ILogger<FirefoxBrowserAdapter>>().Object);
-            var fakeEdge = new EdgeBrowserAdapter(mockOs.Object, new Mock<ILogger<EdgeBrowserAdapter>>().Object);
-            var fakeBrave = new BraveBrowserAdapter(mockOs.Object, new Mock<ILogger<BraveBrowserAdapter>>().Object);
-            var fakeVivaldi = new VivaldiBrowserAdapter(mockOs.Object, new Mock<ILogger<VivaldiBrowserAdapter>>().Object);
+            var fakeChrome = new ChromeBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<ChromeBrowser>>().Object);
+            var fakeFirefox = new FirefoxBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<FirefoxBrowser>>().Object);
+            var fakeEdge = new EdgeBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<EdgeBrowser>>().Object);
+            var fakeBrave = new BraveBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<BraveBrowser>>().Object);
+            var fakeVivaldi = new VivaldiBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<VivaldiBrowser>>().Object);
 
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(ChromeBrowserAdapter))).Returns(fakeChrome);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(FirefoxBrowserAdapter))).Returns(fakeFirefox);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(EdgeBrowserAdapter))).Returns(fakeEdge);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(BraveBrowserAdapter))).Returns(fakeBrave);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(VivaldiBrowserAdapter))).Returns(fakeVivaldi);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(ChromeBrowser))).Returns(fakeChrome);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(FirefoxBrowser))).Returns(fakeFirefox);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(EdgeBrowser))).Returns(fakeEdge);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(BraveBrowser))).Returns(fakeBrave);
+            mockServiceProvider.Setup(sp => sp.GetService(typeof(VivaldiBrowser))).Returns(fakeVivaldi);
 
             var factory = new BrowserFactory(mockServiceProvider.Object);
             var result = factory.Create(inputType);

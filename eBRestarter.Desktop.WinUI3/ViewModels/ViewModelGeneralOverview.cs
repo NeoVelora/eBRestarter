@@ -1,9 +1,15 @@
+using eBRestarter.Core.Application.Ports.Outbound;
+using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Providers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Formatters;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Models.Records;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using LiveChartsCore;
@@ -22,7 +28,7 @@ using System.Threading.Tasks;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public partial class ViewModelGeneralOverview : ObservableObject
+public sealed partial class ViewModelGeneralOverview : ObservableObject
 {
     private const double ChartValueChangeEpsilon = 0.0001;
 
@@ -40,9 +46,9 @@ public partial class ViewModelGeneralOverview : ObservableObject
 
     private const int YAxisMinStep = 100;
 
-    private readonly IEVisitorApiService _eVisitorApiService;
+    private readonly IEVisitorApiProviderPort _eVisitorApiService;
 
-    private readonly ILocalizationService _localizationService;
+    private readonly ILocalizationProvider _localizationService;
 
     private readonly INavigationService _navigationService;
 
@@ -56,7 +62,7 @@ public partial class ViewModelGeneralOverview : ObservableObject
 
     private readonly DispatcherTimer _timer;
 
-    private readonly IEVisitorConfigService _configService;
+    private readonly IEVisitorConfigPort _configService;
 
     private bool _isApiConfigured;
 
@@ -135,18 +141,18 @@ public partial class ViewModelGeneralOverview : ObservableObject
 
     public ViewModelGeneralOverview(
         INavigationService navigationService,
-        IEVisitorApiService eVisitorApiService,
-        ILocalizationService localizationService,
-        IEVisitorConfigService configService)
+        IEVisitorApiProviderPort eVisitorApiService,
+        ILocalizationProvider LocalizationProvider,
+        IEVisitorConfigPort configService)
     {
         ArgumentNullException.ThrowIfNull(navigationService);
         ArgumentNullException.ThrowIfNull(eVisitorApiService);
-        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(LocalizationProvider);
         ArgumentNullException.ThrowIfNull(configService);
 
         _navigationService = navigationService;
         _eVisitorApiService = eVisitorApiService;
-        _localizationService = localizationService;
+        _localizationService = LocalizationProvider;
         _configService = configService;
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
@@ -235,7 +241,7 @@ public partial class ViewModelGeneralOverview : ObservableObject
                 string monthsString = _localizationService.RetrieveString("Chart_MonthsShort");
                 xAxis.Labels = !string.IsNullOrEmpty(monthsString)
                     ? monthsString.Split(',')
-                    : ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+                    : ["Jan", "Feb", "M�r", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
                 break;
         }
 
@@ -399,5 +405,6 @@ public partial class ViewModelGeneralOverview : ObservableObject
     }
 
     [RelayCommand] private void GoToAPILogin() => _navigationService.NavigateTo("Options", parameter: 1);
-
 }
+
+

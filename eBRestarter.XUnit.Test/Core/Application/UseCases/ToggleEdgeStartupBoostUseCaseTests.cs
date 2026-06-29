@@ -1,6 +1,11 @@
-using eBRestarter.Core.Application.Interfaces.Browser;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.ToggleEdgeStartupBoost;
 using eBRestarter.Core.Application.UseCases.ToggleEdgeStartupBoost;
+using eBRestarter.Core.Application.Models.Errors;
+using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Enums;
 using Moq;
 using Shouldly;
@@ -11,16 +16,16 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
 {
     public class ToggleEdgeStartupBoostUseCaseTests
     {
-        private readonly Mock<IWindowsStartupManagerService> _mockStartupService;
-        private readonly Mock<IBrowserFactory> _mockBrowserFactory;
-        private readonly Mock<IBrowser> _mockEdgeBrowser;
+        private readonly Mock<IBrowserConfigPort> _mockStartupService;
+        private readonly Mock<IBrowserFactoryPort> _mockBrowserFactory;
+        private readonly Mock<IBrowserPort> _mockEdgeBrowser;
         private readonly ToggleEdgeStartupBoostUseCase _sut;
 
         public ToggleEdgeStartupBoostUseCaseTests()
         {
-            _mockStartupService = new Mock<IWindowsStartupManagerService>();
-            _mockBrowserFactory = new Mock<IBrowserFactory>();
-            _mockEdgeBrowser = new Mock<IBrowser>();
+            _mockStartupService = new Mock<IBrowserConfigPort>();
+            _mockBrowserFactory = new Mock<IBrowserFactoryPort>();
+            _mockEdgeBrowser = new Mock<IBrowserPort>();
 
             _mockBrowserFactory
                 .Setup(f => f.Create(BrowserType.Edge))
@@ -36,12 +41,12 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
         [InlineData(false)]
         public void IsEnabled_ShouldReturnExactStateFromStartupService(bool expectedState)
         {
-            _mockStartupService.Setup(s => s.IsEdgeStartupBoostEnabled()).Returns(expectedState);
+            _mockStartupService.Setup(s => s.IsBrowserStartupBoostEnabled()).Returns(expectedState);
 
             var result = _sut.IsEnabled();
 
             result.ShouldBe(expectedState);
-            _mockStartupService.Verify(s => s.IsEdgeStartupBoostEnabled(), Times.Once);
+            _mockStartupService.Verify(s => s.IsBrowserStartupBoostEnabled(), Times.Once);
         }
 
         [Theory]
@@ -65,7 +70,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
         {
             var result = _sut.Toggle(targetState);
 
-            _mockStartupService.Verify(s => s.SetEdgeStartupBoost(targetState), Times.Once);
+            _mockStartupService.Verify(s => s.SetBrowserStartupBoost(targetState), Times.Once);
 
             result.Success.ShouldBeTrue();
             result.NewState.ShouldBe(targetState);
@@ -76,7 +81,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
         public void Toggle_ShouldCatchException_AndReturnFailureResponse()
         {
             _mockStartupService
-                .Setup(s => s.SetEdgeStartupBoost(It.IsAny<bool>()))
+                .Setup(s => s.SetBrowserStartupBoost(It.IsAny<bool>()))
                 .Throws(new UnauthorizedAccessException("Zugriff auf Registry verweigert."));
 
             var result = _sut.Toggle(true);
@@ -89,3 +94,5 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
         }
     }
 }
+
+

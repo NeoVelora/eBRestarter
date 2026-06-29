@@ -1,12 +1,26 @@
-using eBRestarter.Core.Application.Constants;
-using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.Interfaces.Browser;
-using eBRestarter.Core.Application.Interfaces.Config;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Domain.Handlers;
+using eBRestarter.Core.Application.Validators;
+using eBRestarter.Infrastructure.Api;
+using eBRestarter.Infrastructure.Browser;
+using eBRestarter.Infrastructure.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Formatters;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.ManageRestarterCycle;
 using eBRestarter.Core.Application.UseCases.ManageRestarterCycle;
+using eBRestarter.Core.Application.Models.Errors;
+using eBRestarter.Core.Application.Models.Records;
+using eBRestarter.Core.Application.Handlers.ManageRestarterCycle.Strategies;
+using eBRestarter.Core.Application.Handlers.ManageRestarterCycle.Strategies;
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Domain.Entities;
-using eBRestarter.Core.Domain.Services;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Shouldly;
@@ -20,26 +34,24 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
 {
     public class ManageRestarterCycleUseCaseTests
     {
-        private readonly Mock<IBrowserFactory> _mockBrowserFactory;
-        private readonly Mock<ILocalizationService> _mockLocalizationService;
-        private readonly Mock<IBrowserDisplayNameResolverUseCase> _mockDisplayNameResolver;
-        private readonly Mock<IEVisitorConfigService> _mockConfigService;
+        private readonly Mock<IBrowserFactoryPort> _mockBrowserFactory;
+        private readonly Mock<ILocalizationProvider> _mockLocalizationService;
+        private readonly Mock<IEVisitorConfigPort> _mockConfigService;
         private readonly Mock<IBrowserCleanupScheduleHandler> _mockCleanupScheduleHandler;
-        private readonly Mock<IWindowsProcessControlService> _mockProcessService;
+        private readonly Mock<IOsProcessControlPort> _mockProcessService;
 
-        private readonly Mock<IBrowser> _mockBrowser;
+        private readonly Mock<IBrowserPort> _mockBrowser;
         private readonly FakeTimeProvider _fakeTimeProvider;
         private readonly ManageRestarterCycleUseCase _sut;
 
         public ManageRestarterCycleUseCaseTests()
         {
-            _mockBrowserFactory = new Mock<IBrowserFactory>();
-            _mockLocalizationService = new Mock<ILocalizationService>();
-            _mockDisplayNameResolver = new Mock<IBrowserDisplayNameResolverUseCase>();
-            _mockConfigService = new Mock<IEVisitorConfigService>();
+            _mockBrowserFactory = new Mock<IBrowserFactoryPort>();
+            _mockLocalizationService = new Mock<ILocalizationProvider>();
+            _mockConfigService = new Mock<IEVisitorConfigPort>();
             _mockCleanupScheduleHandler = new Mock<IBrowserCleanupScheduleHandler>();
-            _mockProcessService = new Mock<IWindowsProcessControlService>();
-            _mockBrowser = new Mock<IBrowser>();
+            _mockProcessService = new Mock<IOsProcessControlPort>();
+            _mockBrowser = new Mock<IBrowserPort>();
 
             _fakeTimeProvider = new FakeTimeProvider();
 
@@ -48,15 +60,18 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
             var dummyConfig = new AppConfig { Browser = null, Username = "TestUser" };
             _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
 
+            var delayStrategy = new DelayPhaseStrategy(_fakeTimeProvider);
+            var runStrategy = new RunBrowserPhaseStrategy(_fakeTimeProvider, _mockProcessService.Object, _mockConfigService.Object);
+
             _sut = new ManageRestarterCycleUseCase(
                 _mockBrowserFactory.Object,
                 _mockLocalizationService.Object,
-                _mockDisplayNameResolver.Object,
                 _mockConfigService.Object,
                 _mockCleanupScheduleHandler.Object,
                 _fakeTimeProvider,
-                _mockProcessService.Object,
-                new ManageRestarterCycleRequestValidator());
+                new ManageRestarterCycleValidator(),
+                delayStrategy,
+                runStrategy);
         }
 
         private async Task AdvanceTimeAsync(int seconds)
@@ -71,7 +86,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
         [Fact]
         public async Task StartAsync_ShouldStopCleanly_WhenStopIsCalled()
         {
-            var request = new ManageRestarterCycleRequest("Firefox", "User", 10, 5, false);
+            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "User", 10, 5, false);
             var emittedEvents = new List<RestarterCycleProgress>();
             _sut.ProgressChanged += (s, e) => emittedEvents.Add(e);
 
@@ -89,8 +104,8 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
         [Fact]
         public async Task StartAsync_ShouldExecuteFullCycleAndLaunchBrowser()
         {
-            var request = new ManageRestarterCycleRequest("Firefox", "TestUser", 10, 5, false);
-            _mockDisplayNameResolver.Setup(r => r.ResolveBrowserTypeFromDisplayName(It.IsAny<string>(), It.IsAny<string>())).Returns(BrowserType.Firefox);
+            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "TestUser", 10, 5, false);
+
 
             var cycleTask = _sut.StartAsync(request, () => Task.CompletedTask);
 
@@ -110,7 +125,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
         [Fact]
         public async Task RunBrowserPhase_ShouldDetectCrash_AndTriggerCrashCooldown()
         {
-            var request = new ManageRestarterCycleRequest("Firefox", "TestUser", 60, 10, CheckBrowserAliveRoutine: true);
+            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "TestUser", 60, 10, CheckBrowserAliveRoutine: true);
             var emittedEvents = new List<RestarterCycleProgress>();
             _sut.ProgressChanged += (s, e) => emittedEvents.Add(e);
 
@@ -130,7 +145,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
         [Fact]
         public async Task Cycle_ShouldTriggerCleanupCallback_AndSaveNewDate()
         {
-            var request = new ManageRestarterCycleRequest("Firefox", "TestUser", 60, 10, false);
+            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "TestUser", 60, 10, false);
             bool callbackExecuted = false;
 
             var dummyConfig = new AppConfig { Browser = new BrowserConfig() };
@@ -160,7 +175,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
         [Fact]
         public async Task RunCycle_ShouldReloadConfig_BeforeEveryNewIteration()
         {
-            var request = new ManageRestarterCycleRequest("Chrome", "OldUser", 10, 5, false);
+            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Chrome, "OldUser", 10, 5, false);
 
             var config1 = new AppConfig { Username = "OldUser", Browser = null };
             var config2 = new AppConfig { Username = "NewUser", Browser = null };
@@ -185,3 +200,5 @@ namespace eBRestarter.XUnit.Test.Core.Application.UseCases
         }
     }
 }
+
+

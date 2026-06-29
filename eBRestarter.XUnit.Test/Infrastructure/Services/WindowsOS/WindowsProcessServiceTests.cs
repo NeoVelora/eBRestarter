@@ -1,5 +1,6 @@
-using eBRestarter.Infrastructure.Services.WindowsOS;
-using eBRestarter.Core.Application.Interfaces.OperatingSystem.WindowsOS.Process;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Infrastructure.Adapters.Wrapper;
+using eBRestarter.Infrastructure.Adapters.WindowsOS;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -14,16 +15,16 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsProcessServiceTests
     {
-        private readonly Mock<ILogger<WindowsProcessAdapter>> _mockLogger;
+        private readonly Mock<ILogger<WindowsProcessControlAdapter>> _mockLogger;
         private readonly Mock<IProcessWrapper> _mockProcessWrapper;
-        private readonly WindowsProcessAdapter _sut;
+        private readonly WindowsProcessControlAdapter _sut;
 
         public WindowsProcessServiceTests()
         {
-            _mockLogger = new Mock<ILogger<WindowsProcessAdapter>>();
+            _mockLogger = new Mock<ILogger<WindowsProcessControlAdapter>>();
             _mockProcessWrapper = new Mock<IProcessWrapper>();
 
-            _sut = new WindowsProcessAdapter(_mockLogger.Object, _mockProcessWrapper.Object);
+            _sut = new WindowsProcessControlAdapter(_mockLogger.Object, _mockProcessWrapper.Object);
         }
 
         [Fact]
@@ -40,7 +41,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
 
         [Fact]
-        public void StartMsiFile_ShouldConfigureMsiExec_AndReadStreams()
+        public void RunInstaller_ShouldConfigureMsiExec_AndReadStreams()
         {
             string msiPath = @"C:\Install\setup.msi";
             string expectedSystemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
@@ -54,7 +55,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             _mockProcessWrapper.Setup(w => w.Start(It.IsAny<ProcessStartInfo>())).Returns(mockProcess.Object);
 
-            _sut.StartMsiFile(msiPath);
+            _sut.RunInstaller(msiPath);
 
             _mockProcessWrapper.Verify(w => w.Start(It.Is<ProcessStartInfo>(info =>
                 info.FileName == expectedMsiExecPath &&
@@ -97,13 +98,13 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
 
         [Fact]
-        public void OpenExplorer_ShouldCallExplorerExe_WithQuotedPath()
+        public void OpenDirectoryInFileBrowser_ShouldCallExplorerExe_WithQuotedPath()
         {
             string targetFolder = @"C:\My Folder With Spaces";
             string expectedWindowsFolder = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
             string expectedExplorerPath = Path.Combine(expectedWindowsFolder, "explorer.exe");
 
-            _sut.OpenExplorer(targetFolder);
+            _sut.OpenDirectoryInFileBrowser(targetFolder);
 
             _mockProcessWrapper.Verify(w => w.Start(It.Is<ProcessStartInfo>(info =>
                 info.FileName == expectedExplorerPath &&
@@ -191,4 +192,5 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
+
 

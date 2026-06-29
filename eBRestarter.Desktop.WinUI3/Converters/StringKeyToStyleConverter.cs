@@ -4,7 +4,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Converters;
 
-public partial class StringKeyToStyleConverter : IValueConverter
+public sealed partial class StringKeyToStyleConverter : IValueConverter
 {
     public object? Convert(object value, Type targetType, object parameter, string language)
     {
@@ -16,7 +16,9 @@ public partial class StringKeyToStyleConverter : IValueConverter
             }
 
         }
+
         return null;
+
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

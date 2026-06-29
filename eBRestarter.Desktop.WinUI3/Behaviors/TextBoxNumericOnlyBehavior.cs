@@ -5,9 +5,8 @@ using System.Text.RegularExpressions;
 
 namespace eBRestarter.Desktop.WinUI3.Behaviors;
 
-public class TextBoxNumericOnlyBehavior : Behavior<TextBox>
+public sealed class TextBoxNumericOnlyBehavior : Behavior<TextBox>
 {
-
     private static readonly Regex _regex = new("[^0-9]+", RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100));
 
     protected override void OnAttached()

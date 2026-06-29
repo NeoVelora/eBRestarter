@@ -1,36 +1,39 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using eBRestarter.Core.Application.Interfaces;
-using eBRestarter.Core.Application.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Providers;
 using eBRestarter.Core.Application.Enums;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using System;
 using System.Collections.ObjectModel;
 using System.Timers;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public partial class ViewModelInstallAddOn : ObservableObject, IDisposable
+public sealed partial class ViewModelInstallAddOn : ObservableObject, IDisposable
 {
     private const double BrowserAddonRefreshIntervalMilliseconds = 2000;
 
-    private readonly IBrowserFactory _browserFactory;
+    private readonly IBrowserFactoryPort _browserFactory;
 
     private readonly Timer _timer;
 
     public ObservableCollection<ViewModelBrowserAddonStatus> Browsers { get; } = [];
 
 
-    public ViewModelInstallAddOn(IBrowserFactory browserFactory, ILocalizationService localizationService)
+    public ViewModelInstallAddOn(IBrowserFactoryPort BrowserFactory, ILocalizationProvider LocalizationProvider)
     {
-        ArgumentNullException.ThrowIfNull(browserFactory);
-        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(BrowserFactory);
+        ArgumentNullException.ThrowIfNull(LocalizationProvider);
 
-        _browserFactory = browserFactory;
+        _browserFactory = BrowserFactory;
 
-        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Brave), localizationService));
-        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Chrome), localizationService));
-        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Edge), localizationService));
-        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Firefox), localizationService));
-        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Vivaldi), localizationService));
+        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Brave), LocalizationProvider));
+        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Chrome), LocalizationProvider));
+        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Edge), LocalizationProvider));
+        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Firefox), LocalizationProvider));
+        Browsers.Add(new ViewModelBrowserAddonStatus(_browserFactory.Create(BrowserType.Vivaldi), LocalizationProvider));
 
         _timer = new Timer(BrowserAddonRefreshIntervalMilliseconds);
         _timer.Elapsed += OnBrowserAddonRefreshTimerElapsed;
@@ -51,3 +54,5 @@ public partial class ViewModelInstallAddOn : ObservableObject, IDisposable
             browserAddonStatus.RefreshStatus();
     }
 }
+
+

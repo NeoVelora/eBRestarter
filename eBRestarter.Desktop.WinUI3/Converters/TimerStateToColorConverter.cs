@@ -5,7 +5,7 @@ using System;
 
 namespace eBRestarter.Desktop.WinUI3.Converters
 {
-    public partial class TimerStateToColorConverter : IValueConverter
+    public sealed partial class TimerStateToColorConverter : IValueConverter
     {
 
         public object Convert(object value, Type targetType, object parameter, string language)
