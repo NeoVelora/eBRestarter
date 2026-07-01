@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using eBRestarter.Core.Application.Ports.Outbound.Application;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Models;
 using eBRestarter.Desktop.WinUI3.Providers.Interfaces;
 using System.Collections.ObjectModel;
@@ -9,7 +9,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public sealed partial class ViewModelAbout : ObservableObject
 {
-    private readonly IAppInfoPort _appInfoUseCase;
+    private readonly IAppInfoProviderOutboundPort _appInfoProvider;
 
     private readonly IIconCreditProvider _iconCreditService;
 
@@ -20,11 +20,11 @@ public sealed partial class ViewModelAbout : ObservableObject
     public ObservableCollection<IconCredit> IconCredits { get; } = [];
 
     public ViewModelAbout(
-        IAppInfoPort AppInfoProviderAdapter,
+        IAppInfoProviderOutboundPort appInfoProvider,
         ILocalizationProvider LocalizationProvider,
         IIconCreditProvider iconCreditService)
     {
-        _appInfoUseCase = AppInfoProviderAdapter;
+        _appInfoProvider = appInfoProvider;
         _localizationService = LocalizationProvider;
         _iconCreditService = iconCreditService;
         AppVersion = _localizationService.RetrieveString("About_Loading");
@@ -34,7 +34,7 @@ public sealed partial class ViewModelAbout : ObservableObject
     private void LoadVersionAndIconCredits()
     {
         string prefix = _localizationService.RetrieveString("About_VersionPrefix");
-        AppVersion = $"{prefix} {_appInfoUseCase.RetrieveAppVersion()}";
+        AppVersion = $"{prefix} {_appInfoProvider.RetrieveAppVersion()}";
         var credits = _iconCreditService.GetIconCredits();
         IconCredits.Clear();
         foreach (var iconCredit in credits)

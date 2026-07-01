@@ -2,9 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using eBRestarter.Core.Application.Extensions;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.DownloadBrowser;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Xaml;
 using System;
@@ -18,23 +17,15 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
 {
     private const int BrowserListRefreshIntervalSeconds = 2;
 
-    private readonly IBrowserDiscoveryPort _browserService;
+    private readonly IBrowserDiscoveryProviderOutboundPort _browserService;
 
-    private readonly IBrowserDownloadPort _downloadService;
+    private readonly IDownloadBrowserUseCase _downloadBrowserUseCase;
 
     private readonly IDialogService _dialogService;
 
-    private readonly IEVisitorConfigPort _EVRestarterConfigRepository;
+    private readonly IEVisitorConfigRepositoryOutboundPort _EVRestarterConfigRepository;
 
     private readonly ILocalizationProvider _localizationService;
-
-    private readonly IOsProcessControlPort _osProcessControlPort;
-    private readonly IOsAutoLogonPort _osAutoLogonPort;
-    private readonly ISystemInfoPort _windowsSystemInfo;
-    private readonly ISettingsPort _settingsPort;
-    private readonly IAutoStartPort _autoStartPort;
-    private readonly IFileSystemPort _fileSystemPort;
-    private readonly IBrowserConfigPort _browserConfigPort;
 
     private readonly DispatcherTimer _refreshTimer;
 
@@ -43,35 +34,20 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
 
 
     public ViewModelInstalledBrowsers(
-        IBrowserDiscoveryPort browserService,
-        IBrowserDownloadPort downloadService,
-        IOsProcessControlPort osProcessControlPort, IOsAutoLogonPort osAutoLogonPort, ISystemInfoPort windowsSystemInfo, ISettingsPort settingsPort, IAutoStartPort autoStartPort, IFileSystemPort fileSystemPort, IBrowserConfigPort browserConfigPort,
+        IBrowserDiscoveryProviderOutboundPort browserService,
+        IDownloadBrowserUseCase downloadBrowserUseCase,
         IDialogService dialogService,
         ILocalizationProvider LocalizationProvider,
-        IEVisitorConfigPort EVRestarterConfigRepository)
+        IEVisitorConfigRepositoryOutboundPort EVRestarterConfigRepository)
     {
         ArgumentNullException.ThrowIfNull(browserService);
-        ArgumentNullException.ThrowIfNull(downloadService);
-        ArgumentNullException.ThrowIfNull(osProcessControlPort);
-        ArgumentNullException.ThrowIfNull(osAutoLogonPort);
-        ArgumentNullException.ThrowIfNull(windowsSystemInfo);
-        ArgumentNullException.ThrowIfNull(settingsPort);
-        ArgumentNullException.ThrowIfNull(autoStartPort);
-        ArgumentNullException.ThrowIfNull(fileSystemPort);
-        ArgumentNullException.ThrowIfNull(browserConfigPort);
+        ArgumentNullException.ThrowIfNull(downloadBrowserUseCase);
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(LocalizationProvider);
         ArgumentNullException.ThrowIfNull(EVRestarterConfigRepository);
 
         _browserService = browserService;
-        _downloadService = downloadService;
-        _osProcessControlPort = osProcessControlPort;
-        _osAutoLogonPort = osAutoLogonPort;
-        _windowsSystemInfo = windowsSystemInfo;
-        _settingsPort = settingsPort;
-        _autoStartPort = autoStartPort;
-        _fileSystemPort = fileSystemPort;
-        _browserConfigPort = browserConfigPort;
+        _downloadBrowserUseCase = downloadBrowserUseCase;
         _dialogService = dialogService;
         _localizationService = LocalizationProvider;
         _EVRestarterConfigRepository = EVRestarterConfigRepository;
@@ -110,8 +86,7 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
             {
                 var newBrowserItem = new ViewModelBrowserItem(
                     installedBrowserInfo,
-                    _downloadService,
-                    _osProcessControlPort, _osAutoLogonPort, _windowsSystemInfo, _settingsPort, _autoStartPort, _fileSystemPort, _browserConfigPort,
+                    _downloadBrowserUseCase,
                     _EVRestarterConfigRepository,
                     _dialogService,
                     _localizationService);

@@ -15,9 +15,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void GetPaths_ShouldParseProfilesIni_AndGeneratePathsForRelativeAndAbsoluteProfiles()
         {
-            var mockProcess = new Mock<IOsProcessControlPort>();
-            var mockSettings = new Mock<ISettingsPort>();
-            var mockFileSystem = new Mock<IFileSystemPort>();
+            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
+            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
             var mockLogger = new Mock<ILogger<FirefoxBrowser>>();
             
 
@@ -61,9 +61,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void IsExtensionInstalled_ShouldReturnTrue_WhenXpiFileExists()
         {
-            var mockProcess = new Mock<IOsProcessControlPort>();
-            var mockSettings = new Mock<ISettingsPort>();
-            var mockFileSystem = new Mock<IFileSystemPort>();
+            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
+            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
             var mockLogger = new Mock<ILogger<FirefoxBrowser>>();
             
 
@@ -92,9 +92,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void IsExtensionInstalled_ShouldReturnTrue_WhenExtractedFolderExists()
         {
-            var mockProcess = new Mock<IOsProcessControlPort>();
-            var mockSettings = new Mock<ISettingsPort>();
-            var mockFileSystem = new Mock<IFileSystemPort>();
+            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
+            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
             var mockLogger = new Mock<ILogger<FirefoxBrowser>>();
             
 

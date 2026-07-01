@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Browsers;
 
-public sealed class ChromeBrowser(IOsProcessControlPort processControlPort, ISettingsPort settingsPort, IFileSystemPort fileSystemPort, ILogger<ChromeBrowser> logger) : ChromiumBrowserBase(processControlPort, settingsPort, fileSystemPort, logger)
+public sealed class ChromeBrowser(IOsProcessControlOutboundPort processControlPort, ISettingsRepositoryOutboundPort settingsPort, IFileSystemOutboundPort fileSystemPort, ILogger<ChromeBrowser> logger) : ChromiumBrowserBase(processControlPort, settingsPort, fileSystemPort, logger)
 {
     public override BrowserType Type => BrowserType.Chrome;
     public override string DisplayName => "Chrome";

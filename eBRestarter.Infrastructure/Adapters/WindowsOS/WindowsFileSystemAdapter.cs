@@ -2,7 +2,7 @@ using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
 namespace eBRestarter.Infrastructure.Adapters.WindowsOS;
 
-public sealed class WindowsFileSystemAdapter : IFileSystemPort
+public sealed class WindowsFileSystemAdapter : IFileSystemOutboundPort
 {
     public bool FileExists(string path) => File.Exists(path);
 

@@ -6,13 +6,13 @@ using System.Text.Json;
 
 namespace eBRestarter.Infrastructure.Repositories.Authentication;
 
-public sealed class JsonCredentialStoreRepository : ICredentialStorePort
+public sealed class JsonCredentialStoreRepository : ICredentialStoreRepositoryOutboundPort
 {
-    private readonly IFileSystemPort _fileSystem;
-    private readonly IAppPathPort _pathProvider;
+    private readonly IFileSystemOutboundPort _fileSystem;
+    private readonly IAppPathProviderOutboundPort _pathProvider;
     private readonly string _storagePath;
 
-    public JsonCredentialStoreRepository(IFileSystemPort fileSystem, IAppPathPort pathProvider)
+    public JsonCredentialStoreRepository(IFileSystemOutboundPort fileSystem, IAppPathProviderOutboundPort pathProvider)
     {
         _fileSystem = fileSystem;
         _pathProvider = pathProvider;

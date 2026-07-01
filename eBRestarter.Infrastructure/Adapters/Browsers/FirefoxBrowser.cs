@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Browsers;
 
-public sealed class FirefoxBrowser(IOsProcessControlPort processControlPort, ISettingsPort settingsPort, IFileSystemPort fileSystemPort, ILogger<FirefoxBrowser> logger) : BrowserBase(processControlPort, settingsPort, fileSystemPort, logger)
+public sealed class FirefoxBrowser(IOsProcessControlOutboundPort processControlPort, ISettingsRepositoryOutboundPort settingsPort, IFileSystemOutboundPort fileSystemPort, ILogger<FirefoxBrowser> logger) : BrowserBase(processControlPort, settingsPort, fileSystemPort, logger)
 {
     private const string EbesucherAddOnNameForFirefox = "{76e6445a-74a5-4c26-9afc-95dae514cb77}.xpi";
 

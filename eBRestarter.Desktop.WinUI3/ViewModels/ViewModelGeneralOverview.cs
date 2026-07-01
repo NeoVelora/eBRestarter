@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Ports.Outbound;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using LiveChartsCore;
@@ -41,7 +41,7 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     private const int YAxisMinStep = 100;
 
-    private readonly IEVisitorApiProviderPort _eVisitorApiService;
+    private readonly IEVisitorApiProviderOutboundPort _eVisitorApiService;
 
     private readonly ILocalizationProvider _localizationService;
 
@@ -57,7 +57,7 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     private readonly DispatcherTimer _timer;
 
-    private readonly IEVisitorConfigPort _configService;
+    private readonly IEVisitorConfigRepositoryOutboundPort _configService;
 
     private bool _isApiConfigured;
 
@@ -136,9 +136,9 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     public ViewModelGeneralOverview(
         INavigationService navigationService,
-        IEVisitorApiProviderPort eVisitorApiService,
+        IEVisitorApiProviderOutboundPort eVisitorApiService,
         ILocalizationProvider LocalizationProvider,
-        IEVisitorConfigPort configService)
+        IEVisitorConfigRepositoryOutboundPort configService)
     {
         ArgumentNullException.ThrowIfNull(navigationService);
         ArgumentNullException.ThrowIfNull(eVisitorApiService);
@@ -236,7 +236,7 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
                 string monthsString = _localizationService.RetrieveString("Chart_MonthsShort");
                 xAxis.Labels = !string.IsNullOrEmpty(monthsString)
                     ? monthsString.Split(',')
-                    : ["Jan", "Feb", "M�r", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+                    : ["Jan", "Feb", "M?r", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
                 break;
         }
 

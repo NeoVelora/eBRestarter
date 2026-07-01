@@ -7,9 +7,8 @@ using eBRestarter.Core.Application.Models;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.DownloadBrowser;
 using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Xaml.Media;
@@ -24,23 +23,12 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public sealed partial class ViewModelBrowserItem : ObservableObject
 {
-    private const string BrowserInstallerFileNameSuffix = "_Installer.exe";
-
     private const string DownloadBrowserToggleButtonRedStyleKey = "DownloadBrowserToggleButtonRed";
-
     private const string DownloadBrowserToggleButtonStyleKey = "DownloadBrowserToggleButton";
-
     private const string InstalledIndicatorForegroundColorHex = "#7ED422";
-
     private const string InstallStateGlyphInstalledCharacter = "\uE73E";
-
     private const string InstallStateGlyphNotInstalledCharacter = "\uE711";
-
     private const string NotInstalledIndicatorForegroundColorHex = "#E40E87";
-
-    private const string UserDownloadsFolderName = "Downloads";
-
-    private const string UserProfileEnvironmentVariableName = "UserProfile";
 
     private BrowserInfo _browserInfo;
 
@@ -49,19 +37,11 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
     private CancellationTokenSource? _downloadCancellationTokenSource;
 
-    private readonly IBrowserDownloadPort _downloadService;
+    private readonly IDownloadBrowserUseCase _downloadBrowserUseCase;
 
-    private readonly IEVisitorConfigPort _EVRestarterConfigRepository;
+    private readonly IEVisitorConfigRepositoryOutboundPort _EVRestarterConfigRepository;
 
     private readonly ILocalizationProvider _localizationService;
-
-    private readonly IOsProcessControlPort _osProcessControlPort;
-    private readonly IOsAutoLogonPort _osAutoLogonPort;
-    private readonly ISystemInfoPort _windowsSystemInfo;
-    private readonly ISettingsPort _settingsPort;
-    private readonly IAutoStartPort _autoStartPort;
-    private readonly IFileSystemPort _fileSystemPort;
-    private readonly IBrowserConfigPort _browserConfigPort;
 
     [ObservableProperty]
     public partial double DownloadProgressValue { get; set; }
@@ -129,34 +109,19 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
     public ViewModelBrowserItem(
         BrowserInfo browserInfo,
-        IBrowserDownloadPort downloadService,
-        IOsProcessControlPort osProcessControlPort, IOsAutoLogonPort osAutoLogonPort, ISystemInfoPort windowsSystemInfo, ISettingsPort settingsPort, IAutoStartPort autoStartPort, IFileSystemPort fileSystemPort, IBrowserConfigPort browserConfigPort,
-        IEVisitorConfigPort EVRestarterConfigRepository,
+        IDownloadBrowserUseCase downloadBrowserUseCase,
+        IEVisitorConfigRepositoryOutboundPort EVRestarterConfigRepository,
         IDialogService dialogService,
         ILocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(browserInfo);
-        ArgumentNullException.ThrowIfNull(downloadService);
-        ArgumentNullException.ThrowIfNull(osProcessControlPort);
-        ArgumentNullException.ThrowIfNull(osAutoLogonPort);
-        ArgumentNullException.ThrowIfNull(windowsSystemInfo);
-        ArgumentNullException.ThrowIfNull(settingsPort);
-        ArgumentNullException.ThrowIfNull(autoStartPort);
-        ArgumentNullException.ThrowIfNull(fileSystemPort);
-        ArgumentNullException.ThrowIfNull(browserConfigPort);
+        ArgumentNullException.ThrowIfNull(downloadBrowserUseCase);
         ArgumentNullException.ThrowIfNull(EVRestarterConfigRepository);
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(LocalizationProvider);
 
         _browserInfo = browserInfo;
-        _downloadService = downloadService;
-        _osProcessControlPort = osProcessControlPort;
-        _osAutoLogonPort = osAutoLogonPort;
-        _windowsSystemInfo = windowsSystemInfo;
-        _settingsPort = settingsPort;
-        _autoStartPort = autoStartPort;
-        _fileSystemPort = fileSystemPort;
-        _browserConfigPort = browserConfigPort;
+        _downloadBrowserUseCase = downloadBrowserUseCase;
         _EVRestarterConfigRepository = EVRestarterConfigRepository;
         _dialogService = dialogService;
         _localizationService = LocalizationProvider;
@@ -207,7 +172,7 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
         if (installNow)
         {
-            await _osProcessControlPort.StartExecutableAsync(installerFilePath);
+            await _downloadBrowserUseCase.StartInstallerAsync(installerFilePath);
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString("Install_FinishedTitle"),
                 _localizationService.RetrieveString("Install_FinishedMessage"));
@@ -218,19 +183,6 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
     {
         _downloadCancellationTokenSource?.Cancel();
         ResetDownloadState().Forget();
-    }
-
-    private void CleanupPartialFile(string partialDownloadFilePath)
-    {
-        try
-        {
-            if (_fileSystemPort.FileExists(partialDownloadFilePath))
-                _fileSystemPort.DeleteFile(partialDownloadFilePath);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ObjectDisposedException)
-        {
-            Debug.WriteLine(ex);
-        }
     }
 
     private static double FormatMegabytesFromBytes(long byteCount) =>
@@ -291,10 +243,6 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
         IsDownloadActive = true;
         RefreshBrowserVersionText();
 
-        var fileName = $"{_browserInfo.Name}{BrowserInstallerFileNameSuffix}";
-        var userProfile = _fileSystemPort.ResolveEnvironmentPath(UserProfileEnvironmentVariableName);
-        var downloadPath = _fileSystemPort.CombinePaths(userProfile, UserDownloadsFolderName, fileName);
-
         var progressHandler = new Progress<DownloadProgressStatus>(downloadProgressStatus =>
         {
             DownloadProgressValue = downloadProgressStatus.Percentage;
@@ -304,9 +252,9 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
         try
         {
-            await _downloadService.DownloadFileAsync(
+            var downloadPath = await _downloadBrowserUseCase.DownloadInstallerAsync(
+                _browserInfo.Name,
                 _browserInfo.DownloadUrl,
-                downloadPath,
                 progressHandler,
                 _downloadCancellationTokenSource.Token);
 
@@ -314,12 +262,12 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
         }
         catch (OperationCanceledException)
         {
-            CleanupPartialFile(downloadPath);
+            _downloadBrowserUseCase.CleanupPartialDownload(_browserInfo.Name);
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException or UnauthorizedAccessException)
         {
             Debug.WriteLine(ex);
-            CleanupPartialFile(downloadPath);
+            _downloadBrowserUseCase.CleanupPartialDownload(_browserInfo.Name);
         }
         finally
         {

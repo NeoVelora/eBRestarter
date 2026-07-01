@@ -1,10 +1,9 @@
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.InitializeBrowserCleanup;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
 using eBRestarter.Core.Application.Providers;
 using eBRestarter.Core.Application.Extensions.DependencyInjections;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Formatters;
-using eBRestarter.Core.Application.Ports.Outbound.Scheduling;
+using eBRestarter.Core.Application.Ports.Inbound.Services;
 using eBRestarter.Core.Application.Models;
 using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Desktop.WinUI3.Extensions.DependencyInjections;
@@ -74,7 +73,8 @@ public partial class App : Application
         StartupDisplayPreferences? launchConfig = null;
         try
         {
-            launchConfig = AppHost!.Services.GetRequiredService<IStartupConfigProvider>().PrepareConfigForLaunch();
+            launchConfig = AppHost!.Services.GetRequiredService<IStartupConfigProvider>().RetrieveStartupPreferences();
+            _ = AppHost!.Services.GetRequiredService<IInitializeBrowserCleanupUseCase>().ExecuteAsync();
             string languageCode = launchConfig.LanguageCode;
 
             ApplicationLanguages.PrimaryLanguageOverride = languageCode;
@@ -92,7 +92,7 @@ public partial class App : Application
 
         try
         {
-            var restartScheduler = AppHost!.Services.GetRequiredService<IComputerRestartSchedulerPort>();
+            var restartScheduler = AppHost!.Services.GetRequiredService<IComputerRestartService>();
             restartScheduler.StartScheduler();
         }
         catch (Exception ex)

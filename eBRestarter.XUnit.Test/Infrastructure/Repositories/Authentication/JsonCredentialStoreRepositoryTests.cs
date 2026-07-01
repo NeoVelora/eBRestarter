@@ -1,5 +1,4 @@
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Formatters;
 using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
@@ -21,8 +20,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void SaveCredentials_ShouldSerializeToJson_AndWriteToFile()
         {
-            var mockFileSystem = new Mock<IFileSystemPort>();
-            var mockPathProvider = new Mock<IAppPathPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockPathProvider = new Mock<IAppPathProviderOutboundPort>();
 
             mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
             mockFileSystem
@@ -42,8 +41,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void LoadCredentials_ShouldReturnCredentials_WhenFileExistsAndIsValidJson()
         {
-            var mockFileSystem = new Mock<IFileSystemPort>();
-            var mockPathProvider = new Mock<IAppPathPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockPathProvider = new Mock<IAppPathProviderOutboundPort>();
 
             mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
             mockFileSystem
@@ -69,8 +68,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [InlineData(true, "Kein Gültiges JSON {")]
         public void LoadCredentials_ShouldReturnNull_WhenFileIsMissingOrBroken(bool fileExists, string? fileContent)
         {
-            var mockFileSystem = new Mock<IFileSystemPort>();
-            var mockPathProvider = new Mock<IAppPathPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockPathProvider = new Mock<IAppPathProviderOutboundPort>();
 
             mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
             mockFileSystem
@@ -94,8 +93,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void ClearCredentials_ShouldDeleteFile_WhenFileExists()
         {
-            var mockFileSystem = new Mock<IFileSystemPort>();
-            var mockPathProvider = new Mock<IAppPathPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockPathProvider = new Mock<IAppPathProviderOutboundPort>();
 
             mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
             mockFileSystem
@@ -114,8 +113,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void ImportFromLegacyFile_ShouldReadBinaryFileCorrectly()
         {
-            var mockFileSystem = new Mock<IFileSystemPort>();
-            var mockPathProvider = new Mock<IAppPathPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockPathProvider = new Mock<IAppPathProviderOutboundPort>();
             
             mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
             mockFileSystem
@@ -145,8 +144,8 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void ImportFromLegacyFile_ShouldReturnNull_WhenFileDoesNotExist()
         {
-            var mockFileSystem = new Mock<IFileSystemPort>();
-            var mockPathProvider = new Mock<IAppPathPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockPathProvider = new Mock<IAppPathProviderOutboundPort>();
 
             mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(@"C:\FakeAppData");
             mockFileSystem

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Browsers;
 
-public abstract class ChromiumBrowserBase(IOsProcessControlPort processControlPort, ISettingsPort settingsPort, IFileSystemPort fileSystemPort, ILogger logger) : BrowserBase(processControlPort, settingsPort, fileSystemPort, logger)
+public abstract class ChromiumBrowserBase(IOsProcessControlOutboundPort processControlPort, ISettingsRepositoryOutboundPort settingsPort, IFileSystemOutboundPort fileSystemPort, ILogger logger) : BrowserBase(processControlPort, settingsPort, fileSystemPort, logger)
 {
     protected abstract string ExeFileName { get; }
     protected abstract string BrowserRegistryName { get; }

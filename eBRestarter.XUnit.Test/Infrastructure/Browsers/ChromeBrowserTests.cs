@@ -15,9 +15,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void GetPaths_ShouldGenerateCorrectCacheAndCookieDirectories_ForDefaultProfile()
         {
-            var mockProcess = new Mock<IOsProcessControlPort>();
-            var mockSettings = new Mock<ISettingsPort>();
-            var mockFileSystem = new Mock<IFileSystemPort>();
+            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
+            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
             var mockLogger = new Mock<ILogger<ChromeBrowser>>();
             
 

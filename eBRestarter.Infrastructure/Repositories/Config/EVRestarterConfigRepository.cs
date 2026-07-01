@@ -1,5 +1,6 @@
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -8,12 +9,12 @@ using System.Text.Json.Serialization;
 namespace eBRestarter.Infrastructure.Repositories.Config;
 
 public sealed class EVRestarterConfigRepository(
-    IOsPathProviderPort pathUseCase,
-    IFileSystemPort fileSystem,
-    ILogger<EVRestarterConfigRepository> logger) : IEVisitorConfigPort
+    IOsPathProvider pathProvider,
+    IFileSystemOutboundPort fileSystem,
+    ILogger<EVRestarterConfigRepository> logger) : IEVisitorConfigRepositoryOutboundPort
 {
-    private readonly IOsPathProviderPort _pathUseCase = pathUseCase;
-    private readonly IFileSystemPort _fileSystem = fileSystem;
+    private readonly IOsPathProvider _pathProvider = pathProvider;
+    private readonly IFileSystemOutboundPort _fileSystem = fileSystem;
     private readonly ILogger<EVRestarterConfigRepository> _logger = logger;
 
     private readonly JsonSerializerOptions _jsonOptions = new()
@@ -25,7 +26,7 @@ public sealed class EVRestarterConfigRepository(
 
     public AppConfig LoadConfig()
     {
-        var filePath = _pathUseCase.RetrieveConfigFilePath();
+        var filePath = _pathProvider.RetrieveConfigFilePath();
 
         if (!_fileSystem.FileExists(filePath))
         {
@@ -55,7 +56,7 @@ public sealed class EVRestarterConfigRepository(
     {
         try
         {
-            var filePath = _pathUseCase.RetrieveConfigFilePath();
+            var filePath = _pathProvider.RetrieveConfigFilePath();
 
             var directory = _fileSystem.GetDirectoryName(filePath);
 

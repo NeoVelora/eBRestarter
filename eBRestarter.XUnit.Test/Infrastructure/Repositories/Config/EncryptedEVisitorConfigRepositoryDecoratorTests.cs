@@ -13,15 +13,15 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
 {
     public class EncryptedEVisitorConfigRepositoryDecoratorTests
     {
-        private readonly Mock<IEVisitorConfigPort> _mockInnerService;
-        private readonly Mock<IEncryptionPort> _mockEncryptionUseCase;
+        private readonly Mock<IEVisitorConfigRepositoryOutboundPort> _mockInnerService;
+        private readonly Mock<IEncryptionOutboundPort> _mockEncryptionUseCase;
         private readonly Mock<ILogger<EncryptedEVisitorConfigRepositoryDecorator>> _mockLogger;
         private readonly EncryptedEVisitorConfigRepositoryDecorator _decorator;
 
         public EncryptedEVisitorConfigRepositoryDecoratorTests()
         {
-            _mockInnerService = new Mock<IEVisitorConfigPort>();
-            _mockEncryptionUseCase = new Mock<IEncryptionPort>();
+            _mockInnerService = new Mock<IEVisitorConfigRepositoryOutboundPort>();
+            _mockEncryptionUseCase = new Mock<IEncryptionOutboundPort>();
             _mockLogger = new Mock<ILogger<EncryptedEVisitorConfigRepositoryDecorator>>();
 
             _decorator = new EncryptedEVisitorConfigRepositoryDecorator(

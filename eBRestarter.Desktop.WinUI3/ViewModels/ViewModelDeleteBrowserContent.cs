@@ -6,7 +6,7 @@ using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Ports.Inbound.UseCases.DeleteBrowserContent;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Domain.Entities;
 using System;
 using System.Diagnostics;
@@ -26,11 +26,11 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
 
     private bool _isAutoMode;
 
-    private readonly IBrowserFactoryPort _browserFactory;
+    private readonly IBrowserFactoryOutboundPort _browserFactory;
 
     private readonly IDeleteBrowserContentUseCase _deleteBrowserContentUseCase;
 
-    private readonly IEVisitorConfigPort _EVRestarterConfigRepository;
+    private readonly IEVisitorConfigRepositoryOutboundPort _EVRestarterConfigRepository;
 
     private readonly ILocalizationProvider _localizationService;
 
@@ -79,8 +79,8 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
 
     public ViewModelDeleteBrowserContent(
         IDeleteBrowserContentUseCase deleteBrowserContentUseCase,
-        IBrowserFactoryPort BrowserFactory,
-        IEVisitorConfigPort EVRestarterConfigRepository,
+        IBrowserFactoryOutboundPort BrowserFactory,
+        IEVisitorConfigRepositoryOutboundPort EVRestarterConfigRepository,
         ILocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(deleteBrowserContentUseCase);

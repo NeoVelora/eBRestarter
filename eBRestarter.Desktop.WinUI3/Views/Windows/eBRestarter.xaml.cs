@@ -18,7 +18,7 @@ namespace eBRestarter.Desktop.WinUI3
     {
         private readonly INavigationService _navigationService;
 
-        private readonly IAppVersionInfoPort? _iAppVersionInfoService;
+        private readonly IAppVersionInfoProviderOutboundPort? _iAppVersionInfoService;
         private readonly IMainWindowProvider _mainWindowProvider;
         private readonly IAppWindowHelper _appWindowHelper;
 
@@ -26,7 +26,7 @@ namespace eBRestarter.Desktop.WinUI3
 
         public EBRestarter(
             INavigationService navigationService,
-            IAppVersionInfoPort iAppVersionInfoService,
+            IAppVersionInfoProviderOutboundPort iAppVersionInfoService,
             IMainWindowProvider mainWindowProvider,
             IAppWindowHelper appWindowHelper)
         {

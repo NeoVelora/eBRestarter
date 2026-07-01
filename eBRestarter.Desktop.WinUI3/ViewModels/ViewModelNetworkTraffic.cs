@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using eBRestarter.Core.Application.Extensions;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Models.UI;
 using Microsoft.UI.Dispatching;
 using System;
@@ -31,7 +31,7 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
 
     private readonly ILocalizationProvider _localizationService;
 
-    private readonly INetworkInfoPort _networkService;
+    private readonly INetworkInfoProvider _networkService;
 
     private readonly DispatcherQueue _dispatcherQueue;
 
@@ -41,7 +41,7 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
 
 
     public ViewModelNetworkTraffic(
-        INetworkInfoPort networkService,
+        INetworkInfoProvider networkService,
         ILocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(networkService);

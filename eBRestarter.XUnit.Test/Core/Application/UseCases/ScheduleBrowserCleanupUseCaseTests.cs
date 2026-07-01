@@ -15,13 +15,13 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
 {
     public class ScheduleBrowserCleanupUseCaseTests
     {
-        private readonly Mock<IEVisitorConfigPort> _mockConfigService;
+        private readonly Mock<IEVisitorConfigRepositoryOutboundPort> _mockConfigService;
         private readonly FakeTimeProvider _fakeTimeProvider;
         private readonly ScheduleBrowserCleanupUseCase _sut;
 
         public ScheduleBrowserCleanupUseCaseTests()
         {
-            _mockConfigService = new Mock<IEVisitorConfigPort>();
+            _mockConfigService = new Mock<IEVisitorConfigRepositoryOutboundPort>();
             _fakeTimeProvider = new FakeTimeProvider();
 
             _sut = new ScheduleBrowserCleanupUseCase(

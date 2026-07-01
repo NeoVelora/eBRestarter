@@ -5,7 +5,7 @@ using System.Runtime.Versioning;
 namespace eBRestarter.Infrastructure.Adapters.WindowsOS;
 
 [SupportedOSPlatform("windows")]
-public sealed class WindowsRegistryRepository : ISettingsPort
+public sealed class WindowsRegistryRepository : ISettingsRepositoryOutboundPort
 {
     public void SetUserValue(string subKey, string name, object value)
     {

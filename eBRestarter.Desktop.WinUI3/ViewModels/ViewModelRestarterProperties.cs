@@ -8,7 +8,7 @@ using eBRestarter.Core.Application.Ports.Inbound.UseCases.ScheduleBrowserCleanup
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Models;
@@ -30,21 +30,15 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
 {
     private const int BrowserInstallCheckIntervalSeconds = 5;
 
-    private readonly IBrowserDiscoveryPort _browserService;
+    private readonly IBrowserDiscoveryProviderOutboundPort _browserService;
 
     private readonly IDialogService _dialogService;
 
-    private readonly IEVisitorConfigPort _EVRestarterConfigRepository;
+    private readonly IEVisitorConfigRepositoryOutboundPort _EVRestarterConfigRepository;
 
     private readonly ILocalizationProvider _localizationService;
 
-    private readonly IOsProcessControlPort _osProcessControlPort;
-    private readonly IOsAutoLogonPort _osAutoLogonPort;
-    private readonly ISystemInfoPort _windowsSystemInfo;
-    private readonly ISettingsPort _settingsPort;
-    private readonly IAutoStartPort _autoStartPort;
-    private readonly IFileSystemPort _fileSystemPort;
-    private readonly IBrowserConfigPort _browserConfigPort;
+    private readonly IOsProcessControlOutboundPort _osProcessControlPort;
 
     private readonly IScheduleBrowserCleanupUseCase _scheduleBrowserCleanupUseCase;
 
@@ -99,21 +93,15 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
 
     public ViewModelRestarterProperties(
         IScheduleBrowserCleanupUseCase scheduleBrowserCleanupUseCase,
-        IOsProcessControlPort osProcessControlPort, IOsAutoLogonPort osAutoLogonPort, ISystemInfoPort windowsSystemInfo, ISettingsPort settingsPort, IAutoStartPort autoStartPort, IFileSystemPort fileSystemPort, IBrowserConfigPort browserConfigPort,
-        IEVisitorConfigPort EVRestarterConfigRepository,
+        IOsProcessControlOutboundPort osProcessControlPort,
+        IEVisitorConfigRepositoryOutboundPort EVRestarterConfigRepository,
         ILocalizationProvider LocalizationProvider,
         IUIOptionsProvider uiOptionsService,
         IDialogService dialogService,
-        IBrowserDiscoveryPort browserService)
+        IBrowserDiscoveryProviderOutboundPort browserService)
     {
         ArgumentNullException.ThrowIfNull(scheduleBrowserCleanupUseCase);
         ArgumentNullException.ThrowIfNull(osProcessControlPort);
-        ArgumentNullException.ThrowIfNull(osAutoLogonPort);
-        ArgumentNullException.ThrowIfNull(windowsSystemInfo);
-        ArgumentNullException.ThrowIfNull(settingsPort);
-        ArgumentNullException.ThrowIfNull(autoStartPort);
-        ArgumentNullException.ThrowIfNull(fileSystemPort);
-        ArgumentNullException.ThrowIfNull(browserConfigPort);
         ArgumentNullException.ThrowIfNull(EVRestarterConfigRepository);
         ArgumentNullException.ThrowIfNull(LocalizationProvider);
         ArgumentNullException.ThrowIfNull(uiOptionsService);
@@ -125,12 +113,6 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
         _EVRestarterConfigRepository = EVRestarterConfigRepository;
         _localizationService = LocalizationProvider;
         _osProcessControlPort = osProcessControlPort;
-        _osAutoLogonPort = osAutoLogonPort;
-        _windowsSystemInfo = windowsSystemInfo;
-        _settingsPort = settingsPort;
-        _autoStartPort = autoStartPort;
-        _fileSystemPort = fileSystemPort;
-        _browserConfigPort = browserConfigPort;
         _scheduleBrowserCleanupUseCase = scheduleBrowserCleanupUseCase;
         _uiOptionsService = uiOptionsService;
 

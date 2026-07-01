@@ -8,7 +8,7 @@ using System.Runtime.Versioning;
 namespace eBRestarter.Infrastructure.Adapters.WindowsOS;
 
 [SupportedOSPlatform("windows")]
-public sealed partial class WindowsProcessControlAdapter(ILogger<WindowsProcessControlAdapter> logger, IProcessWrapper processWrapper) : IOsProcessControlPort
+public sealed partial class WindowsProcessControlAdapter(ILogger<WindowsProcessControlAdapter> logger, IProcessWrapper processWrapper) : IOsProcessControlOutboundPort
 {
     private readonly ILogger<WindowsProcessControlAdapter> _logger = logger;
 

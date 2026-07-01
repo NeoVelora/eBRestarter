@@ -15,9 +15,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void BrowserVersion_ShouldReturnVersionFromUninstallKey_AndCleanIt()
         {
-            var mockProcess = new Mock<IOsProcessControlPort>();
-            var mockSettings = new Mock<ISettingsPort>();
-            var mockFileSystem = new Mock<IFileSystemPort>();
+            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
+            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
             var mockLogger = new Mock<ILogger<VivaldiBrowser>>();
             
 
@@ -37,11 +37,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void GetPaths_ShouldGenerateCorrectDirectories_ForVivaldi()
         {
-            var mockProcess = new Mock<IOsProcessControlPort>();
-            var mockSettings = new Mock<ISettingsPort>();
+            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
+            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
             
             var mockLogger = new Mock<ILogger<VivaldiBrowser>>();
-            var mockFileSystem = new Mock<IFileSystemPort>();
+            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
             mockFileSystem.Setup(fs => fs.CombinePaths(It.IsAny<string[]>())).Returns<string[]>(paths => string.Join(@"\", paths));

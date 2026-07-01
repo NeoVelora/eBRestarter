@@ -7,7 +7,7 @@ using System.Runtime.Versioning;
 namespace eBRestarter.Infrastructure.Adapters.WindowsOS.Security;
 
 [SupportedOSPlatform("windows")]
-public sealed partial class WindowsAutoLogonRepository(ILogger<WindowsAutoLogonRepository> logger) : IOsAutoLogonPort
+public sealed partial class WindowsAutoLogonRepository(ILogger<WindowsAutoLogonRepository> logger) : IOsAutoLogonRepositoryOutboundPort
 {
     private const string WinLogonPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon";
     private const string DefaultPasswordKey = "DefaultPassword";

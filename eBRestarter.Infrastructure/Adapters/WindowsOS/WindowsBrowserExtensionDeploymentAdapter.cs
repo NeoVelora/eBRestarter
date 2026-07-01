@@ -2,7 +2,7 @@ using eBRestarter.Core.Application.Ports.Outbound;
 
 namespace eBRestarter.Infrastructure.Adapters.WindowsOS;
 
-public sealed class WindowsBrowserExtensionDeploymentAdapter : IBrowserExtensionDeploymentPort
+public sealed class WindowsBrowserExtensionDeploymentAdapter : IBrowserExtensionDeploymentOutboundPort, IBrowserExtensionPathProviderOutboundPort
 {
     public void EnsureExtensionIsDeployed()
     {

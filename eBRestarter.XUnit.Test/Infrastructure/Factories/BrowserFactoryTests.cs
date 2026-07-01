@@ -24,9 +24,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
         {
             var mockServiceProvider = new Mock<IServiceProvider>();
 
-            var mockProcess = new Mock<IOsProcessControlPort>();
-            var mockSettings = new Mock<ISettingsPort>();
-            var mockFs = new Mock<IFileSystemPort>();
+            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
+            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockFs = new Mock<IFileSystemOutboundPort>();
 
             var fakeChrome = new ChromeBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<ChromeBrowser>>().Object);
             var fakeFirefox = new FirefoxBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<FirefoxBrowser>>().Object);

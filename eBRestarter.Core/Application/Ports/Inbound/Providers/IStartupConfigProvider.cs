@@ -4,6 +4,6 @@ namespace eBRestarter.Core.Application.Ports.Inbound.Providers;
 
 public interface IStartupConfigProvider
 {
-    StartupDisplayPreferences PrepareConfigForLaunch();
+    StartupDisplayPreferences RetrieveStartupPreferences();
 }
 

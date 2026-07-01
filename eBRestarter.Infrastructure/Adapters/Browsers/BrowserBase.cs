@@ -6,11 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Browsers;
 
-public abstract class BrowserBase(IOsProcessControlPort processControlPort, ISettingsPort settingsPort, IFileSystemPort fileSystemPort, ILogger logger) : IBrowserPort
+public abstract class BrowserBase(IOsProcessControlOutboundPort processControlPort, ISettingsRepositoryOutboundPort settingsPort, IFileSystemOutboundPort fileSystemPort, ILogger logger) : IBrowserOutboundPort
 {
-    protected readonly IOsProcessControlPort _processControlPort = processControlPort;
-    protected readonly ISettingsPort _settingsPort = settingsPort;
-    protected readonly IFileSystemPort _fileSystemPort = fileSystemPort;
+    protected readonly IOsProcessControlOutboundPort _processControlPort = processControlPort;
+    protected readonly ISettingsRepositoryOutboundPort _settingsPort = settingsPort;
+    protected readonly IFileSystemOutboundPort _fileSystemPort = fileSystemPort;
     protected readonly ILogger _logger = logger;
 
     public abstract BrowserType Type { get; }

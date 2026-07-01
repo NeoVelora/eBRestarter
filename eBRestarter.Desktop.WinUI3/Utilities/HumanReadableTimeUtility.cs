@@ -1,12 +1,10 @@
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Formatters;
 using System;
 
 namespace eBRestarter.Desktop.WinUI3.Utilities;
 
-public sealed class HumanReadableTimeUtility : ITimeFormatterPort
+public static class HumanReadableTimeUtility
 {
-    public string Format(int seconds)
+    public static string Format(int seconds)
     {
         if (seconds < 0) return "0s";
 
