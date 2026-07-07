@@ -1,18 +1,18 @@
 using eBRestarter.Infrastructure.Network;
 using eBRestarter.Infrastructure.Adapters.Authentication;
 using eBRestarter.Infrastructure.Adapters.RestSharp;
-using eBRestarter.Infrastructure.Network;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Infrastructure.Adapters.RestSharp;
-using eBRestarter.Infrastructure.Network;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Enums;
-using eBRestarter.Infrastructure.Network;
 using eBRestarter.Infrastructure.Repositories.Authentication;
 using Moq;
 using Shouldly;
 using System.Threading.Tasks;
 using Xunit;
+using eBRestarter.Infrastructure.Api.Interfaces;
+using eBRestarter.Infrastructure.Enums;
+using eBRestarter.Infrastructure.Models.Network;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
 {
@@ -21,7 +21,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
         [Fact]
         public async Task VerifyCredentialsAsync_ShouldReturnTrue_WhenApiCallIsSuccessful()
         {
-            var mockRestClient = new Mock<IRestClientPort>();
+            var mockRestClient = new Mock<IRestClient>();
 
             string testUsername = "TestUser";
             string testApiKey = "SecretKey123";
@@ -29,14 +29,14 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
             var fakeSuccessResponse = new ApiResponse
             {
                 IsSuccess = true,
-                StatusCode = eBRestarter.Infrastructure.Api.ResponseCode.HttpRE200
+                StatusCode = ResponseCode.HttpRE200
             };
 
             mockRestClient
                 .Setup(client => client.ExecuteGetAsync(It.IsAny<ApiRequest>()))
                 .ReturnsAsync(fakeSuccessResponse);
 
-            var apiUseCase = new EVisitorApiAuthenticationProvider(mockRestClient.Object);
+            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient.Object);
 
             var (isValid, message) = await apiUseCase.VerifyCredentialsAsync(testUsername, testApiKey);
 
@@ -50,19 +50,19 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
         [Fact]
         public async Task VerifyCredentialsAsync_ShouldReturnFalseAndSpecificMessage_WhenCredentialsAreInvalid()
         {
-            var mockRestClient = new Mock<IRestClientPort>();
+            var mockRestClient = new Mock<IRestClient>();
 
             var fakeUnauthorizedResponse = new ApiResponse
             {
                 IsSuccess = false,
-                StatusCode = eBRestarter.Infrastructure.Api.ResponseCode.HttpRE401
+                StatusCode = ResponseCode.HttpRE401
             };
 
             mockRestClient
                 .Setup(client => client.ExecuteGetAsync(It.IsAny<ApiRequest>()))
                 .ReturnsAsync(fakeUnauthorizedResponse);
 
-            var apiUseCase = new EVisitorApiAuthenticationProvider(mockRestClient.Object);
+            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient.Object);
 
             var (isValid, message) = await apiUseCase.VerifyCredentialsAsync("WrongUser", "WrongKey");
 
@@ -73,14 +73,14 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
         [Fact]
         public async Task VerifyCredentialsAsync_ShouldReturnFalseAndErrorMessage_OnGeneralApiError()
         {
-            var mockRestClient = new Mock<IRestClientPort>();
+            var mockRestClient = new Mock<IRestClient>();
 
             string systemErrorMessage = "Es konnte keine Verbindung zum Zielserver hergestellt werden (Timeout).";
 
             var fakeGeneralErrorResponse = new ApiResponse
             {
                 IsSuccess = false,
-                StatusCode = eBRestarter.Infrastructure.Api.ResponseCode.HttpRE500,
+                StatusCode = ResponseCode.HttpRE500,
                 ErrorMessage = systemErrorMessage
             };
 
@@ -88,7 +88,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
                 .Setup(client => client.ExecuteGetAsync(It.IsAny<ApiRequest>()))
                 .ReturnsAsync(fakeGeneralErrorResponse);
 
-            var apiUseCase = new EVisitorApiAuthenticationProvider(mockRestClient.Object);
+            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient.Object);
 
             var (isValid, message) = await apiUseCase.VerifyCredentialsAsync("User", "Key");
 

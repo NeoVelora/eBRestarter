@@ -1,4 +1,4 @@
-using eBRestarter.Infrastructure.Adapters.Providers.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS.Providers;
 using Shouldly;
 using System;
 using System.IO;
@@ -8,11 +8,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsAppPathProviderTests
     {
-        private readonly WindowsAppPathProvider _sut;
+        private readonly AdapterWindowsAppPathProvider _sut;
 
         public WindowsAppPathProviderTests()
         {
-            _sut = new WindowsAppPathProvider();
+            _sut = new AdapterWindowsAppPathProvider();
         }
 
         [Fact]

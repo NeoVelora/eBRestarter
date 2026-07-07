@@ -1,14 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Models.Enums;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -18,8 +18,8 @@ public sealed partial class ViewModelTurnOffEdgeStartupBoost : ObservableObject
 
     private readonly IDialogService _dialogService;
     private readonly IInboundPortLocalizationProvider _localizationService;
-    private readonly IToggleEdgeStartupBoostUseCase _toggleEdgeStartupBoostUseCase;
-    private readonly ISystemInfoProviderOutboundPort _windowsSystemInfo;
+    private readonly IUseCaseToggleEdgeStartupBoost _toggleEdgeStartupBoostUseCase;
+    private readonly IOutboundPortSystemInfoProvider _windowsSystemInfo;
 
     private bool _isRevertingState;
 
@@ -46,10 +46,10 @@ public sealed partial class ViewModelTurnOffEdgeStartupBoost : ObservableObject
     public bool IsNotAdministrator => !IsAdministrator;
 
     public ViewModelTurnOffEdgeStartupBoost(
-        IToggleEdgeStartupBoostUseCase toggleEdgeStartupBoostUseCase,
+        IUseCaseToggleEdgeStartupBoost toggleEdgeStartupBoostUseCase,
         IDialogService dialogService,
         IInboundPortLocalizationProvider LocalizationProvider,
-        ISystemInfoProviderOutboundPort windowsSystemInfo)
+        IOutboundPortSystemInfoProvider windowsSystemInfo)
     {
         ArgumentNullException.ThrowIfNull(toggleEdgeStartupBoostUseCase);
         ArgumentNullException.ThrowIfNull(dialogService);

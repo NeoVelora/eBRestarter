@@ -1,4 +1,4 @@
-using eBRestarter.Infrastructure.Adapters.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS.Repositories;
 using Microsoft.Win32;
 using Shouldly;
 using System;
@@ -10,12 +10,12 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsRegistryRepositoryTests : IDisposable
     {
-        private readonly WindowsRegistryRepository _sut;
+        private readonly AdapterWindowsRegistryRepository _sut;
         private readonly string _tempTestKey;
 
         public WindowsRegistryRepositoryTests()
         {
-            _sut = new WindowsRegistryRepository();
+            _sut = new AdapterWindowsRegistryRepository();
 
             _tempTestKey = $@"Software\eBRestarter_TestSandbox_{Guid.NewGuid()}";
         }

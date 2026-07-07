@@ -1,5 +1,3 @@
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.WindowsOS;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using Microsoft.Extensions.Logging;
@@ -10,15 +8,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS.Repository;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsStartupRepositoryTests
     {
-        private readonly Mock<ILogger<WindowsStartupRepository>> _mockLogger;
-        private readonly Mock<ISettingsRepositoryOutboundPort> _mockRegistry;
-        private readonly Mock<IProcessInfoProviderOutboundPort> _mockProcessInfo;
-        private readonly WindowsStartupRepository _sut;
+        private readonly Mock<ILogger<AdapterWindowsStartupRepository>> _mockLogger;
+        private readonly Mock<IOutboundPortSystemConfigurationRepository> _mockRegistry;
+        private readonly Mock<IOutboundPortProcessInfoProvider> _mockProcessInfo;
+        private readonly AdapterWindowsStartupRepository _sut;
 
         private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
         private const string RegistryPathEdgePolicies = @"SOFTWARE\Policies\Microsoft\Edge";
@@ -26,11 +26,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
         public WindowsStartupRepositoryTests()
         {
-            _mockLogger = new Mock<ILogger<WindowsStartupRepository>>();
-            _mockRegistry = new Mock<ISettingsRepositoryOutboundPort>();
-            _mockProcessInfo = new Mock<IProcessInfoProviderOutboundPort>();
+            _mockLogger = new Mock<ILogger<AdapterWindowsStartupRepository>>();
+            _mockRegistry = new Mock<IOutboundPortSystemConfigurationRepository>();
+            _mockProcessInfo = new Mock<IOutboundPortProcessInfoProvider>();
 
-            _sut = new WindowsStartupRepository(_mockLogger.Object, _mockRegistry.Object, _mockProcessInfo.Object);
+            _sut = new AdapterWindowsStartupRepository(_mockLogger.Object, _mockRegistry.Object, _mockProcessInfo.Object);
         }
 
         [Fact]

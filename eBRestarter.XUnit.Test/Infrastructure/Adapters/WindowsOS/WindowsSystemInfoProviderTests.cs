@@ -1,5 +1,3 @@
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.WindowsOS;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using Microsoft.Extensions.Logging;
@@ -7,14 +5,16 @@ using Moq;
 using Shouldly;
 using System;
 using Xunit;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS.Providers;
 
 namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
 {
     public class WindowsSystemInfoProviderTests
     {
-        private readonly Mock<ILogger<WindowsSystemInfoProvider>> _mockLogger;
-        private readonly Mock<ISettingsRepositoryOutboundPort> _mockRegistry;
-        private readonly WindowsSystemInfoProvider _sut;
+        private readonly Mock<ILogger<AdapterWindowsSystemInfoProvider>> _mockLogger;
+        private readonly Mock<IOutboundPortSystemConfigurationRepository> _mockRegistry;
+        private readonly AdapterWindowsSystemInfoProvider _sut;
 
         private const string RegistryPathCurrentVersion = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
         private const string RegistryPathUserChoiceHttp = @"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice";
@@ -22,10 +22,10 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
 
         public WindowsSystemInfoProviderTests()
         {
-            _mockLogger = new Mock<ILogger<WindowsSystemInfoProvider>>();
-            _mockRegistry = new Mock<ISettingsRepositoryOutboundPort>();
+            _mockLogger = new Mock<ILogger<AdapterWindowsSystemInfoProvider>>();
+            _mockRegistry = new Mock<IOutboundPortSystemConfigurationRepository>();
 
-            _sut = new WindowsSystemInfoProvider(_mockLogger.Object, _mockRegistry.Object);
+            _sut = new AdapterWindowsSystemInfoProvider(_mockLogger.Object, _mockRegistry.Object);
         }
 
         [Fact]

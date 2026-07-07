@@ -3,19 +3,19 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Ports.Outbound.Authentication;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Messages;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public sealed partial class ViewModelActivateApi : ObservableObject
 {
-    private readonly IApiAuthenticationProviderOutboundPort _apiAuthenticationService;
+    private readonly IOutboundPortApiAuthenticationProvider _apiAuthenticationService;
 
-    private readonly IEVisitorConfigRepositoryOutboundPort _configService;
+    private readonly IOutboundPortEVisitorConfigRepository _configService;
 
     private readonly IInboundPortLocalizationProvider _localizationService;
 
@@ -39,8 +39,8 @@ public sealed partial class ViewModelActivateApi : ObservableObject
     private bool CanSubmit => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(ApiKey) && !IsBusy;
 
     public ViewModelActivateApi(
-        IApiAuthenticationProviderOutboundPort apiAuthenticationService,
-        IEVisitorConfigRepositoryOutboundPort configService,
+        IOutboundPortApiAuthenticationProvider apiAuthenticationService,
+        IOutboundPortEVisitorConfigRepository configService,
         IInboundPortLocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(apiAuthenticationService);

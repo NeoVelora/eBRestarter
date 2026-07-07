@@ -1,12 +1,12 @@
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.WindowsOS;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Infrastructure.Adapters.Browsers;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using Xunit;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Infrastructure.Adapters.Outbound.Browsers;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 {
@@ -15,10 +15,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void GetPaths_ShouldGenerateCorrectCacheAndCookieDirectories_ForDefaultProfile()
         {
-            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
-            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
-            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
-            var mockLogger = new Mock<ILogger<ChromeBrowser>>();
+            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
+            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
+            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
+            var mockLogger = new Mock<ILogger<AdapterChromeBrowser>>();
             
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Users\Test\AppData\Local");
@@ -30,7 +30,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string expectedDefaultProfilePath = @"C:\Users\Test\AppData\Local\Google\Chrome\User Data\Default";
             mockFileSystem.Setup(fs => fs.DirectoryExists(expectedDefaultProfilePath)).Returns(true);
 
-            var ChromeBrowser = new ChromeBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var ChromeBrowser = new AdapterChromeBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
 
             var paths = ChromeBrowser.ResolvePaths();
 

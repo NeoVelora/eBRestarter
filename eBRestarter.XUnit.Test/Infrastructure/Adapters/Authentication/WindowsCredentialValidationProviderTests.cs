@@ -17,13 +17,13 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void ValidateCredentials_ShouldUseMachineContext_WhenDomainIsLocalComputer()
         {
-            var mockAdService = new Mock<IActiveDirectoryProviderOutboundPort>();
+            var mockAdService = new Mock<IOutboundPortActiveDirectoryProvider>();
 
             mockAdService
                 .Setup(ad => ad.ValidateCredentials(It.IsAny<DirectoryContextScope>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(true);
 
-            var useCase = new WindowsCredentialValidationProvider(mockAdService.Object);
+            var useCase = new AdapterWindowsCredentialValidationProvider(mockAdService.Object);
 
             string localMachineName = Environment.MachineName;
 
@@ -41,12 +41,12 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void ValidateCredentials_ShouldUseDomainContext_WhenDomainIsDifferentFromMachineName()
         {
-            var mockAdService = new Mock<IActiveDirectoryProviderOutboundPort>();
+            var mockAdService = new Mock<IOutboundPortActiveDirectoryProvider>();
             mockAdService
                 .Setup(ad => ad.ValidateCredentials(It.IsAny<DirectoryContextScope>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(true);
 
-            var useCase = new WindowsCredentialValidationProvider(mockAdService.Object);
+            var useCase = new AdapterWindowsCredentialValidationProvider(mockAdService.Object);
 
             string someDomain = "FIRMEN_DOMAIN_ABC";
 
@@ -64,13 +64,13 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void ValidateCredentials_ShouldThrowInvalidOperationException_WhenServerIsDown()
         {
-            var mockAdService = new Mock<IActiveDirectoryProviderOutboundPort>();
+            var mockAdService = new Mock<IOutboundPortActiveDirectoryProvider>();
 
             mockAdService
                 .Setup(ad => ad.ValidateCredentials(It.IsAny<DirectoryContextScope>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Throws(new PrincipalServerDownException());
 
-            var useCase = new WindowsCredentialValidationProvider(mockAdService.Object);
+            var useCase = new AdapterWindowsCredentialValidationProvider(mockAdService.Object);
 
             var exception = Should.Throw<InvalidOperationException>(() =>
             {
@@ -83,13 +83,13 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
         [Fact]
         public void ValidateCredentials_ShouldReturnFalse_OnAnyOtherException()
         {
-            var mockAdService = new Mock<IActiveDirectoryProviderOutboundPort>();
+            var mockAdService = new Mock<IOutboundPortActiveDirectoryProvider>();
 
             mockAdService
                 .Setup(ad => ad.ValidateCredentials(It.IsAny<DirectoryContextScope>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Throws(new Exception("Irgendein unerwarteter Fehler im Windows-System"));
 
-            var useCase = new WindowsCredentialValidationProvider(mockAdService.Object);
+            var useCase = new AdapterWindowsCredentialValidationProvider(mockAdService.Object);
 
             var result = useCase.ValidateCredentials("TestUser", "DOMAIN", "Password");
 

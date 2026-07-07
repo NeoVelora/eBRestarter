@@ -1,4 +1,3 @@
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.WindowsOS;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
@@ -7,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using Xunit;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 {
@@ -15,10 +15,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void GetPaths_ShouldGenerateCorrectDirectories_ForEdge()
         {
-            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
-            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
-            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
-            var mockLogger = new Mock<ILogger<EdgeBrowser>>();
+            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
+            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
+            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
+            var mockLogger = new Mock<ILogger<AdapterEdgeBrowser>>();
             
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(@"C:\Local");
@@ -27,7 +27,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string expectedDefaultProfilePath = @"C:\Local\Microsoft\Edge\User Data\Default";
             mockFileSystem.Setup(fs => fs.DirectoryExists(expectedDefaultProfilePath)).Returns(true);
 
-            var EdgeBrowser = new EdgeBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var EdgeBrowser = new AdapterEdgeBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
 
             var paths = EdgeBrowser.ResolvePaths();
 

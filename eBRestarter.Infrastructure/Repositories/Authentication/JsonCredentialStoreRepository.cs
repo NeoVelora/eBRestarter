@@ -1,18 +1,18 @@
 using eBRestarter.Core.Application.Ports.Outbound.Authentication;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using System.Text.Json;
 
 namespace eBRestarter.Infrastructure.Repositories.Authentication;
 
-public sealed class JsonCredentialStoreRepository : ICredentialStoreRepositoryOutboundPort
+public sealed class JsonCredentialStoreRepository : IOutboundPortCredentialStoreRepository
 {
-    private readonly IFileSystemOutboundPort _fileSystem;
-    private readonly IAppPathProviderOutboundPort _pathProvider;
+    private readonly IOutboundPortFileSystem _fileSystem;
+    private readonly IOutboundPortAppPathProvider _pathProvider;
     private readonly string _storagePath;
 
-    public JsonCredentialStoreRepository(IFileSystemOutboundPort fileSystem, IAppPathProviderOutboundPort pathProvider)
+    public JsonCredentialStoreRepository(IOutboundPortFileSystem fileSystem, IOutboundPortAppPathProvider pathProvider)
     {
         _fileSystem = fileSystem;
         _pathProvider = pathProvider;

@@ -1,5 +1,4 @@
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
 using eBRestarter.Desktop.WinUI3.Helpers.Interfaces;
 using eBRestarter.Desktop.WinUI3.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
@@ -18,7 +17,7 @@ namespace eBRestarter.Desktop.WinUI3
     {
         private readonly INavigationService _navigationService;
 
-        private readonly IAppVersionInfoProviderOutboundPort? _iAppVersionInfoService;
+        private readonly IOutboundPortAppVersionInfoProvider? _iAppVersionInfoService;
         private readonly IMainWindowProvider _mainWindowProvider;
         private readonly IAppWindowHelper _appWindowHelper;
 
@@ -26,7 +25,7 @@ namespace eBRestarter.Desktop.WinUI3
 
         public EBRestarter(
             INavigationService navigationService,
-            IAppVersionInfoProviderOutboundPort iAppVersionInfoService,
+            IOutboundPortAppVersionInfoProvider iAppVersionInfoService,
             IMainWindowProvider mainWindowProvider,
             IAppWindowHelper appWindowHelper)
         {

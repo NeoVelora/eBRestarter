@@ -1,6 +1,7 @@
+using eBRestarter.Infrastructure.Adapters.Wrapper;
 using System.Diagnostics;
 
-namespace eBRestarter.Infrastructure.Adapters.Wrapper;
+namespace eBRestarter.Infrastructure.Wrappers;
 
 public interface IProcessWrapper
 {

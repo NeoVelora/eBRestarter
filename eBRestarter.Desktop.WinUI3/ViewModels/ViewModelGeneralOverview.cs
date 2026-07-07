@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Ports.Outbound;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Messages;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using LiveChartsCore;
@@ -20,6 +19,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -41,7 +41,7 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     private const int YAxisMinStep = 100;
 
-    private readonly IEVisitorApiProviderOutboundPort _eVisitorApiService;
+    private readonly IOutboundPortEVisitorApiProvider _eVisitorApiService;
 
     private readonly IInboundPortLocalizationProvider _localizationService;
 
@@ -57,7 +57,7 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     private readonly DispatcherTimer _timer;
 
-    private readonly IEVisitorConfigRepositoryOutboundPort _configService;
+    private readonly IOutboundPortEVisitorConfigRepository _configService;
 
     private bool _isApiConfigured;
 
@@ -136,9 +136,9 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     public ViewModelGeneralOverview(
         INavigationService navigationService,
-        IEVisitorApiProviderOutboundPort eVisitorApiService,
+        IOutboundPortEVisitorApiProvider eVisitorApiService,
         IInboundPortLocalizationProvider LocalizationProvider,
-        IEVisitorConfigRepositoryOutboundPort configService)
+        IOutboundPortEVisitorConfigRepository configService)
     {
         ArgumentNullException.ThrowIfNull(navigationService);
         ArgumentNullException.ThrowIfNull(eVisitorApiService);

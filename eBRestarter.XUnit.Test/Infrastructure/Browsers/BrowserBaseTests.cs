@@ -1,5 +1,3 @@
-using eBRestarter.Infrastructure.Adapters.Browsers;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.WindowsOS;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
@@ -10,15 +8,17 @@ using Moq;
 using Shouldly;
 using System.Collections.Generic;
 using Xunit;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Infrastructure.Adapters.Outbound.Browsers;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 {
     public class BrowserBaseTests
     {
 
-        private class TestDummyBrowser : BrowserBase
+        private class TestDummyBrowser : AdapterBrowserBase
         {
-            public TestDummyBrowser(IOsProcessControlOutboundPort os, ISettingsRepositoryOutboundPort settings, IFileSystemOutboundPort fs, ILogger logger) : base(os, settings, fs, logger) { }
+            public TestDummyBrowser(IOutboundPortOsProcessControl os, IOutboundPortSystemConfigurationRepository settings, IOutboundPortFileSystem fs, ILogger logger) : base(os, settings, fs, logger) { }
 
             public override BrowserType Type => BrowserType.Firefox;
             public override string DisplayName => "TestBrowser";
@@ -48,9 +48,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [InlineData("", "Unknown")]
         public void CleanVersionString_ShouldExtractVersionNumberCorrectly(string? rawVersion, string expectedResult)
         {
-            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
-            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
-            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
+            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
+            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
             var mockLogger = new Mock<ILogger>();
             var dummyBrowser = new TestDummyBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
 
@@ -62,12 +62,12 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void Start_ShouldFindExecutableAndCallProcessService_WithUrlAndArguments()
         {
-            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
-            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
+            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
             
             var mockLogger = new Mock<ILogger>();
 
-            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
             mockFileSystem.
                 Setup(fs => fs.FileExists(@"C:\FakePath\browser.exe")).
                 Returns(true);
@@ -89,12 +89,12 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void Start_ShouldLogError_WhenExecutableIsNotFound()
         {
-            var mockProcess = new Mock<IOsProcessControlOutboundPort>();
-            var mockSettings = new Mock<ISettingsRepositoryOutboundPort>();
+            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
+            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
             
             var mockLogger = new Mock<ILogger>();
 
-            var mockFileSystem = new Mock<IFileSystemOutboundPort>();
+            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
             mockFileSystem
                 .Setup(fs => fs.FileExists(It.IsAny<string>()))
                 .Returns(false);

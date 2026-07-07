@@ -1,15 +1,15 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using eBRestarter.Core.Application.Ports.Outbound.Application;
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Models;
 using eBRestarter.Desktop.WinUI3.Providers.Interfaces;
 using System.Collections.ObjectModel;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public sealed partial class ViewModelAbout : ObservableObject
 {
-    private readonly IAppInfoProviderOutboundPort _appInfoProvider;
+    private readonly IOutboundPortAppVersionInfoProvider _appInfoProvider;
 
     private readonly IIconCreditProvider _iconCreditService;
 
@@ -20,7 +20,7 @@ public sealed partial class ViewModelAbout : ObservableObject
     public ObservableCollection<IconCredit> IconCredits { get; } = [];
 
     public ViewModelAbout(
-        IAppInfoProviderOutboundPort appInfoProvider,
+        IOutboundPortAppVersionInfoProvider appInfoProvider,
         IInboundPortLocalizationProvider LocalizationProvider,
         IIconCreditProvider iconCreditService)
     {

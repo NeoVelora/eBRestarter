@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using eBRestarter.Core.Application.Ports.Outbound.Browser;
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using Microsoft.UI.Dispatching;
 using System;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels
 {
@@ -29,7 +29,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
 
         private const string NeutralForegroundHex = "#000000";
 
-        private readonly IBrowserOutboundPort _browser;
+        private readonly IOutboundPortBrowser _browser;
 
         private readonly DispatcherQueue _dispatcherQueue;
 
@@ -64,7 +64,7 @@ namespace eBRestarter.Desktop.WinUI3.ViewModels
         public partial bool IsButtonEnabled { get; set; }
 
         public ViewModelBrowserAddonStatus(
-            IBrowserOutboundPort browser,
+            IOutboundPortBrowser browser,
             IInboundPortLocalizationProvider LocalizationProvider)
         {
             ArgumentNullException.ThrowIfNull(browser);

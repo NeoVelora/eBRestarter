@@ -1,16 +1,16 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using eBRestarter.Core.Application.Extensions;
-using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Models;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -18,13 +18,13 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
 {
     private const int BrowserListRefreshIntervalSeconds = 2;
 
-    private readonly IBrowserDiscoveryProviderOutboundPort _browserService;
+    private readonly IOutboundPortBrowserDiscoveryProvider _browserService;
 
-    private readonly IDownloadBrowserUseCase _downloadBrowserUseCase;
+    private readonly IUseCaseDownloadBrowser _downloadBrowserUseCase;
 
     private readonly IDialogService _dialogService;
 
-    private readonly IEVisitorConfigRepositoryOutboundPort _EVRestarterConfigRepository;
+    private readonly IOutboundPortEVisitorConfigRepository _EVRestarterConfigRepository;
 
     private readonly IInboundPortLocalizationProvider _localizationService;
 
@@ -35,11 +35,11 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
 
 
     public ViewModelInstalledBrowsers(
-        IBrowserDiscoveryProviderOutboundPort browserService,
-        IDownloadBrowserUseCase downloadBrowserUseCase,
+        IOutboundPortBrowserDiscoveryProvider browserService,
+        IUseCaseDownloadBrowser downloadBrowserUseCase,
         IDialogService dialogService,
         IInboundPortLocalizationProvider LocalizationProvider,
-        IEVisitorConfigRepositoryOutboundPort EVRestarterConfigRepository)
+        IOutboundPortEVisitorConfigRepository EVRestarterConfigRepository)
     {
         ArgumentNullException.ThrowIfNull(browserService);
         ArgumentNullException.ThrowIfNull(downloadBrowserUseCase);

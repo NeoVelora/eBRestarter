@@ -8,12 +8,12 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsFileSystemServiceAdapterTests : IDisposable
     {
-        private readonly WindowsFileSystemAdapter _sut;
+        private readonly AdapterWindowsFileSystem _sut;
         private readonly string _tempTestDirectory;
 
         public WindowsFileSystemServiceAdapterTests()
         {
-            _sut = new WindowsFileSystemAdapter();
+            _sut = new AdapterWindowsFileSystem();
 
             _tempTestDirectory = Path.Combine(Path.GetTempPath(), $"eB_FS_Test_{Guid.NewGuid()}");
             Directory.CreateDirectory(_tempTestDirectory);

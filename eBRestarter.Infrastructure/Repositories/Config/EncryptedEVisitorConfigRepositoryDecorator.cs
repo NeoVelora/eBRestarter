@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 namespace eBRestarter.Infrastructure.Repositories.Config;
 
 public sealed class EncryptedEVisitorConfigRepositoryDecorator(
-    IEVisitorConfigRepositoryOutboundPort inner,
-    IEncryptionOutboundPort encryptionUseCase,
-    ILogger<EncryptedEVisitorConfigRepositoryDecorator> logger) : IEVisitorConfigRepositoryOutboundPort
+    IOutboundPortEVisitorConfigRepository inner,
+    IOutboundPortEncryption encryptionUseCase,
+    ILogger<EncryptedEVisitorConfigRepositoryDecorator> logger) : IOutboundPortEVisitorConfigRepository
 {
-    private readonly IEVisitorConfigRepositoryOutboundPort _inner = inner;
-    private readonly IEncryptionOutboundPort _encryptionUseCase = encryptionUseCase;
+    private readonly IOutboundPortEVisitorConfigRepository _inner = inner;
+    private readonly IOutboundPortEncryption _encryptionUseCase = encryptionUseCase;
     private readonly ILogger<EncryptedEVisitorConfigRepositoryDecorator> _logger = logger;
 
     public AppConfig LoadConfig()
