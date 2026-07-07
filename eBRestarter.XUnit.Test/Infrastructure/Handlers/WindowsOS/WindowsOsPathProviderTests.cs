@@ -1,5 +1,4 @@
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
@@ -9,19 +8,20 @@ using Moq;
 using Shouldly;
 using System.IO;
 using Xunit;
+using eBRestarter.Infrastructure.Providers;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsOsPathProviderAdapterTests
     {
         private readonly Mock<IAppPathProviderOutboundPort> _mockPathProvider;
-        private readonly WindowsOsPathProvider _sut;
+        private readonly WindowsAppPathProvider _sut;
 
         public WindowsOsPathProviderAdapterTests()
         {
             _mockPathProvider = new Mock<IAppPathProviderOutboundPort>();
 
-            _sut = new WindowsOsPathProvider(_mockPathProvider.Object);
+            _sut = new WindowsAppPathProvider(_mockPathProvider.Object);
         }
 
 

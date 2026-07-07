@@ -1,6 +1,5 @@
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.UseCases;
-using eBRestarter.Core.Application.Models.Errors;
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
@@ -18,7 +17,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
 {
     public class EVisitorConfigRepositoryTests
     {
-        private readonly Mock<IOsPathProvider> _mockPathProvider;
+        private readonly Mock<IInboundPortOsAppPathProvider> _mockPathProvider;
         private readonly Mock<IFileSystemOutboundPort> _mockFileSystem;
         private readonly Mock<ILogger<EVRestarterConfigRepository>> _mockLogger;
         private readonly EVRestarterConfigRepository _service;
@@ -26,7 +25,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
 
         public EVisitorConfigRepositoryTests()
         {
-            _mockPathProvider = new Mock<IOsPathProvider>();
+            _mockPathProvider = new Mock<IInboundPortOsAppPathProvider>();
             _mockFileSystem = new Mock<IFileSystemOutboundPort>();
             _mockLogger = new Mock<ILogger<EVRestarterConfigRepository>>();
 

@@ -29,9 +29,9 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
 
     private const string SentDataIconPath = "/Resources/Visuals/Icons/LightTheme/send-data-light_theme.png";
 
-    private readonly ILocalizationProvider _localizationService;
+    private readonly IInboundPortLocalizationProvider _localizationService;
 
-    private readonly INetworkInfoProvider _networkService;
+    private readonly IInboundPortNetworkInfoProvider _networkService;
 
     private readonly DispatcherQueue _dispatcherQueue;
 
@@ -41,8 +41,8 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
 
 
     public ViewModelNetworkTraffic(
-        INetworkInfoProvider networkService,
-        ILocalizationProvider LocalizationProvider)
+        IInboundPortNetworkInfoProvider networkService,
+        IInboundPortLocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(networkService);
         ArgumentNullException.ThrowIfNull(LocalizationProvider);

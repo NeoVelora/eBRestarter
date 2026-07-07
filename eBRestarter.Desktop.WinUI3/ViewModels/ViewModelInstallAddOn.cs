@@ -19,7 +19,7 @@ public sealed partial class ViewModelInstallAddOn : ObservableObject, IDisposabl
     public ObservableCollection<ViewModelBrowserAddonStatus> Browsers { get; } = [];
 
 
-    public ViewModelInstallAddOn(IBrowserFactoryOutboundPort BrowserFactory, ILocalizationProvider LocalizationProvider)
+    public ViewModelInstallAddOn(IBrowserFactoryOutboundPort BrowserFactory, IInboundPortLocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(BrowserFactory);
         ArgumentNullException.ThrowIfNull(LocalizationProvider);

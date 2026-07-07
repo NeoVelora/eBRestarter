@@ -2,23 +2,24 @@ using eBRestarter.Core.Application.Ports.Outbound;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Inbound.Services;
-using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.Logging;
 
 namespace eBRestarter.Core.Application.Services;
 
-public partial class ComputerRestartService(
+public class ComputerRestartService(
     IEVisitorConfigRepositoryOutboundPort configService,
     IOsProcessControlOutboundPort processService,
     IApplicationLifetimeOutboundPort applicationLifetime,
     TimeProvider timeProvider,
-    ILogger<ComputerRestartService> logger) : IComputerRestartService, IDisposable
+    IApplicationLoggerOutboundPort<ComputerRestartService> logger) : IComputerRestartService, IDisposable
 {
     private bool _disposed;
+
     private readonly IEVisitorConfigRepositoryOutboundPort _configService = configService;
     private readonly IOsProcessControlOutboundPort _processService = processService;
     private readonly IApplicationLifetimeOutboundPort _applicationLifetime = applicationLifetime;
     private readonly TimeProvider _timeProvider = timeProvider;
-    private readonly ILogger<ComputerRestartService> _logger = logger;
+    private readonly IApplicationLoggerOutboundPort<ComputerRestartService> _logger = logger;
 
     private PeriodicTimer? _timer;
     private Task? _backgroundTask;

@@ -17,7 +17,7 @@ public sealed partial class ViewModelActivateApi : ObservableObject
 
     private readonly IEVisitorConfigRepositoryOutboundPort _configService;
 
-    private readonly ILocalizationProvider _localizationService;
+    private readonly IInboundPortLocalizationProvider _localizationService;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SubmitCommand))]
@@ -41,7 +41,7 @@ public sealed partial class ViewModelActivateApi : ObservableObject
     public ViewModelActivateApi(
         IApiAuthenticationProviderOutboundPort apiAuthenticationService,
         IEVisitorConfigRepositoryOutboundPort configService,
-        ILocalizationProvider LocalizationProvider)
+        IInboundPortLocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(apiAuthenticationService);
         ArgumentNullException.ThrowIfNull(configService);

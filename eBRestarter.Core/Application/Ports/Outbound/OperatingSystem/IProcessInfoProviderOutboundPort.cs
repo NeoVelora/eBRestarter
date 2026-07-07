@@ -1,4 +1,4 @@
-﻿namespace eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+namespace eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
 public interface IProcessInfoProviderOutboundPort
 {

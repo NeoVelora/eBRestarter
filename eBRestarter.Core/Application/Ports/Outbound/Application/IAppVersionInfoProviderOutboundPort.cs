@@ -1,7 +1,9 @@
+using System;
+
 namespace eBRestarter.Core.Application.Ports.Outbound.Application;
 
-public interface IAppVersionInfoProviderOutboundPort
+[Obsolete("Use IAppInfoProviderOutboundPort instead. This port has been unified to eliminate redundancy.")]
+public interface IAppVersionInfoProviderOutboundPort : IAppInfoProviderOutboundPort
 {
-    string RetrieveAppVersion();
 }
 

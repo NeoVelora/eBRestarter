@@ -16,9 +16,9 @@ public sealed partial class ViewModelInfocenter : ObservableObject
 
     private readonly IDialogService _dialogService;
 
-    private readonly ISystemInformationProvider _systemInformationProvider;
+    private readonly IInboundPortSystemInformationProvider _systemInformationProvider;
 
-    private readonly ILocalizationProvider _localizationService;
+    private readonly IInboundPortLocalizationProvider _localizationService;
 
     [ObservableProperty]
     public partial string BrowserText { get; set; }
@@ -42,9 +42,9 @@ public sealed partial class ViewModelInfocenter : ObservableObject
     public partial string RamText { get; set; }
 
     public ViewModelInfocenter(
-        ISystemInformationProvider systemInformationProvider,
+        IInboundPortSystemInformationProvider systemInformationProvider,
         IDialogService dialogService,
-        ILocalizationProvider LocalizationProvider)
+        IInboundPortLocalizationProvider LocalizationProvider)
     {
         ArgumentNullException.ThrowIfNull(systemInformationProvider);
         ArgumentNullException.ThrowIfNull(dialogService);

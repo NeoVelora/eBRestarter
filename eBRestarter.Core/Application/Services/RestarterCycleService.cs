@@ -1,3 +1,4 @@
+using eBRestarter.Core.Application.Handlers;
 using eBRestarter.Core.Application.Ports.Inbound.Handlers;
 using eBRestarter.Core.Application.Ports.Inbound.Services;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
@@ -6,33 +7,36 @@ using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Domain.Handlers;
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Application.Models.Records;
-using FluentValidation;
+using eBRestarter.Core.Application.Ports.Inbound.Validators;
 
 namespace eBRestarter.Core.Application.Services;
 
 public sealed class RestarterCycleService(
     IBrowserFactoryOutboundPort BrowserFactory,
-    ILocalizationProvider LocalizationService,
+    IInboundPortLocalizationProvider LocalizationService,
 
     IEVisitorConfigRepositoryOutboundPort configService,
     IBrowserCleanupScheduleHandler browserCleanupScheduleHandler,
     TimeProvider timeProvider,
-    IValidator<ManageRestarterCycleRequest> validator,
+    IInboundPortApplicationValidator<ManageRestarterCycleRequest> validator,
     IDelayPhaseHandler delayPhaseHandler,
     IRunBrowserPhaseHandler runBrowserPhaseHandler) : IRestarterCycleService
 {
     private const string BaseUrl = "https://www.ebesucher.de/surfbar/";
+
     private const int InitialDelaySeconds = 5;
 
     private readonly IBrowserFactoryOutboundPort _browserFactory = BrowserFactory;
-    private readonly ILocalizationProvider _localizationService = LocalizationService;
+    private readonly IInboundPortLocalizationProvider _localizationService = LocalizationService;
 
     private readonly IEVisitorConfigRepositoryOutboundPort _configService = configService;
     private readonly IBrowserCleanupScheduleHandler _browserCleanupScheduleHandler = browserCleanupScheduleHandler;
-    private readonly TimeProvider _timeProvider = timeProvider;
-    private readonly IValidator<ManageRestarterCycleRequest> _validator = validator;
+
+    private readonly IInboundPortApplicationValidator<ManageRestarterCycleRequest> _validator = validator;
     private readonly IDelayPhaseHandler _delayPhaseHandler = delayPhaseHandler;
     private readonly IRunBrowserPhaseHandler _runBrowserPhaseHandler = runBrowserPhaseHandler;
+
+    private readonly TimeProvider _timeProvider = timeProvider;
 
     private CancellationTokenSource? _cts;
 
@@ -136,7 +140,6 @@ public sealed class RestarterCycleService(
         }
     }
 
-
     private void LaunchBrowser(ManageRestarterCycleRequest request)
     {
         try
@@ -174,7 +177,6 @@ public sealed class RestarterCycleService(
 
         if (browser is null || !_browserCleanupScheduleHandler.ShouldRunCleanupNow(browser.DeleteBrowserCacheIntervalDays, browser.NextBrowserDeleteCacheDate))
             return;
-
 
         CloseCurrentBrowser();
 
@@ -214,5 +216,3 @@ public sealed class RestarterCycleService(
         };
     }
 }
-
-

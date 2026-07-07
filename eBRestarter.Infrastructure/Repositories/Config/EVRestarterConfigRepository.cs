@@ -9,11 +9,11 @@ using System.Text.Json.Serialization;
 namespace eBRestarter.Infrastructure.Repositories.Config;
 
 public sealed class EVRestarterConfigRepository(
-    IOsPathProvider pathProvider,
+    IInboundPortOsAppPathProvider pathProvider,
     IFileSystemOutboundPort fileSystem,
     ILogger<EVRestarterConfigRepository> logger) : IEVisitorConfigRepositoryOutboundPort
 {
-    private readonly IOsPathProvider _pathProvider = pathProvider;
+    private readonly IInboundPortOsAppPathProvider _pathProvider = pathProvider;
     private readonly IFileSystemOutboundPort _fileSystem = fileSystem;
     private readonly ILogger<EVRestarterConfigRepository> _logger = logger;
 

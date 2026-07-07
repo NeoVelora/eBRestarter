@@ -4,5 +4,3 @@ public interface IOsEditionProviderOutboundPort
 {
     Task<string> RetrieveOsEditionAsync();
 }
-
-

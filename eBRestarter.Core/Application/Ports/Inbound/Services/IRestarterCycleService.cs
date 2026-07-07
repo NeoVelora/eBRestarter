@@ -7,6 +7,7 @@ public interface IRestarterCycleService
     event EventHandler<RestarterCycleProgress> ProgressChanged;
 
     Task StartAsync(ManageRestarterCycleRequest request, Func<Task> performCleanupCallback);
+
     void Stop();
 }
 

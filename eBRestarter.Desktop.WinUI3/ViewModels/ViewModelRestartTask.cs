@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Application.Extensions;
-using eBRestarter.Core.Application.Models;
 using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Handlers;
@@ -11,6 +10,7 @@ using eBRestarter.Core.Application.Ports.Inbound.Services;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.Messages;
+using eBRestarter.Core.Application.Models;
 using eBRestarter.Desktop.WinUI3.Models.Enums;
 using eBRestarter.Desktop.WinUI3.Services.Interfaces;
 using Microsoft.UI.Dispatching;
@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using eBRestarter.Desktop.WinUI3.Models;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -38,11 +39,11 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
     private readonly IBrowserDiscoveryProviderOutboundPort _browserService;
     private readonly eBRestarter.Desktop.WinUI3.Utilities.IBrowserDisplayNameResolverUtility _browserDisplayNameResolver;
 
-    private readonly ILocalizationProvider _localizationService;
+    private readonly IInboundPortLocalizationProvider _localizationService;
 
     private readonly IRestarterCycleService _restarterCycleService;
 
-    private readonly IRestartTaskDisplayStateHandler _restartTaskDisplayStateHandler;
+    private readonly IInboundPortRestartTaskDisplayStateHandler _restartTaskDisplayStateHandler;
 
     private bool _checkBrowserAliveRoutine;
 
@@ -88,8 +89,8 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         IRestarterCycleService restarterCycleService,
         IEVisitorConfigRepositoryOutboundPort configService,
         IDialogService dialogService,
-        ILocalizationProvider LocalizationProvider,
-        IRestartTaskDisplayStateHandler restartTaskDisplayStateHandler,
+        IInboundPortLocalizationProvider LocalizationProvider,
+        IInboundPortRestartTaskDisplayStateHandler restartTaskDisplayStateHandler,
         IBrowserDiscoveryProviderOutboundPort browserService, eBRestarter.Desktop.WinUI3.Utilities.IBrowserDisplayNameResolverUtility browserDisplayNameResolver)
     {
         ArgumentNullException.ThrowIfNull(restarterCycleService);
@@ -181,23 +182,17 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         }
     }
 
-    public void Receive(BrowserChangedMessage message) =>
-        _dispatcherQueue.TryEnqueue(() => ChosenBrowser = message.BrowserName ?? "-");
+    public void Receive(BrowserChangedMessage message) => _dispatcherQueue.TryEnqueue(() => ChosenBrowser = message.BrowserName ?? "-");
 
-    public void Receive(DeleteBrowserContentActivateMessage message) =>
-        _dispatcherQueue.TryEnqueue(() => DeleteIsActivatedMessage = message.ActivateMessage ?? "-");
+    public void Receive(DeleteBrowserContentActivateMessage message) => _dispatcherQueue.TryEnqueue(() => DeleteIsActivatedMessage = message.ActivateMessage ?? "-");
 
-    public void Receive(DeleteBrowserContentIsActive message) =>
-        _dispatcherQueue.TryEnqueue(() => DeleteBrowserContentIsActive = message.IsActiveOrNot);
+    public void Receive(DeleteBrowserContentIsActive message) => _dispatcherQueue.TryEnqueue(() => DeleteBrowserContentIsActive = message.IsActiveOrNot);
 
-    public void Receive(NextDeletionProcessMessage message) =>
-        _dispatcherQueue.TryEnqueue(() => NextDeletionProcessMessage = message.Message ?? "-");
+    public void Receive(NextDeletionProcessMessage message) => _dispatcherQueue.TryEnqueue(() => NextDeletionProcessMessage = message.Message ?? "-");
 
-    public void Receive(NextDeletionProcessDate message) =>
-        _dispatcherQueue.TryEnqueue(() => NextDeletionProcessDateMessage = message.NextDeletionProcessDateMessage ?? "-");
+    public void Receive(NextDeletionProcessDate message) => _dispatcherQueue.TryEnqueue(() => NextDeletionProcessDateMessage = message.NextDeletionProcessDateMessage ?? "-");
 
-    public void Receive(UsernameChangedMessage message) =>
-        _dispatcherQueue.TryEnqueue(() => Username = message.NewUsername ?? "-");
+    public void Receive(UsernameChangedMessage message) => _dispatcherQueue.TryEnqueue(() => Username = message.NewUsername ?? "-");
 
     private void LoadInitialConfigData()
     {
@@ -247,11 +242,13 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
                 try
                 {
                     await _dialogService.ShowDeleteBrowserContentDialogAsync(autoStart: true);
+
                     tcs.TrySetResult();
                 }
                 catch (Exception ex)
                 {
                     Debug.WriteLine(ex);
+
                     tcs.TrySetException(ex);
                 }
                 finally
@@ -272,11 +269,9 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
 
     private async Task CheckInstalledBrowsersAsync()
     {
-        IEnumerable<BrowserInfo>? installedBrowsers =
-            await Task.Run(() => _browserService.FindInstalledBrowsersAsync()).ConfigureAwait(false);
+        IEnumerable<BrowserInfo>? installedBrowsers = await Task.Run(() => _browserService.FindInstalledBrowsersAsync()).ConfigureAwait(false);
 
-        bool hasInstalledBrowsers =
-            installedBrowsers?.Any(browser => browser.IsInstalled) == true;
+        bool hasInstalledBrowsers = installedBrowsers?.Any(browser => browser.IsInstalled) == true;
 
         _dispatcherQueue.TryEnqueue(() =>
         {
@@ -287,6 +282,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
                 if (!hasInstalledBrowsers && IsActive)
                 {
                     IsActive = false;
+
                     StopLoop();
                 }
             }

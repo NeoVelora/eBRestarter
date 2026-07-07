@@ -1,4 +1,5 @@
-﻿namespace eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+namespace eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+
 public interface IOsAutoLogonRepositoryOutboundPort
 {
     void EnableAutoLogon(string username, string domain, string password);
