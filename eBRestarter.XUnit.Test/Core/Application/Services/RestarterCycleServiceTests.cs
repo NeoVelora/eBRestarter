@@ -10,7 +10,6 @@ using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Inbound.Services;
 using eBRestarter.Core.Application.Services;
-using eBRestarter.Core.Application.Models.Records;
 using eBRestarter.Core.Application.Handlers;
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Domain.Entities;
@@ -26,6 +25,7 @@ using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Common.Statics;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 
 namespace eBRestarter.XUnit.Test.Core.Application.Services
 {
