@@ -16,7 +16,7 @@ public sealed class NavigationService : INavigationService
 
     public void AttachFrame(Frame frame)
     {
-        _frameAdapter = new WinUIFrameAdapter(frame);
+        _frameAdapter = new WinUIFrameNavigator(frame);
     }
 
     internal void SetFrameAdapter(INavigationFrame frameAdapter)

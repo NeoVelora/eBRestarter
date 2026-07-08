@@ -3,9 +3,9 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using System;
 
-namespace eBRestarter.Desktop.WinUI3.Adapters;
+namespace eBRestarter.Desktop.WinUI3.Navigation;
 
-public sealed class WinUIFrameAdapter(Frame frame) : INavigationFrame
+public sealed class WinUIFrameNavigator(Frame frame) : INavigationFrame
 {
     private readonly Frame _frame = frame;
 
