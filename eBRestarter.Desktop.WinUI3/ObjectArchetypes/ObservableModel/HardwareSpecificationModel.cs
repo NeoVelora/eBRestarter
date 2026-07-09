@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace eBRestarter.Desktop.WinUI3.Models.UI;
+namespace eBRestarter.Desktop.WinUI3.ObjectArchetypes.ObservableModel;
 
 public sealed partial class HardwareSpecificationModel : ObservableObject
 {

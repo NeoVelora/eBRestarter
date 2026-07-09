@@ -1,7 +1,6 @@
-using eBRestarter.Core.Application.Ports.Outbound;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 
-namespace eBRestarter.Infrastructure.Adapters.WindowsOS;
+namespace eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS;
 
 public sealed class AdapterWindowsBrowserExtensionDeployment : IOutboundPortBrowserExtensionDeployment, IOutboundPortBrowserExtensionPathProvider
 {

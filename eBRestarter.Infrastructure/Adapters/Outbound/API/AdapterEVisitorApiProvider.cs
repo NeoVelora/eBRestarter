@@ -1,9 +1,9 @@
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound;
-using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Infrastructure.Api;
 using eBRestarter.Infrastructure.Api.Interfaces;
-using eBRestarter.Infrastructure.Models.Network;
+using eBRestarter.Infrastructure.ObjectArchetypes.Model;
 using eBRestarter.Infrastructure.Utilities;
 using Microsoft.Extensions.Logging;
 

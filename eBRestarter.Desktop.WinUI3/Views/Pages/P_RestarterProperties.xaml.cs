@@ -2,20 +2,18 @@ using eBRestarter.Desktop.WinUI3.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 
+namespace eBRestarter.Desktop.WinUI3.Views.Pages;
 
-namespace eBRestarter.Desktop.WinUI3.Views.Pages
+public sealed partial class P_RestarterProperties : Page
 {
-    public sealed partial class P_RestarterProperties : Page
+    public ViewModelRestarterProperties ViewModelRestarterProperties { get; }
+
+    public P_RestarterProperties()
     {
-        public ViewModelRestarterProperties ViewModelRestarterProperties { get; }
+        this.InitializeComponent();
 
-        public P_RestarterProperties()
-        {
-            this.InitializeComponent();
+        ViewModelRestarterProperties = App.AppHost!.Services.GetRequiredService<ViewModelRestarterProperties>();
 
-            ViewModelRestarterProperties = App.AppHost!.Services.GetRequiredService<ViewModelRestarterProperties>();
-
-            this.DataContext = ViewModelRestarterProperties;
-        }
+        this.DataContext = ViewModelRestarterProperties;
     }
 }

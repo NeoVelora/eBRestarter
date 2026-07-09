@@ -11,91 +11,90 @@ using System;
 using System.IO;
 
 
-namespace eBRestarter.Desktop.WinUI3
+namespace eBRestarter.Desktop.WinUI3;
+
+public sealed partial class EBRestarter : Window
 {
-    public sealed partial class EBRestarter : Window
+    private readonly INavigationService _navigationService;
+
+    private readonly IOutboundPortAppVersionInfoProvider? _iAppVersionInfoService;
+    private readonly IMainWindowProvider _mainWindowProvider;
+    private readonly IAppWindowHelper _appWindowHelper;
+
+    private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
+
+    public EBRestarter(
+        INavigationService navigationService,
+        IOutboundPortAppVersionInfoProvider iAppVersionInfoService,
+        IMainWindowProvider mainWindowProvider,
+        IAppWindowHelper appWindowHelper)
     {
-        private readonly INavigationService _navigationService;
+        InitializeComponent();
 
-        private readonly IOutboundPortAppVersionInfoProvider? _iAppVersionInfoService;
-        private readonly IMainWindowProvider _mainWindowProvider;
-        private readonly IAppWindowHelper _appWindowHelper;
+        _mainWindowProvider = mainWindowProvider;
+        _appWindowHelper = appWindowHelper;
 
-        private readonly NavigationTransitionInfo _defaultTransition = new DrillInNavigationTransitionInfo();
+        _mainWindowProvider.SetMainWindow(this);
 
-        public EBRestarter(
-            INavigationService navigationService,
-            IOutboundPortAppVersionInfoProvider iAppVersionInfoService,
-            IMainWindowProvider mainWindowProvider,
-            IAppWindowHelper appWindowHelper)
+        _appWindowHelper.ConfigureTitleBarColors(this);
+
+        NavigationFrame.CacheSize = 10;
+
+        _navigationService = navigationService;
+
+        _iAppVersionInfoService = iAppVersionInfoService;
+
+        _navigationService.AttachFrame(NavigationFrame);
+
+        _navigationService.NavigateTo("CommonOverview", transitionInfo: new DrillInNavigationTransitionInfo());
+
+        IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
+        AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+
+        string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "eB Restarter.ico");
+
+        if (File.Exists(iconPath))
         {
-            InitializeComponent();
-
-            _mainWindowProvider = mainWindowProvider;
-            _appWindowHelper = appWindowHelper;
-
-            _mainWindowProvider.SetMainWindow(this);
-
-            _appWindowHelper.ConfigureTitleBarColors(this);
-
-            NavigationFrame.CacheSize = 10;
-
-            _navigationService = navigationService;
-
-            _iAppVersionInfoService = iAppVersionInfoService;
-
-            _navigationService.AttachFrame(NavigationFrame);
-
-            _navigationService.NavigateTo("CommonOverview", transitionInfo: new DrillInNavigationTransitionInfo());
-
-            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            WindowId windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
-            AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
-
-            string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "eB Restarter.ico");
-
-            if (File.Exists(iconPath))
-            {
-                appWindow.SetIcon(iconPath);
-            }
-
-            if (appWindow.Presenter is OverlappedPresenter presenter)
-            {
-                presenter.Maximize();
-            }
-
-            TxbVersion.Text = "v" + _iAppVersionInfoService?.RetrieveAppVersion();
-
-
+            appWindow.SetIcon(iconPath);
         }
 
-        private void AppTitleBar_BackRequested(TitleBar sender, object args)
+        if (appWindow.Presenter is OverlappedPresenter presenter)
         {
-            if (NavigationFrame.CanGoBack)
-            {
-                NavigationFrame.GoBack();
-            }
+            presenter.Maximize();
         }
 
-        private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args)
+        TxbVersion.Text = "v" + _iAppVersionInfoService?.RetrieveAppVersion();
+
+
+    }
+
+    private void AppTitleBar_BackRequested(TitleBar sender, object args)
+    {
+        if (NavigationFrame.CanGoBack)
         {
-            NavView.IsPaneOpen = !NavView.IsPaneOpen;
+            NavigationFrame.GoBack();
         }
+    }
 
-        private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args)
+    {
+        NavView.IsPaneOpen = !NavView.IsPaneOpen;
+    }
+
+    private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(args);
+
+        if (args.InvokedItemContainer is NavigationViewItem nvi
+            && nvi.Tag is string tag)
         {
-            ArgumentNullException.ThrowIfNull(sender);
-            ArgumentNullException.ThrowIfNull(args);
-
-            if (args.InvokedItemContainer is NavigationViewItem nvi
-                && nvi.Tag is string tag)
-            {
-                _navigationService.NavigateTo(
-                    tag,
-                    parameter: null!,
-                    transitionInfo: _defaultTransition
-                );
-            }
+            _navigationService.NavigateTo(
+                tag,
+                parameter: null!,
+                transitionInfo: _defaultTransition
+            );
         }
     }
 }

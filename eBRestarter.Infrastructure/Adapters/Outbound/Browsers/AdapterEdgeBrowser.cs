@@ -1,10 +1,9 @@
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.Outbound.Browsers;
 using eBRestarter.Infrastructure.Common.Statics;
 using Microsoft.Extensions.Logging;
 
-namespace eBRestarter.Infrastructure.Adapters.Browsers;
+namespace eBRestarter.Infrastructure.Adapters.Outbound.Browsers;
 
 public sealed class AdapterEdgeBrowser(IOutboundPortOsProcessControl processControlPort, IOutboundPortSystemConfigurationRepository settingsPort, IOutboundPortFileSystem fileSystemPort, ILogger<AdapterEdgeBrowser> logger) : AdapterChromiumBrowserBase(processControlPort, settingsPort, fileSystemPort, logger)
 {

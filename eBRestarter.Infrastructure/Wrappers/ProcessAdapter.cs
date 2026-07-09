@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace eBRestarter.Infrastructure.Adapters.Wrapper;
+namespace eBRestarter.Infrastructure.Wrappers;
 
 public partial class ProcessAdapter(Process process) : IProcess
 {

@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using Microsoft.Extensions.Logging;
 
-namespace eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS.Repository;
+namespace eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS.Repositories;
 
 public sealed class AdapterWindowsStartupRepository(
     ILogger<AdapterWindowsStartupRepository> logger,

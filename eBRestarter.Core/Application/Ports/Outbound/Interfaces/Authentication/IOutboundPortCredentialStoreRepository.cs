@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 
-namespace eBRestarter.Core.Application.Ports.Outbound.Authentication;
+namespace eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
 
 public interface IOutboundPortCredentialStoreRepository
 {

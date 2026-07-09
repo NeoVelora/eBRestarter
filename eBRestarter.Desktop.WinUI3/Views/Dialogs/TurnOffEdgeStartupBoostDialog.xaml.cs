@@ -2,7 +2,6 @@ using eBRestarter.Desktop.WinUI3.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 
-
 namespace eBRestarter.Desktop.WinUI3.Views.Dialogs;
 
 public partial class TurnOffEdgeStartupBoostDialog : ContentDialog

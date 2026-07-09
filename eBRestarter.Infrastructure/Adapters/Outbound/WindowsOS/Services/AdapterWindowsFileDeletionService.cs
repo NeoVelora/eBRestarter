@@ -1,7 +1,7 @@
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace eBRestarter.Infrastructure.Adapters.WindowsOS;
+namespace eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS.Services;
 
 public sealed class AdapterWindowsFileDeletionService(ILogger<AdapterWindowsFileDeletionService> logger) : IOutboundPortFileDeletion
 {

@@ -1,4 +1,4 @@
-namespace eBRestarter.Core.Application.Ports.Outbound.Security;
+namespace eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
 
 public interface IOutboundPortEncryption
 {

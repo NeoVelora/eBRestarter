@@ -1,4 +1,4 @@
-namespace eBRestarter.Infrastructure.Adapters.Wrapper;
+namespace eBRestarter.Infrastructure.Wrappers;
 
 public interface IProcess : IDisposable
 {

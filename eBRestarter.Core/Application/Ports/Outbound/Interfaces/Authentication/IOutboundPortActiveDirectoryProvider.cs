@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Enums;
 
-namespace eBRestarter.Core.Application.Ports.Outbound.Authentication;
+namespace eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
 
 public interface IOutboundPortActiveDirectoryProvider
 {

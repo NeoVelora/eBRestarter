@@ -1,6 +1,6 @@
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 
-namespace eBRestarter.Infrastructure.Adapters.WindowsOS;
+namespace eBRestarter.Infrastructure.Adapters.Outbound.WindowsOS;
 
 public sealed class AdapterWindowsFileSystem : IOutboundPortFileSystem
 {

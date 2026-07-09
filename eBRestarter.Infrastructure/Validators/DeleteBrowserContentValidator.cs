@@ -1,9 +1,9 @@
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using FluentValidation;
 
-namespace eBRestarter.Infrastructure.Adapters.Validators;
+namespace eBRestarter.Infrastructure.Validators;
 
-public sealed class DeleteBrowserContentValidator : AbstractValidator<DeleteBrowserContentRequest>
+public sealed partial class DeleteBrowserContentValidator : AbstractValidator<DeleteBrowserContentRequest>
 {
     public DeleteBrowserContentValidator()
     {

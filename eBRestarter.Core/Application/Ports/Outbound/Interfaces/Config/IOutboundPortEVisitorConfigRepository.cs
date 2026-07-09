@@ -1,6 +1,6 @@
 using eBRestarter.Core.Domain.Entities;
 
-namespace eBRestarter.Core.Application.Ports.Outbound.Config;
+namespace eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 
 public interface IOutboundPortEVisitorConfigRepository
 {
