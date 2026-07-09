@@ -20,7 +20,7 @@ public sealed class AdapterGitHubUpdate(
     IOutboundPortApplicationLifetime applicationLifetimeUseCase,
     ILogger<AdapterGitHubUpdate> logger) : IOutboundPortUpdate
 {
-    private const string RepoOwner = "DamonHelheim";
+    private const string RepoOwner = "NeoVelora";
     private const string RepoName = "eBRestarter";
 
     private const string GitHubApiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest";
