@@ -11,7 +11,7 @@ using eBRestarter.Core.Application.Ports.Inbound.Services;
 using eBRestarter.Core.Application.Services;
 using eBRestarter.Core.Application.Handlers;
 using eBRestarter.Core.Application.Enums;
-using eBRestarter.Core.Domain.Entities;
+using eBRestarter.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Shouldly;
