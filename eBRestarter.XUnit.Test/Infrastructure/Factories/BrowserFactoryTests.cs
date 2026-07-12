@@ -1,6 +1,7 @@
 using eBRestarter.Core.Application.Ports.Outbound;
 using eBRestarter.Core.Application.Enums;
 using eBRestarter.Infrastructure.Factories;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
@@ -59,6 +60,24 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
             });
 
             exception.Message.ShouldContain("ist noch nicht implementiert");
+        }
+
+        [Fact]
+        public void Create_ShouldResolveBrowser_ViaKeyedServices()
+        {
+            var services = new ServiceCollection();
+            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
+            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
+            var mockFs = new Mock<IOutboundPortFileSystem>();
+            var fakeChrome = new AdapterChromeBrowser(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<AdapterChromeBrowser>>().Object);
+
+            services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Chrome, fakeChrome);
+            var sp = services.BuildServiceProvider();
+            var factory = new BrowserFactory(sp);
+
+            var result = factory.Create(BrowserType.Chrome);
+
+            result.ShouldBeSameAs(fakeChrome);
         }
     }
 }
