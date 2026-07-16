@@ -10,7 +10,6 @@ using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Inbound.Services;
 using eBRestarter.Core.Application.Services;
 using eBRestarter.Core.Application.Handlers;
-using eBRestarter.Core.Application.Enums;
 using eBRestarter.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
@@ -26,6 +25,7 @@ using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Common.Statics;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 
 namespace eBRestarter.XUnit.Test.Core.Application.Services
 {
@@ -83,7 +83,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
         [Fact]
         public async Task StartAsync_ShouldStopCleanly_WhenStopIsCalled()
         {
-            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "User", 10, 5, false);
+            var request = new ManageRestarterCycleRequest(BrowserType.Firefox, "User", 10, 5, false);
             var emittedEvents = new List<RestarterCycleProgress>();
             _sut.ProgressChanged += (s, e) => emittedEvents.Add(e);
 
@@ -101,7 +101,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
         [Fact]
         public async Task StartAsync_ShouldExecuteFullCycleAndLaunchBrowser()
         {
-            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "TestUser", 10, 5, false);
+            var request = new ManageRestarterCycleRequest(BrowserType.Firefox, "TestUser", 10, 5, false);
 
 
             var cycleTask = _sut.StartAsync(request, () => Task.CompletedTask);
@@ -122,7 +122,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
         [Fact]
         public async Task RunBrowserPhase_ShouldDetectCrash_AndTriggerCrashCooldown()
         {
-            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "TestUser", 60, 10, CheckBrowserAliveRoutine: true);
+            var request = new ManageRestarterCycleRequest(BrowserType.Firefox, "TestUser", 60, 10, CheckBrowserAliveRoutine: true);
             var emittedEvents = new List<RestarterCycleProgress>();
             _sut.ProgressChanged += (s, e) => emittedEvents.Add(e);
 
@@ -142,7 +142,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
         [Fact]
         public async Task Cycle_ShouldTriggerCleanupCallback_AndSaveNewDate()
         {
-            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Firefox, "TestUser", 60, 10, false);
+            var request = new ManageRestarterCycleRequest(BrowserType.Firefox, "TestUser", 60, 10, false);
             bool callbackExecuted = false;
 
             var dummyConfig = new AppConfig { Browser = new BrowserConfig() };
@@ -172,7 +172,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
         [Fact]
         public async Task RunCycle_ShouldReloadConfig_BeforeEveryNewIteration()
         {
-            var request = new ManageRestarterCycleRequest(eBRestarter.Core.Application.Enums.BrowserType.Chrome, "OldUser", 10, 5, false);
+            var request = new ManageRestarterCycleRequest(BrowserType.Chrome, "OldUser", 10, 5, false);
 
             var config1 = new AppConfig { Username = "OldUser", Browser = null };
             var config2 = new AppConfig { Username = "NewUser", Browser = null };

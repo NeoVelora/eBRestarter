@@ -3,8 +3,8 @@ using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Infrastructure.Api;
 using eBRestarter.Infrastructure.Api.Interfaces;
+using eBRestarter.Infrastructure.BehavioralComponents.Utilities;
 using eBRestarter.Infrastructure.ObjectArchetypes.Model;
-using eBRestarter.Infrastructure.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.API;
@@ -24,7 +24,7 @@ public sealed class AdapterEVisitorApiProvider(
         var request = new ApiRequest
         {
             Url = ApiWebLinks.IpLink,
-            Method = Enums.HttpMethod.GET
+            Method = ObjectArchetypes.Enums.HttpMethod.GET
         };
 
         var response = await _restClientPort.ExecuteGetAsync(request);
@@ -92,7 +92,7 @@ public sealed class AdapterEVisitorApiProvider(
         var request = new ApiRequest
         {
             Url = ApiWebLinks.HourlyEarnings,
-            Method = Enums.HttpMethod.GET,
+            Method = ObjectArchetypes.Enums.HttpMethod.GET,
             Username = username,
             Password = apiKey
         };
@@ -123,7 +123,7 @@ public sealed class AdapterEVisitorApiProvider(
         var request = new ApiRequest
         {
             Url = url,
-            Method = Enums.HttpMethod.GET,
+            Method = ObjectArchetypes.Enums.HttpMethod.GET,
             Username = username,
             Password = apiKey
         };
@@ -156,7 +156,7 @@ public sealed class AdapterEVisitorApiProvider(
         var request = new ApiRequest
         {
             Url = url,
-            Method = Enums.HttpMethod.GET,
+            Method = ObjectArchetypes.Enums.HttpMethod.GET,
             Username = username,
             Password = apiKey
         };
