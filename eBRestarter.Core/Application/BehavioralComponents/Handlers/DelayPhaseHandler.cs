@@ -1,3 +1,7 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 using eBRestarter.Core.Application.BehavioralComponents.Handlers.Interfaces;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 
@@ -5,10 +9,29 @@ namespace eBRestarter.Core.Application.BehavioralComponents.Handlers;
 
 public sealed class DelayPhaseHandler(TimeProvider timeProvider) : IDelayPhaseHandler
 {
-    private readonly TimeProvider _timeProvider = timeProvider;
+    private static readonly TimeSpan OneSecondInterval = TimeSpan.FromSeconds(1);
 
-    public async Task ExecuteAsync(RestartTaskState state, int totalSeconds, Action<RestartTaskState, int, string?> reportProgress, CancellationToken token)
+    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+
+
+    public async Task ExecuteAsync(
+        RestartTaskState state,
+        int totalSeconds,
+        Action<RestartTaskState, int, string?> reportProgress,
+        CancellationToken token)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(totalSeconds);
+        ArgumentNullException.ThrowIfNull(reportProgress);
+
+        if (totalSeconds == 0)
+        {
+            token.ThrowIfCancellationRequested();
+            reportProgress(state, 0, null);
+            return;
+        }
+
+        using var timer = new PeriodicTimer(OneSecondInterval, _timeProvider);
+
         for (int secondsRemaining = totalSeconds; secondsRemaining >= 0; secondsRemaining--)
         {
             token.ThrowIfCancellationRequested();
@@ -16,7 +39,7 @@ public sealed class DelayPhaseHandler(TimeProvider timeProvider) : IDelayPhaseHa
 
             if (secondsRemaining > 0)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(1000), _timeProvider, token);
+                await timer.WaitForNextTickAsync(token);
             }
         }
     }

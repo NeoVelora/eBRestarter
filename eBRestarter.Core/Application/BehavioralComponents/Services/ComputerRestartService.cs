@@ -1,63 +1,99 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 
-namespace eBRestarter.Core.Application.Services;
+namespace eBRestarter.Core.Application.BehavioralComponents.Services;
 
-public class ComputerRestartService(
-    IOutboundPortEVisitorConfigRepository configService,
-    IOutboundPortOsProcessControl processService,
+public sealed class ComputerRestartService(
     IOutboundPortApplicationLifetime applicationLifetime,
-    TimeProvider timeProvider,
-    IOutboundPortApplicationLogger<ComputerRestartService> logger) : IInboundPortComputerRestartService, IDisposable
+    IOutboundPortEVisitorConfigRepository configService,
+    IOutboundPortApplicationLogger<ComputerRestartService> logger,
+    IOutboundPortOsProcessControl processService,
+    TimeProvider timeProvider) : IInboundPortComputerRestartService, IDisposable
 {
+    private static readonly TimeSpan SchedulerTimerInterval = TimeSpan.FromSeconds(30);
+
+    private const int ApplicationExitSuccessCode = 0;
+    private const int MissedSlotToleranceMinutes = 5;
+    private const int ProcessCloseTimeoutMilliseconds = 30000;
+
+    private readonly IOutboundPortApplicationLifetime _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
+    private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+    private readonly IOutboundPortApplicationLogger<ComputerRestartService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IOutboundPortOsProcessControl _processService = processService ?? throw new ArgumentNullException(nameof(processService));
+    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+
     private bool _disposed;
 
-    private readonly IOutboundPortEVisitorConfigRepository _configService = configService;
-    private readonly IOutboundPortOsProcessControl _processService = processService;
-    private readonly IOutboundPortApplicationLifetime _applicationLifetime = applicationLifetime;
-    private readonly TimeProvider _timeProvider = timeProvider;
-    private readonly IOutboundPortApplicationLogger<ComputerRestartService> _logger = logger;
-
-    private PeriodicTimer? _timer;
     private Task? _backgroundTask;
     private CancellationTokenSource? _cts;
+    private readonly System.Threading.Lock _syncLock = new();
+    private PeriodicTimer? _timer;
 
-    public event EventHandler<DateTime?>? OnNextRestartDateChanged;
+
+    public event EventHandler<DateTime?>? NextRestartDateChanged;
+
 
     public void StartScheduler()
     {
-        if (_backgroundTask is not null) return;
+        lock (_syncLock)
+        {
+            if (_backgroundTask is not null) return;
 
-        _logger.LogInformation("Computer Restart Scheduler started.");
+            _logger.LogInformation("Computer Restart Scheduler started.");
 
-        _cts = new CancellationTokenSource();
+            _cts = new CancellationTokenSource();
+            _timer = new PeriodicTimer(SchedulerTimerInterval, _timeProvider);
 
-        _timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+            PeriodicTimer timer = _timer;
+            CancellationToken token = _cts.Token;
 
-        _backgroundTask = Task.Run(async () => await LoopAsync(_cts.Token));
+            _backgroundTask = Task.Run(() => LoopAsync(timer, token));
+        }
     }
 
     public async Task StopSchedulerAsync()
     {
-        if (_cts is not null)
+        CancellationTokenSource? cts;
+        Task? backgroundTask;
+        PeriodicTimer? timer;
+
+        lock (_syncLock)
         {
-            await _cts.CancelAsync();
-            _cts.Dispose();
+            if (_backgroundTask is null) return;
+
+            cts = _cts;
+            backgroundTask = _backgroundTask;
+            timer = _timer;
+
             _cts = null;
+            _backgroundTask = null;
+            _timer = null;
         }
 
-        if (_backgroundTask is not null)
+        if (cts is not null)
+        {
+            await cts.CancelAsync();
+            cts.Dispose();
+        }
+
+        timer?.Dispose();
+
+        if (backgroundTask is not null)
         {
             try
             {
-                await _backgroundTask;
+                await backgroundTask;
             }
-            catch (OperationCanceledException) { }
-
-            _backgroundTask = null;
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         _logger.LogInformation("Computer Restart Scheduler stopped.");
@@ -65,30 +101,27 @@ public class ComputerRestartService(
 
     public void Dispose()
     {
-        Dispose(true);
-
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
+        lock (_syncLock)
         {
-            if (disposing)
-            {
-                _timer?.Dispose();
-                _cts?.Dispose();
-            }
-
+            if (_disposed) return;
             _disposed = true;
+
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _timer?.Dispose();
         }
     }
 
-    private async Task LoopAsync(CancellationToken token)
+    private void OnNextRestartDateChanged(DateTime? nextRestartDate)
+    {
+        NextRestartDateChanged?.Invoke(this, nextRestartDate);
+    }
+
+    private async Task LoopAsync(PeriodicTimer timer, CancellationToken cancellationToken)
     {
         try
         {
-            while (await _timer!.WaitForNextTickAsync(token))
+            while (await timer.WaitForNextTickAsync(cancellationToken))
             {
                 await CheckAndExecuteRestartAsync();
             }
@@ -104,49 +137,45 @@ public class ComputerRestartService(
 
     private async Task CheckAndExecuteRestartAsync()
     {
-        var config = _configService.LoadConfig();
+        var appConfig = _configService.LoadConfig();
 
-        if (config.Computer.NextRestartDate is null || config.Computer.ComputerRestartIntervalDays <= 0)
+        if (appConfig.Computer.NextRestartDate is null || appConfig.Computer.ComputerRestartIntervalDays <= 0)
         {
             return;
         }
 
         var now = _timeProvider.GetLocalNow();
-        var targetDateTime = config.Computer.NextRestartDate.Value.Date.AddHours(config.Computer.RestartClockTime);
+        var targetDateTime = appConfig.Computer.NextRestartDate.Value.Date.AddHours(appConfig.Computer.RestartClockTime);
+
+        if (now < targetDateTime)
+        {
+            return;
+        }
+
         var today = now.Date;
 
-        if (now >= targetDateTime)
+        if (now > targetDateTime.AddMinutes(MissedSlotToleranceMinutes))
         {
-            if (now > targetDateTime.AddMinutes(5))
-            {
-                _logger.LogWarning("Missed the targeted automated computer restart slot scheduled at {Target}. Recalculating new target execution window...", targetDateTime);
+            _logger.LogWarning("Missed the targeted automated computer restart slot scheduled at {Target}. Recalculating new target execution window...", targetDateTime);
 
-                DateTime newTargetDate;
+            DateTime newTargetDate = now.Hour >= appConfig.Computer.RestartClockTime
+                ? today.AddDays(appConfig.Computer.ComputerRestartIntervalDays).AddHours(appConfig.Computer.RestartClockTime)
+                : today.AddHours(appConfig.Computer.RestartClockTime);
 
-                if (now.Hour >= config.Computer.RestartClockTime)
-                {
-                    newTargetDate = today.AddDays(config.Computer.ComputerRestartIntervalDays).AddHours(config.Computer.RestartClockTime);
-                }
-                else
-                {
-                    newTargetDate = today.AddHours(config.Computer.RestartClockTime);
-                }
+            appConfig.Computer.SetNextRestartDate(newTargetDate);
+            _configService.SaveConfig(appConfig);
 
-                config.Computer.SetNextRestartDate(newTargetDate);
-                _configService.SaveConfig(config);
+            OnNextRestartDateChanged(newTargetDate);
+            return;
+        }
 
-                OnNextRestartDateChanged?.Invoke(this, newTargetDate);
-                return;
-            }
+        var restartDate = appConfig.Computer.NextRestartDate.Value.Date;
+        bool isCorrectDay = restartDate == today;
+        bool isCorrectTime = now.Hour == appConfig.Computer.RestartClockTime;
 
-            var restartDate = config.Computer.NextRestartDate.Value.Date;
-            bool isCorrectDay = restartDate == today;
-            bool isCorrectTime = now.Hour == config.Computer.RestartClockTime;
-
-            if (isCorrectDay && isCorrectTime)
-            {
-                await ExecuteRestartSequenceAsync();
-            }
+        if (isCorrectDay && isCorrectTime)
+        {
+            await ExecuteRestartSequenceAsync();
         }
     }
 
@@ -157,12 +186,12 @@ public class ComputerRestartService(
         try
         {
             _logger.LogInformation("Requesting graceful closure across all active desktop applications windows...");
-            await _processService.CloseAllOpenProgramsAsync(30000);
+            await _processService.CloseAllOpenProgramsAsync(ProcessCloseTimeoutMilliseconds);
 
             _logger.LogInformation("Dispatching system level hardware reboot instruction sets...");
             _processService.ShutdownComputer();
 
-            _applicationLifetime.ExitApplication(0);
+            _applicationLifetime.ExitApplication(ApplicationExitSuccessCode);
         }
         catch (Exception ex)
         {
@@ -170,5 +199,3 @@ public class ComputerRestartService(
         }
     }
 }
-
-

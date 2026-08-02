@@ -1,38 +1,37 @@
+using System;
+using System.IO;
 using System.Runtime.Versioning;
+
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Providers;
 
 [SupportedOSPlatform("windows")]
-public sealed class WindowsAppPathProvider(IOutboundPortAppPathProvider pathProvider) : IInboundPortOsAppPathProvider
+public sealed class WindowsAppPathProvider(
+    IOutboundPortAppPathProvider pathProvider)
+    : IInboundPortOsAppPathProvider
 {
-    private readonly IOutboundPortAppPathProvider _pathProvider = pathProvider;
 
     private const string AppFolderName = "eBRestarter";
     private const string ConfigFileName = "eBRestarterConfig.json";
+    private const string DownloadsFolderName = "Downloads";
+    private const string LogFileName = "log.txt";
+    private const string SkylarFolderName = "Skylar";
+
+
+    private readonly IOutboundPortAppPathProvider _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
+
 
     public string RetrieveAppDataPath()
     {
-        string localAppData = _pathProvider.RetrieveLocalAppDataDirectory();
-
-        return Path.Combine(localAppData, "Skylar", AppFolderName);
+        var localAppData = _pathProvider.RetrieveLocalAppDataDirectory();
+        return Path.Combine(localAppData, SkylarFolderName, AppFolderName);
     }
 
-    public string RetrieveDownloadsPath()
-    {
-        return Path.Combine(_pathProvider.RetrieveUserProfileDirectory(), "Downloads");
-    }
+    public string RetrieveConfigFilePath() => Path.Combine(RetrieveAppDataPath(), ConfigFileName);
 
-    public string RetrieveConfigFilePath()
-    {
-        return Path.Combine(RetrieveAppDataPath(), ConfigFileName);
-    }
+    public string RetrieveDownloadsPath() => Path.Combine(_pathProvider.RetrieveUserProfileDirectory(), DownloadsFolderName);
 
-    public string RetrieveLogFilePath()
-    {
-        return Path.Combine(RetrieveAppDataPath(), "log.txt");
-    }
+    public string RetrieveLogFilePath() => Path.Combine(RetrieveAppDataPath(), LogFileName);
 }
-
-

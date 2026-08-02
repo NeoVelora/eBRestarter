@@ -1,20 +1,29 @@
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using FluentValidation;
 
-namespace eBRestarter.Infrastructure.Validators;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 
-public sealed partial class ManageRestarterCycleValidator : AbstractValidator<ManageRestarterCycleRequest>
+namespace eBRestarter.Infrastructure.BehavioralComponents.Validators;
+
+public sealed class ManageRestarterCycleValidator : AbstractValidator<ManageRestarterCycleRequest>
 {
+
+    private const string BrowserTypeRequiredErrorMessage = "A valid browser type must be selected.";
+    private const string PauseTimeCannotBeNegativeErrorMessage = "Pause time cannot be negative.";
+    private const string RuntimeGreaterThanZeroErrorMessage = "Runtime must be greater than 0 seconds.";
+
+
     public ManageRestarterCycleValidator()
     {
-        RuleFor(x => x.BrowserType).IsInEnum().WithMessage("A valid browser type must be selected.");
+        RuleFor(request => request.BrowserType)
+            .IsInEnum()
+            .WithMessage(BrowserTypeRequiredErrorMessage);
 
-        RuleFor(x => x.RuntimeSeconds)
+        RuleFor(request => request.RuntimeSeconds)
             .GreaterThan(0)
-            .WithMessage("Runtime must be greater than 0 seconds.");
+            .WithMessage(RuntimeGreaterThanZeroErrorMessage);
 
-        RuleFor(x => x.PauseSeconds)
+        RuleFor(request => request.PauseSeconds)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("Pause time cannot be negative.");
+            .WithMessage(PauseTimeCannotBeNegativeErrorMessage);
     }
 }

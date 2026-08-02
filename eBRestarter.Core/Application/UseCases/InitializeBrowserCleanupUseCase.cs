@@ -1,11 +1,20 @@
-﻿using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
+using System;
+using System.Threading.Tasks;
+
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 
 namespace eBRestarter.Core.Application.UseCases;
 
-public class InitializeBrowserCleanupUseCase(IOutboundPortEVisitorConfigRepository configService) : IUseCaseInitializeBrowserCleanup
+public sealed class InitializeBrowserCleanupUseCase(
+    IOutboundPortEVisitorConfigRepository configService,
+    TimeProvider timeProvider)
+    : IUseCaseInitializeBrowserCleanup
 {
-    private readonly IOutboundPortEVisitorConfigRepository _configService = configService;
+
+    private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+
 
     public Task ExecuteAsync()
     {
@@ -13,10 +22,11 @@ public class InitializeBrowserCleanupUseCase(IOutboundPortEVisitorConfigReposito
 
         int intervalDays = config.Browser?.DeleteBrowserCacheIntervalDays ?? 0;
         DateTime nextDate = config.Browser?.NextBrowserDeleteCacheDate ?? DateTime.MinValue;
+        DateTime today = _timeProvider.GetLocalNow().Date;
 
-        if (nextDate == DateTime.Today && intervalDays > 0)
+        if (nextDate == today && intervalDays > 0)
         {
-            nextDate = DateTime.Today.AddDays(intervalDays);
+            nextDate = today.AddDays(intervalDays);
             config.Browser?.SetNextCleanupDate(nextDate);
             _configService.SaveConfig(config);
         }

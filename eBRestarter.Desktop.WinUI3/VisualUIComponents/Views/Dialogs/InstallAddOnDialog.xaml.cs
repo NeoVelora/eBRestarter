@@ -11,10 +11,11 @@ public sealed partial class InstallAddOnDialog : ContentDialog
     public InstallAddOnDialog()
     {
         InitializeComponent();
+
         ViewModelInstallAddOn = App.AppHost!.Services.GetRequiredService<ViewModelInstallAddOn>();
+        
+        DataContext = ViewModelInstallAddOn;
 
-        this.DataContext = ViewModelInstallAddOn;
-
-        this.Closed += (_, __) => ViewModelInstallAddOn.Dispose();
+        Closed += (_, _) => ViewModelInstallAddOn.Dispose();
     }
 }

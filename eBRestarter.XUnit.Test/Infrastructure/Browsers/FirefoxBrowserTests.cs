@@ -6,7 +6,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.Outbound.Browsers;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 {
@@ -18,7 +18,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockProcess = new Mock<IOutboundPortOsProcessControl>();
             var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
             var mockFileSystem = new Mock<IOutboundPortFileSystem>();
-            var mockLogger = new Mock<ILogger<AdapterFirefoxBrowser>>();
+            var mockLogger = new Mock<ILogger<AdapterFirefoxBrowserWrapper>>();
             
 
             mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("AppData")).Returns(@"C:\Roaming");
@@ -46,7 +46,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 
             mockFileSystem.Setup(fs => fs.ReadAllLines(fakeIniPath)).Returns(fakeIniContent);
 
-            var FirefoxBrowser = new AdapterFirefoxBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var FirefoxBrowser = new AdapterFirefoxBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
             var paths = FirefoxBrowser.ResolvePaths();
 
             paths.CacheDirs.ShouldContain(@"C:\Local\Mozilla\Firefox\Profiles\abc.default\cache2\entries");
@@ -64,7 +64,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockProcess = new Mock<IOutboundPortOsProcessControl>();
             var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
             var mockFileSystem = new Mock<IOutboundPortFileSystem>();
-            var mockLogger = new Mock<ILogger<AdapterFirefoxBrowser>>();
+            var mockLogger = new Mock<ILogger<AdapterFirefoxBrowserWrapper>>();
             
 
             string fakeRoamingExtensionsDir = @"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\extensions";
@@ -84,7 +84,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             mockFileSystem.Setup(fs => fs.DirectoryExists(fakeRoamingExtensionsDir)).Returns(true);
             mockFileSystem.Setup(fs => fs.FileExists(fullXpiPath)).Returns(true);
 
-            var FirefoxBrowser = new AdapterFirefoxBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var FirefoxBrowser = new AdapterFirefoxBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
             bool isInstalled = FirefoxBrowser.IsExtensionInstalled();
             isInstalled.ShouldBeTrue();
         }
@@ -95,7 +95,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             var mockProcess = new Mock<IOutboundPortOsProcessControl>();
             var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
             var mockFileSystem = new Mock<IOutboundPortFileSystem>();
-            var mockLogger = new Mock<ILogger<AdapterFirefoxBrowser>>();
+            var mockLogger = new Mock<ILogger<AdapterFirefoxBrowserWrapper>>();
             
 
             string fakeRoamingExtensionsDir = @"C:\Roaming\Mozilla\Firefox\Profiles\abc.default\extensions";
@@ -117,7 +117,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
             string extractedFolderPath = $@"{fakeRoamingExtensionsDir}\{{fef425dc-a60f-4484-954d-71ecf2544846}}";
             mockFileSystem.Setup(fs => fs.DirectoryExists(extractedFolderPath)).Returns(true);
 
-            var FirefoxBrowser = new AdapterFirefoxBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var FirefoxBrowser = new AdapterFirefoxBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
             bool isInstalled = FirefoxBrowser.IsExtensionInstalled();
             isInstalled.ShouldBeTrue();
         }

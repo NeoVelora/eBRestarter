@@ -1,14 +1,11 @@
+using System;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Xaml.Interactivity;
-using System;
-using System.Text.RegularExpressions;
 
 namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Behaviors;
 
 public sealed class TextBoxNumericOnlyBehavior : Behavior<TextBox>
 {
-    private static readonly Regex _regex = new("[^0-9]+", RegexOptions.NonBacktracking, TimeSpan.FromMilliseconds(100));
-
     protected override void OnAttached()
     {
         base.OnAttached();
@@ -21,20 +18,67 @@ public sealed class TextBoxNumericOnlyBehavior : Behavior<TextBox>
         AssociatedObject.TextChanging -= OnTextChanging;
     }
 
-    private void OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
+    private static void OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
-        try
+        string currentText = sender.Text;
+        if (string.IsNullOrEmpty(currentText))
         {
-            if (_regex.IsMatch(sender.Text))
+            return;
+        }
+
+        ReadOnlySpan<char> span = currentText.AsSpan();
+        if (!HasNonDigits(span))
+        {
+            return;
+        }
+
+        int originalSelectionStart = sender.SelectionStart;
+
+        string cleanText = RemoveNonDigits(span);
+
+        sender.Text = cleanText;
+        sender.SelectionStart = Math.Min(originalSelectionStart, cleanText.Length);
+    }
+
+    private static bool HasNonDigits(ReadOnlySpan<char> span)
+    {
+        foreach (char c in span)
+        {
+            if (!char.IsAsciiDigit(c))
             {
-                int pos = sender.SelectionStart;
-                sender.Text = _regex.Replace(sender.Text, "");
-                sender.SelectionStart = Math.Min(pos, sender.Text.Length);
+                return true;
             }
         }
-        catch (RegexMatchTimeoutException)
+
+        return false;
+    }
+
+    private static string RemoveNonDigits(ReadOnlySpan<char> source)
+    {
+        int digitCount = 0;
+        foreach (char c in source)
         {
-            sender.Text = string.Empty;
+            if (char.IsAsciiDigit(c))
+            {
+                digitCount++;
+            }
         }
+
+        if (digitCount == 0)
+        {
+            return string.Empty;
+        }
+
+        return string.Create(digitCount, source, static (destination, span) =>
+        {
+            int index = 0;
+            foreach (char c in span)
+            {
+                if (char.IsAsciiDigit(c))
+                {
+                    destination[index++] = c;
+                }
+            }
+        });
     }
 }

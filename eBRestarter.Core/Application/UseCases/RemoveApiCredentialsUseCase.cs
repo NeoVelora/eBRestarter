@@ -1,15 +1,23 @@
-﻿using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
+using System;
+
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 
 namespace eBRestarter.Core.Application.UseCases;
 
-public sealed class RemoveApiCredentialsUseCase(IOutboundPortEVisitorConfigRepository configService) : IUseCaseRemoveApiCredentials
+public sealed class RemoveApiCredentialsUseCase(
+    IOutboundPortEVisitorConfigRepository configService) : IUseCaseRemoveApiCredentials
 {
-    private readonly IOutboundPortEVisitorConfigRepository _configService = configService;
+    private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+
 
     public void Execute()
     {
         var currentConfig = _configService.LoadConfig();
+        if (currentConfig.Settings is null)
+        {
+            return;
+        }
 
         currentConfig.Settings.ApiUsername = string.Empty;
         currentConfig.Settings.ApiKey = string.Empty;
@@ -17,5 +25,3 @@ public sealed class RemoveApiCredentialsUseCase(IOutboundPortEVisitorConfigRepos
         _configService.SaveConfig(currentConfig);
     }
 }
-
-

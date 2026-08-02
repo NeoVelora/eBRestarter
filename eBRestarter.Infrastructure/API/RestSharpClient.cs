@@ -1,20 +1,58 @@
-using eBRestarter.Infrastructure.Api.Interfaces;
-using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
-using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using System;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RestSharp;
 using RestSharp.Authenticators;
-using System.Net;
+
+using eBRestarter.Infrastructure.Api.Interfaces;
+using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
+using eBRestarter.Infrastructure.ObjectArchetypes.Model;
 
 namespace eBRestarter.Infrastructure.API;
 
-public sealed class RestSharpClient(ILogger<RestSharpClient> logger, HttpMessageHandler? httpMessageHandler = null) : Api.Interfaces.IRestClient
+public sealed class RestSharpClient(
+    ILogger<RestSharpClient> logger,
+    HttpMessageHandler? httpMessageHandler = null)
+    : eBRestarter.Infrastructure.Api.Interfaces.IRestClient
 {
-    private readonly ILogger<RestSharpClient> _logger = logger;
+
+    private const string RateLimitRemainingHeaderName = "X-Ratelimit-Remaining";
+    private const int RemainingRateLimitThreshold = 10;
+    private const string RequestTimeoutErrorMessage = "The request has exceeded the time limit";
+
+
+    private readonly ILogger<RestSharpClient> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly HttpMessageHandler? _httpMessageHandler = httpMessageHandler;
+
+
+    public ApiResponse ExecuteGet(ApiRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        using var client = CreateClient(request);
+
+        var restRequest = new RestRequest();
+
+        try
+        {
+            var response = client.ExecuteGet(restRequest);
+            return MapResponse(response);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error during synchronous API invocation: {Url}", request.Url);
+
+            return MapExceptionToResponse(exception);
+        }
+    }
 
     public async Task<ApiResponse> ExecuteGetAsync(ApiRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         using var client = CreateClient(request);
 
         var restRequest = new RestRequest();
@@ -25,38 +63,31 @@ public sealed class RestSharpClient(ILogger<RestSharpClient> logger, HttpMessage
 
             return MapResponse(response);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            _logger.LogError(ex, "Error during asynchronous API invocation: {Url}", request.Url);
+            _logger.LogError(exception, "Error during asynchronous API invocation: {Url}", request.Url);
 
-            return MapExceptionToResponse(ex);
+            return MapExceptionToResponse(exception);
         }
     }
 
-    public ApiResponse ExecuteGet(ApiRequest request)
+    private static ResponseCode CheckRateLimit(RestResponse response)
     {
-        using var client = CreateClient(request);
+        var header = response.Headers?.FirstOrDefault(h => h.Name.Equals(RateLimitRemainingHeaderName, StringComparison.OrdinalIgnoreCase))?.Value?.ToString();
 
-        var restRequest = new RestRequest();
-
-        try
+        if (int.TryParse(header, out int remaining) && remaining <= RemainingRateLimitThreshold)
         {
-            var response = client.ExecuteGet(restRequest);
-            return MapResponse(response);
+            return ResponseCode.RequestLimit;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during synchronous API invocation: {Url}", request.Url);
 
-            return MapExceptionToResponse(ex);
-        }
+        return ResponseCode.Success;
     }
 
-    private RestClient CreateClient(ApiRequest model)
+    private RestClient CreateClient(ApiRequest request)
     {
-        var options = new RestClientOptions(model.Url)
+        var options = new RestClientOptions(request.Url)
         {
-            Timeout = TimeSpan.FromSeconds(model.TimeoutSeconds)
+            Timeout = TimeSpan.FromSeconds(request.TimeoutSeconds)
         };
 
         if (_httpMessageHandler is not null)
@@ -64,12 +95,30 @@ public sealed class RestSharpClient(ILogger<RestSharpClient> logger, HttpMessage
             options.ConfigureMessageHandler = _ => _httpMessageHandler;
         }
 
-        if (!string.IsNullOrWhiteSpace(model.Username) && !string.IsNullOrWhiteSpace(model.Password))
+        if (!string.IsNullOrWhiteSpace(request.Username) && !string.IsNullOrWhiteSpace(request.Password))
         {
-            options.Authenticator = new HttpBasicAuthenticator(model.Username, model.Password);
+            options.Authenticator = new HttpBasicAuthenticator(request.Username, request.Password);
         }
 
         return new RestClient(options);
+    }
+
+    private static ApiResponse MapExceptionToResponse(Exception exception)
+    {
+        var code = exception switch
+        {
+            TimeoutException or TaskCanceledException => ResponseCode.HTTPTimeout,
+            HttpRequestException httpException when httpException.StatusCode == HttpStatusCode.TooManyRequests || httpException.Message.Contains(((int)HttpStatusCode.TooManyRequests).ToString(), StringComparison.OrdinalIgnoreCase) => ResponseCode.HttpRE429,
+            HttpRequestException httpException when httpException.StatusCode == HttpStatusCode.Unauthorized || httpException.Message.Contains(((int)HttpStatusCode.Unauthorized).ToString(), StringComparison.OrdinalIgnoreCase) => ResponseCode.HttpRE401,
+            _ => ResponseCode.GeneralExceptionError
+        };
+
+        return new ApiResponse
+        {
+            IsSuccess = false,
+            StatusCode = code,
+            ErrorMessage = exception.Message
+        };
     }
 
     private ApiResponse MapResponse(RestResponse response)
@@ -93,7 +142,7 @@ public sealed class RestSharpClient(ILogger<RestSharpClient> logger, HttpMessage
             {
                 IsSuccess = false,
                 StatusCode = ResponseCode.HTTPTimeout,
-                ErrorMessage = "The request has exceeded the time limit"
+                ErrorMessage = RequestTimeoutErrorMessage
             };
         }
 
@@ -116,41 +165,4 @@ public sealed class RestSharpClient(ILogger<RestSharpClient> logger, HttpMessage
             ErrorMessage = response.ErrorMessage ?? response.StatusDescription
         };
     }
-
-    private static ResponseCode CheckRateLimit(RestResponse response)
-    {
-        var header = response.Headers?.FirstOrDefault(h => h.Name == "X-Ratelimit-Remaining")?.Value?.ToString();
-
-        if (int.TryParse(header, out int remaining) && remaining <= 10)
-        {
-            return ResponseCode.RequestLimit;
-        }
-
-        return ResponseCode.Success;
-    }
-
-    private static ApiResponse MapExceptionToResponse(Exception ex)
-    {
-        var code = ex switch
-        {
-            TimeoutException => ResponseCode.HTTPTimeout,
-
-            TaskCanceledException => ResponseCode.HTTPTimeout,
-
-            HttpRequestException httpEx when httpEx.Message.Contains("429") => ResponseCode.HttpRE429,
-
-            HttpRequestException httpEx when httpEx.Message.Contains("401") => ResponseCode.HttpRE401,
-
-            _ => ResponseCode.GeneralExceptionError
-        };
-
-        return new ApiResponse
-        {
-            IsSuccess = false,
-            StatusCode = code,
-            ErrorMessage = ex.Message
-        };
-    }
 }
-
-

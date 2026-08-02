@@ -4,17 +4,30 @@ namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Utilities;
 
 public static class HumanReadableTimeUtility
 {
+    private const int MinimumThreshold = 1;
+    private const string ZeroSecondsText = "0s";
+
+
     public static string Format(int seconds)
     {
-        if (seconds < 0) return "0s";
+        if (seconds <= 0)
+        {
+            return ZeroSecondsText;
+        }
 
         TimeSpan time = TimeSpan.FromSeconds(seconds);
+        int totalHours = (int)time.TotalHours;
 
-        return time switch
+        if (totalHours >= MinimumThreshold)
         {
-            { TotalHours: >= 1 } => time.ToString(@"h\h\:\ m\m\:\ s\s"),
-            { TotalMinutes: >= 1 } => time.ToString(@"m\m\:\ s\s"),
-            _ => time.ToString(@"s\s")
-        };
+            return $"{totalHours}h: {time.Minutes}m: {time.Seconds}s";
+        }
+
+        if (time.TotalMinutes >= MinimumThreshold)
+        {
+            return $"{time.Minutes}m: {time.Seconds}s";
+        }
+
+        return $"{time.Seconds}s";
     }
 }

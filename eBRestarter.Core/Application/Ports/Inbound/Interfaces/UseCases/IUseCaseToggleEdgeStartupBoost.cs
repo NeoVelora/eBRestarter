@@ -6,6 +6,5 @@ public interface IUseCaseToggleEdgeStartupBoost
 {
     bool IsEnabled();
     bool IsEdgeInstalled();
-    ToggleEdgeStartupBoostResponse Toggle(bool enable);
+    ToggleEdgeStartupBoostResponse Toggle(bool shouldEnable);
 }
-

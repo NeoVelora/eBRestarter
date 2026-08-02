@@ -1,13 +1,20 @@
+using System;
+using System.Collections.Generic;
+using System.Net.NetworkInformation;
+
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Network;
-using System.Net.NetworkInformation;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Providers;
 
-public sealed class NetworkInfoProvider(IOutboundPortNetworkProvider networkProvider) : IInboundPortNetworkInfoProvider
+public sealed class NetworkInfoProvider(
+    IOutboundPortNetworkProvider networkProvider)
+    : IInboundPortNetworkInfoProvider
 {
-    private readonly IOutboundPortNetworkProvider _networkProvider = networkProvider;
+
+    private readonly IOutboundPortNetworkProvider _networkProvider = networkProvider ?? throw new ArgumentNullException(nameof(networkProvider));
+
 
     public bool IsNetworkAvailable() => _networkProvider.CheckIsNetworkAvailable();
 
@@ -15,28 +22,25 @@ public sealed class NetworkInfoProvider(IOutboundPortNetworkProvider networkProv
     {
         var interfaces = _networkProvider.RetrieveAllNetworkInterfaces();
 
-        foreach (var nic in interfaces)
+        foreach (var networkInterface in interfaces)
         {
-            if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+            if (networkInterface.OperationalStatus != OperationalStatus.Up || networkInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
             {
                 continue;
             }
 
-            var stats = nic.GetIPv4Statistics();
+            var ipv4Statistics = networkInterface.GetIPv4Statistics();
 
-            if (stats.BytesSent == 0 && stats.BytesReceived == 0)
+            if (ipv4Statistics.BytesSent == 0 && ipv4Statistics.BytesReceived == 0)
             {
                 continue;
             }
 
             yield return new NetworkStats(
-                Name: nic.Name,
-                BytesReceived: stats.BytesReceived,
-                BytesSent: stats.BytesSent,
-                IsActive: true
-            );
+                Name: networkInterface.Name,
+                BytesReceived: ipv4Statistics.BytesReceived,
+                BytesSent: ipv4Statistics.BytesSent,
+                IsActive: true);
         }
     }
 }
-
-

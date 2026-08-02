@@ -1,58 +1,50 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+
+using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public sealed partial class ViewModelInfocenter : ObservableObject
 {
+    private const string InfocenterBrowserPrefixResourceKey = "Infocenter_BrowserPrefix";
+    private const string InfocenterBuildPrefixResourceKey = "Infocenter_BuildPrefix";
+    private const string InfocenterEditionPrefixResourceKey = "Infocenter_EditionPrefix";
+    private const string InfocenterGraphicsPrefixResourceKey = "Infocenter_GraphicsPrefix";
     private const string InfocenterLoadFailedResourceKey = "Infocenter_LoadFailed";
-
     private const string InfocenterLoadingResourceKey = "Infocenter_Loading";
+    private const string InfocenterProcessorPrefixResourceKey = "Infocenter_ProcessorPrefix";
+    private const string InfocenterRamPrefixResourceKey = "Infocenter_RamPrefix";
+    private const string InfocenterVersionPrefixResourceKey = "Infocenter_VersionPrefix";
 
     private readonly IDialogService _dialogService;
-
+    private readonly IInboundPortLocalizationProvider _localizationService;
     private readonly IInboundPortSystemInformationProvider _systemInformationProvider;
 
-    private readonly IInboundPortLocalizationProvider _localizationService;
-
-    [ObservableProperty]
-    public partial string BrowserText { get; set; }
-
-    [ObservableProperty]
-    public partial string GraphicsText { get; set; }
-
-    [ObservableProperty]
-    public partial string OsBuildText { get; set; }
-
-    [ObservableProperty]
-    public partial string OsEditionText { get; set; }
-
-    [ObservableProperty]
-    public partial string OsVersionText { get; set; }
-
-    [ObservableProperty]
-    public partial string ProcessorText { get; set; }
-
-    [ObservableProperty]
-    public partial string RamText { get; set; }
+    [ObservableProperty] public partial string BrowserText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string GraphicsText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string OsBuildText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string OsEditionText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string OsVersionText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string ProcessorText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string RamText { get; set; } = string.Empty;
 
     public ViewModelInfocenter(
-        IInboundPortSystemInformationProvider systemInformationProvider,
         IDialogService dialogService,
-        IInboundPortLocalizationProvider LocalizationProvider)
+        IInboundPortLocalizationProvider localizationService,
+        IInboundPortSystemInformationProvider systemInformationProvider)
     {
-        ArgumentNullException.ThrowIfNull(systemInformationProvider);
         ArgumentNullException.ThrowIfNull(dialogService);
-        ArgumentNullException.ThrowIfNull(LocalizationProvider);
+        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(systemInformationProvider);
 
-        _systemInformationProvider = systemInformationProvider;
         _dialogService = dialogService;
-        _localizationService = LocalizationProvider;
+        _localizationService = localizationService;
+        _systemInformationProvider = systemInformationProvider;
 
         string loadingPlaceholder = _localizationService.RetrieveString(InfocenterLoadingResourceKey);
 
@@ -70,23 +62,23 @@ public sealed partial class ViewModelInfocenter : ObservableObject
     [RelayCommand]
     public static void OpenSupportWebsite(string? url)
     {
-        if (string.IsNullOrWhiteSpace(url)) return;
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
 
         try
         {
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            Debug.WriteLine(ex);
+            Debug.WriteLine(exception);
         }
     }
 
     [RelayCommand]
-    private async Task ShowAboutInfo()
-    {
-        await _dialogService.ShowAboutDialogAsync();
-    }
+    private Task ShowAboutInfoAsync() => _dialogService.ShowAboutDialogAsync();
 
     private async Task LoadDataAsync()
     {
@@ -94,18 +86,20 @@ public sealed partial class ViewModelInfocenter : ObservableObject
         {
             var systemInformation = await _systemInformationProvider.RetrieveAsync();
 
-            ProcessorText = $"{_localizationService.RetrieveString("Infocenter_ProcessorPrefix")} {systemInformation.ProcessorName}";
-            GraphicsText = $"{_localizationService.RetrieveString("Infocenter_GraphicsPrefix")} {systemInformation.GraphicsCardName}";
-            RamText = $"{_localizationService.RetrieveString("Infocenter_RamPrefix")} {systemInformation.InstalledRam}";
-            OsEditionText = $"{_localizationService.RetrieveString("Infocenter_EditionPrefix")} {systemInformation.OsEdition}";
-            OsVersionText = $"{_localizationService.RetrieveString("Infocenter_VersionPrefix")} {systemInformation.OsDisplayVersion}";
-            OsBuildText = $"{_localizationService.RetrieveString("Infocenter_BuildPrefix")} {systemInformation.OsBuildVersion}";
-            BrowserText = $"{_localizationService.RetrieveString("Infocenter_BrowserPrefix")} {systemInformation.StandardBrowserName}";
+            ProcessorText = $"{_localizationService.RetrieveString(InfocenterProcessorPrefixResourceKey)} {systemInformation.ProcessorName}";
+            GraphicsText = $"{_localizationService.RetrieveString(InfocenterGraphicsPrefixResourceKey)} {systemInformation.GraphicsCardName}";
+            RamText = $"{_localizationService.RetrieveString(InfocenterRamPrefixResourceKey)} {systemInformation.InstalledRam}";
+            OsEditionText = $"{_localizationService.RetrieveString(InfocenterEditionPrefixResourceKey)} {systemInformation.OsEdition}";
+            OsVersionText = $"{_localizationService.RetrieveString(InfocenterVersionPrefixResourceKey)} {systemInformation.OsDisplayVersion}";
+            OsBuildText = $"{_localizationService.RetrieveString(InfocenterBuildPrefixResourceKey)} {systemInformation.OsBuildVersion}";
+            BrowserText = $"{_localizationService.RetrieveString(InfocenterBrowserPrefixResourceKey)} {systemInformation.StandardBrowserName}";
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            Debug.WriteLine(ex);
+            Debug.WriteLine(exception);
+
             string failureMessage = _localizationService.RetrieveString(InfocenterLoadFailedResourceKey);
+
             BrowserText = failureMessage;
             GraphicsText = failureMessage;
             OsBuildText = failureMessage;
@@ -116,5 +110,3 @@ public sealed partial class ViewModelInfocenter : ObservableObject
         }
     }
 }
-
-

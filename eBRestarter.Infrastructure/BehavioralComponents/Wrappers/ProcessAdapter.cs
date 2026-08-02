@@ -1,43 +1,30 @@
-using eBRestarter.Infrastructure.BehavioralComponents.Wrappers;
+using System;
 using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 
-namespace eBRestarter.Infrastructure.Wrappers;
+namespace eBRestarter.Infrastructure.BehavioralComponents.Wrappers;
 
-public partial class ProcessAdapter(Process process) : IProcess
+public sealed class ProcessAdapter(
+    Process process)
+    : IProcess
 {
-    private bool _disposedValue;
 
     private readonly Process _process = process ?? throw new ArgumentNullException(nameof(process));
 
-    public StreamReader StandardOutput => _process.StandardOutput;
-    public StreamReader StandardError => _process.StandardError;
+
     public string ProcessName => _process.ProcessName;
+
     public IntPtr MainWindowHandle => _process.MainWindowHandle;
+    public StreamReader StandardError => _process.StandardError;
+    public StreamReader StandardOutput => _process.StandardOutput;
 
-    public void WaitForExit() =>
-        _process.WaitForExit();
 
-    public bool WaitForExit(int milliseconds) =>
-        _process.WaitForExit(milliseconds);
+    public void Dispose() => _process.Dispose();
 
-    public Task WaitForExitAsync() =>
-        _process.WaitForExitAsync();
+    public void WaitForExit() => _process.WaitForExit();
 
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
+    public bool WaitForExit(int milliseconds) => _process.WaitForExit(milliseconds);
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposedValue)
-        {
-            if (disposing)
-            {
-                _process.Dispose();
-            }
-            _disposedValue = true;
-        }
-    }
+    public Task WaitForExitAsync() => _process.WaitForExitAsync();
 }

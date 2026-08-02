@@ -1,23 +1,35 @@
+using System;
+
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 
 namespace eBRestarter.Core.Application.BehavioralComponents.Providers;
 
-public class StartupConfigProvider(IOutboundPortEVisitorConfigRepository configService) : IInboundPortStartupConfigProvider
+public sealed class StartupConfigProvider(IOutboundPortEVisitorConfigRepository configService) : IInboundPortStartupConfigProvider
 {
-    private readonly IOutboundPortEVisitorConfigRepository _configService = configService;
+    private const int GermanLanguageCode = 0;
+
+    private const string DefaultEnglishCultureCode = "en-US";
+    private const string DefaultGermanCultureCode = "de-DE";
+    private const string DefaultThemeName = "Light";
+
+    private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+
 
     public StartupDisplayPreferences RetrieveStartupPreferences()
     {
-        var config = _configService.LoadConfig();
+        var appConfig = _configService.LoadConfig();
 
-        string languageCode = config.Settings.Language == 0 ? "de-DE" : "en-US";
+        string languageCode = appConfig?.Settings?.Language == GermanLanguageCode
+            ? DefaultGermanCultureCode
+            : DefaultEnglishCultureCode;
 
-        string themeName = string.IsNullOrEmpty(config.Settings.Theme) ? "Light" : config.Settings.Theme;
+        string? rawTheme = appConfig?.Settings?.Theme;
+        string themeName = string.IsNullOrWhiteSpace(rawTheme)
+            ? DefaultThemeName
+            : rawTheme;
 
         return new StartupDisplayPreferences(languageCode, themeName);
     }
 }
-
-

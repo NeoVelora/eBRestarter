@@ -1,48 +1,63 @@
+using System;
+using Microsoft.Extensions.Logging;
+
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
 using eBRestarter.Core.Domain.ValueObjects;
-using Microsoft.Extensions.Logging;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Repositories.Config;
 
 public sealed class EncryptedEVisitorConfigRepositoryDecorator(
     IOutboundPortEVisitorConfigRepository inner,
     IOutboundPortEncryption encryptionUseCase,
-    ILogger<EncryptedEVisitorConfigRepositoryDecorator> logger) : IOutboundPortEVisitorConfigRepository
+    ILogger<EncryptedEVisitorConfigRepositoryDecorator> logger)
+    : IOutboundPortEVisitorConfigRepository
 {
-    private readonly IOutboundPortEVisitorConfigRepository _inner = inner;
-    private readonly IOutboundPortEncryption _encryptionUseCase = encryptionUseCase;
-    private readonly ILogger<EncryptedEVisitorConfigRepositoryDecorator> _logger = logger;
+
+    private readonly IOutboundPortEncryption _encryptionUseCase = encryptionUseCase ?? throw new ArgumentNullException(nameof(encryptionUseCase));
+    private readonly IOutboundPortEVisitorConfigRepository _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+    private readonly ILogger<EncryptedEVisitorConfigRepositoryDecorator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
 
     public AppConfig LoadConfig()
     {
         var config = _inner.LoadConfig();
 
-        if (!string.IsNullOrEmpty(config.Settings.ApiKey))
+        if (string.IsNullOrEmpty(config.Settings.ApiKey))
         {
-            try
-            {
-                var decryptedKey = _encryptionUseCase.Decrypt(config.Settings.ApiKey);
-                config.Settings.ApiKey = decryptedKey;
+            return config;
+        }
 
-                if (string.IsNullOrEmpty(decryptedKey))
-                {
-                    _logger.LogWarning("API Key could not be decrypted (possibly changed machine). The key must be re-entered.");
-                }
-            }
-            catch (Exception ex)
+        try
+        {
+            var decryptedKey = _encryptionUseCase.Decrypt(config.Settings.ApiKey);
+            config.Settings.ApiKey = decryptedKey;
+
+            if (string.IsNullOrEmpty(decryptedKey))
             {
-                _logger.LogError(ex, "Error while decrypting the API key.");
-                config.Settings.ApiKey = string.Empty;
+                _logger.LogWarning("API Key could not be decrypted (possibly changed machine). The key must be re-entered.");
             }
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error while decrypting the API key.");
+            config.Settings.ApiKey = string.Empty;
         }
 
         return config;
     }
 
+    public void ResetConfig()
+    {
+        _inner.ResetConfig();
+    }
+
     public void SaveConfig(AppConfig config)
     {
+        ArgumentNullException.ThrowIfNull(config);
+
         var originalKey = config.Settings.ApiKey;
+
         try
         {
             if (!string.IsNullOrEmpty(originalKey))
@@ -56,10 +71,5 @@ public sealed class EncryptedEVisitorConfigRepositoryDecorator(
         {
             config.Settings.ApiKey = originalKey;
         }
-    }
-
-    public void ResetConfig()
-    {
-        _inner.ResetConfig();
     }
 }
