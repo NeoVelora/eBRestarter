@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Windows.ApplicationModel.Resources;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.UIOptionDTO;
@@ -33,12 +37,19 @@ public sealed class LocalizationProvider : IInboundPortLocalizationProvider, IUI
 
     private const string ResourcePathPrefix = "Resources/";
 
+    private readonly ILogger<LocalizationProvider> _logger;
+
     private readonly ResourceContext _resourceContext;
     private readonly ResourceMap _resourceMap;
 
+    private readonly ConcurrentDictionary<string, string> _resourceStringCache = new(StringComparer.Ordinal);
 
-    public LocalizationProvider()
+    public LocalizationProvider(ILogger<LocalizationProvider> logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
+
+        _logger = logger;
+
         var resourceManager = new ResourceManager();
         _resourceContext = resourceManager.CreateResourceContext();
 
@@ -52,7 +63,6 @@ public sealed class LocalizationProvider : IInboundPortLocalizationProvider, IUI
         _resourceMap = resourceManager.MainResourceMap;
     }
 
-
     public string RetrieveString(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -60,15 +70,38 @@ public sealed class LocalizationProvider : IInboundPortLocalizationProvider, IUI
             return string.Empty;
         }
 
-        try
-        {
-            var result = _resourceMap.GetValue($"{ResourcePathPrefix}{key}", _resourceContext);
-            return result?.ValueAsString ?? $"[{key}]";
-        }
-        catch
-        {
-            return $"[{key}]";
-        }
+        return _resourceStringCache.GetOrAdd(
+            key,
+            static (resourceKey, lookup) =>
+            {
+                try
+                {
+                    var result = lookup.Map.GetValue($"{ResourcePathPrefix}{resourceKey}", lookup.Context);
+
+                    if (result?.ValueAsString is { } resolvedValue)
+                    {
+                        return resolvedValue;
+                    }
+
+                    lookup.Logger.LogWarning(
+                        LogEventIds.UserInterface.LocalizationLookupFailed,
+                        "Resource key {ResourceKey} has no value in the current language; showing the bracketed key instead.",
+                        resourceKey);
+
+                    return $"[{resourceKey}]";
+                }
+                catch (Exception exception)
+                {
+                    lookup.Logger.LogWarning(
+                        LogEventIds.UserInterface.LocalizationLookupFailed,
+                        exception,
+                        "Looking up resource key {ResourceKey} failed; showing the bracketed key instead.",
+                        resourceKey);
+
+                    return $"[{resourceKey}]";
+                }
+            },
+            (Map: _resourceMap, Context: _resourceContext, Logger: _logger));
     }
 
     public IEnumerable<LanguageOption> GetAvailableLanguages()

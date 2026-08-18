@@ -46,7 +46,7 @@ public sealed class AdapterWindowsBrowserExtensionDeploymentProvider : IOutbound
     }
 
 #if !DEBUG
-    private static void CopyDirectoryContents(string sourceDir, string targetDir)
+        private static void CopyDirectoryContents(string sourceDir, string targetDir)
     {
         foreach (var dirPath in Directory.GetDirectories(sourceDir, AllDirectoriesSearchPattern, SearchOption.AllDirectories))
         {

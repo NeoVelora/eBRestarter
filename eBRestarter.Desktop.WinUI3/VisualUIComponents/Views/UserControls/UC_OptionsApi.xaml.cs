@@ -10,8 +10,10 @@ public sealed partial class UC_OptionsApi : UserControl
 
     public UC_OptionsApi()
     {
-        InitializeComponent();
         ViewModel = App.AppHost!.Services.GetRequiredService<ViewModelOptionsApi>();
+
+        InitializeComponent();
+
         this.DataContext = ViewModel;
     }
 }

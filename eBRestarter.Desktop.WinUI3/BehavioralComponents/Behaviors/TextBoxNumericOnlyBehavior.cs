@@ -21,12 +21,14 @@ public sealed class TextBoxNumericOnlyBehavior : Behavior<TextBox>
     private static void OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
         string currentText = sender.Text;
+
         if (string.IsNullOrEmpty(currentText))
         {
             return;
         }
 
         ReadOnlySpan<char> span = currentText.AsSpan();
+
         if (!HasNonDigits(span))
         {
             return;

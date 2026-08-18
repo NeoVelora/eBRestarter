@@ -1,3 +1,5 @@
+using System;
+
 using eBRestarter.Desktop.WinUI3.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,11 +20,15 @@ public static class ViewModelServiceExtensions
         services.AddSingleton<ViewModelInfocenter>();
 
         services.AddTransient<ViewModelAbout>();
-        services.AddTransient<ViewModelNetworkTraffic>();
         services.AddTransient<ViewModelDeleteBrowserContent>();
-        services.AddTransient<ViewModelInstallAddOn>();
         services.AddTransient<ViewModelActivateApi>();
         services.AddTransient<ViewModelTurnOffEdgeStartupBoost>();
+
+        services.AddSingleton<Func<ViewModelNetworkTraffic>>(
+            static serviceProvider => () => ActivatorUtilities.CreateInstance<ViewModelNetworkTraffic>(serviceProvider));
+
+        services.AddSingleton<Func<ViewModelInstallAddOn>>(
+            static serviceProvider => () => ActivatorUtilities.CreateInstance<ViewModelInstallAddOn>(serviceProvider));
 
         return services;
     }

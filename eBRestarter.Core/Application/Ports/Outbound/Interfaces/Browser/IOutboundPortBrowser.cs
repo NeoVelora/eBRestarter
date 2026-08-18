@@ -15,7 +15,8 @@ public interface IOutboundPortBrowser
     bool IsInstalled { get; }
     string ExtensionInstallUrl { get; }
 
-    void Start(string url, string arguments = "");
+    bool Start(string url, string arguments = "");
+
     void Close();
 
     BrowserPaths ResolvePaths();

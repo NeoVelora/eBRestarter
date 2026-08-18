@@ -1,10 +1,8 @@
-using eBRestarter.Core.Application.Ports.Outbound.Authentication;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Authentication;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Enums;
-using eBRestarter.Core.Application.Models.Records;
+using eBRestarter.Core.Application.Common.Results;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.Enums;
+using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Infrastructure.BehavioralComponents.Validators;
+using NSubstitute.ExceptionExtensions;
 
 

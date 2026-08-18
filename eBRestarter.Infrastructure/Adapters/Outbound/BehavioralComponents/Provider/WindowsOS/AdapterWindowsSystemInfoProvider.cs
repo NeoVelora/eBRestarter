@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 using System.Security.Principal;
 
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
 
@@ -69,7 +70,7 @@ public sealed class AdapterWindowsSystemInfoProvider : IOutboundPortSystemInfoPr
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ErrorReadingOsBuildVersionLogMessage);
+            _logger.LogError(LogEventIds.OperatingSystem.OsVersionReadFailed, ex, ErrorReadingOsBuildVersionLogMessage);
 
             return ErrorVersionFallback;
         }
@@ -87,7 +88,7 @@ public sealed class AdapterWindowsSystemInfoProvider : IOutboundPortSystemInfoPr
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ErrorReadingOsDisplayVersionLogMessage);
+            _logger.LogError(LogEventIds.OperatingSystem.OsVersionReadFailed, ex, ErrorReadingOsDisplayVersionLogMessage);
 
             return ErrorVersionFallback;
         }
@@ -105,7 +106,7 @@ public sealed class AdapterWindowsSystemInfoProvider : IOutboundPortSystemInfoPr
 
         if (!string.Equals(progIdHttp, progIdHttps, StringComparison.OrdinalIgnoreCase) && _logger.IsEnabled(LogLevel.Information))
         {
-            _logger.LogInformation(DifferentBrowsersDetectedLogMessage, progIdHttp, progIdHttps);
+            _logger.LogDebug(LogEventIds.OperatingSystem.DefaultBrowserMismatch, DifferentBrowsersDetectedLogMessage, progIdHttp, progIdHttps);
         }
 
         return IdentifyBrowserByProgId(progIdHttp);
@@ -119,7 +120,7 @@ public sealed class AdapterWindowsSystemInfoProvider : IOutboundPortSystemInfoPr
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, UnableToReadRegistryPathLogMessage, subKey);
+            _logger.LogWarning(LogEventIds.OperatingSystem.RegistryReadFailed, ex, UnableToReadRegistryPathLogMessage, subKey);
             return null;
         }
     }

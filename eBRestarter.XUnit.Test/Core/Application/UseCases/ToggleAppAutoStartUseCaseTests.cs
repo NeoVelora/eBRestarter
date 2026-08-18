@@ -1,48 +1,44 @@
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
-using eBRestarter.Core.Application.Enums;
-using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Core.Domain.ValueObjects;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Core.Application.UseCases;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Core.Domain.ValueObjects;
 
 namespace eBRestarter.Tests.Core.Application.UseCases.ToggleAppAutoStart
 {
     public class ToggleAppAutoStartUseCaseTests
     {
-        private readonly Mock<IOutboundPortAutoStartRepository> _mockStartupManager;
-        private readonly Mock<IOutboundPortEVisitorConfigRepository> _mockConfigService;
+        private readonly IOutboundPortAutoStartRepository _mockStartupManager;
+        private readonly IOutboundPortEVisitorConfigRepository _mockConfigService;
         private readonly ToggleAppAutoStartUseCase _sut;
 
         public ToggleAppAutoStartUseCaseTests()
         {
-            _mockStartupManager = new Mock<IOutboundPortAutoStartRepository>();
-            _mockConfigService = new Mock<IOutboundPortEVisitorConfigRepository>();
+            _mockStartupManager = Substitute.For<IOutboundPortAutoStartRepository>();
+            _mockConfigService = Substitute.For<IOutboundPortEVisitorConfigRepository>();
 
-            _sut = new ToggleAppAutoStartUseCase(
-                _mockStartupManager.Object,
-                _mockConfigService.Object);
+            _sut =
+            new ToggleAppAutoStartUseCase(
+                _mockConfigService,
+                _mockStartupManager);
         }
 
         [Fact]
         public async Task InitializeAndGetStateAsync_ShouldEnableInOs_WhenConfigIsTrueAndOsIsFalse()
         {
             var config = new AppConfig { Settings = new SettingsConfig { StartWithWindows = true } };
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(config);
+            _mockConfigService.LoadConfig().Returns(config);
 
-            _mockStartupManager.Setup(s => s.IsAutoStartEnabledAsync()).ReturnsAsync(false);
+            _mockStartupManager.IsAutoStartEnabledAsync().Returns(false);
 
             var result = await _sut.InitializeAndGetStateAsync();
 
             result.ShouldBeTrue();
 
-            _mockStartupManager.Verify(s => s.EnableAutoStartAsync(), Times.Once);
+            await _mockStartupManager.Received(1).EnableAutoStartAsync();
         }
 
         [Theory]
@@ -53,33 +49,33 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleAppAutoStart
             bool configState, bool osState, bool expectedResult)
         {
             var config = new AppConfig { Settings = new SettingsConfig { StartWithWindows = configState } };
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(config);
-            _mockStartupManager.Setup(s => s.IsAutoStartEnabledAsync()).ReturnsAsync(osState);
+            _mockConfigService.LoadConfig().Returns(config);
+            _mockStartupManager.IsAutoStartEnabledAsync().Returns(osState);
 
             var result = await _sut.InitializeAndGetStateAsync();
 
             result.ShouldBe(expectedResult);
 
-            _mockStartupManager.Verify(s => s.EnableAutoStartAsync(), Times.Never);
-            _mockStartupManager.Verify(s => s.DisableAutoStartAsync(), Times.Never);
+            await _mockStartupManager.DidNotReceive().EnableAutoStartAsync();
+            await _mockStartupManager.DidNotReceive().DisableAutoStartAsync();
         }
 
         [Fact]
         public async Task ToggleAsync_ShouldEnableInOs_AndSaveConfig_WhenTrue()
         {
             var initialConfig = new AppConfig { Settings = new SettingsConfig { StartWithWindows = false } };
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(initialConfig);
+            _mockConfigService.LoadConfig().Returns(initialConfig);
 
             AppConfig? savedConfig = null;
-            _mockConfigService.Setup(c => c.SaveConfig(It.IsAny<AppConfig>()))
-                              .Callback<AppConfig>(c => savedConfig = c);
+            _mockConfigService.When(s => s.SaveConfig(Arg.Any<AppConfig>()))
+                .Do(ci => savedConfig = ci.Arg<AppConfig>());
 
             await _sut.ToggleAsync(true);
 
-            _mockStartupManager.Verify(s => s.EnableAutoStartAsync(), Times.Once);
-            _mockStartupManager.Verify(s => s.DisableAutoStartAsync(), Times.Never);
+            await _mockStartupManager.Received(1).EnableAutoStartAsync();
+            await _mockStartupManager.DidNotReceive().DisableAutoStartAsync();
 
-            _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Once);
+            _mockConfigService.Received(1).SaveConfig(Arg.Any<AppConfig>());
             savedConfig.ShouldNotBeNull();
             savedConfig.Settings.StartWithWindows.ShouldBeTrue();
         }
@@ -88,18 +84,18 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleAppAutoStart
         public async Task ToggleAsync_ShouldDisableInOs_AndSaveConfig_WhenFalse()
         {
             var initialConfig = new AppConfig { Settings = new SettingsConfig { StartWithWindows = true } };
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(initialConfig);
+            _mockConfigService.LoadConfig().Returns(initialConfig);
 
             AppConfig? savedConfig = null;
-            _mockConfigService.Setup(c => c.SaveConfig(It.IsAny<AppConfig>()))
-                              .Callback<AppConfig>(c => savedConfig = c);
+            _mockConfigService.When(s => s.SaveConfig(Arg.Any<AppConfig>()))
+                .Do(ci => savedConfig = ci.Arg<AppConfig>());
 
             await _sut.ToggleAsync(false);
 
-            _mockStartupManager.Verify(s => s.DisableAutoStartAsync(), Times.Once);
-            _mockStartupManager.Verify(s => s.EnableAutoStartAsync(), Times.Never);
+            await _mockStartupManager.Received(1).DisableAutoStartAsync();
+            await _mockStartupManager.DidNotReceive().EnableAutoStartAsync();
 
-            _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Once);
+            _mockConfigService.Received(1).SaveConfig(Arg.Any<AppConfig>());
             savedConfig.ShouldNotBeNull();
             savedConfig.Settings.StartWithWindows.ShouldBeFalse();
         }

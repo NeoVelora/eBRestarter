@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
@@ -149,7 +150,7 @@ public abstract class AdapterChromiumBrowserBaseWrapper(
         {
             if (_logger.IsEnabled(LogLevel.Debug))
             {
-                _logger.LogDebug(exception, "Could not retrieve additional profile folders for Chromium user data path {UserDataRoot}", userDataRoot);
+                _logger.LogDebug(LogEventIds.Browser.BrowserProfileDiscoveryFailed, exception, "Could not retrieve additional profile folders for Chromium user data path {UserDataRoot}", userDataRoot);
             }
         }
 

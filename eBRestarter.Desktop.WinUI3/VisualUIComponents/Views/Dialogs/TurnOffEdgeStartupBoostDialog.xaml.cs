@@ -10,9 +10,10 @@ public partial class TurnOffEdgeStartupBoostDialog : ContentDialog
 
     public TurnOffEdgeStartupBoostDialog()
     {
+        ViewModel = App.AppHost!.Services.GetRequiredService<ViewModelTurnOffEdgeStartupBoost>();
+
         this.InitializeComponent();
 
-        ViewModel = App.AppHost!.Services.GetRequiredService<ViewModelTurnOffEdgeStartupBoost>();
 
         this.DataContext = ViewModel;
     }

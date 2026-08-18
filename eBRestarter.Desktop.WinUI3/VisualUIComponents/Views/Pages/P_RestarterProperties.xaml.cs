@@ -10,9 +10,10 @@ public sealed partial class P_RestarterProperties : Page
 
     public P_RestarterProperties()
     {
+        ViewModelRestarterProperties = App.AppHost!.Services.GetRequiredService<ViewModelRestarterProperties>();
+
         this.InitializeComponent();
 
-        ViewModelRestarterProperties = App.AppHost!.Services.GetRequiredService<ViewModelRestarterProperties>();
 
         this.DataContext = ViewModelRestarterProperties;
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -10,6 +11,8 @@ using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -21,11 +24,13 @@ public sealed partial class ViewModelActivateApi : ObservableObject
     private const string KeyActivateApiFileNotFound = "ActivateApi_FileNotFound";
     private const string KeyActivateApiImportError = "ActivateApi_ImportError";
     private const string KeyActivateApiImportSuccess = "ActivateApi_ImportSuccess";
+    private const string KeyActivateApiSaveError = "ActivateApi_SaveError";
     private const string KeyActivateApiSuccess = "ActivateApi_Success";
     private const string SystemColorSuccessBrush = "{ThemeResource SystemFillColorSuccessBrush}";
     private const string TransparentColor = "Transparent";
 
     private readonly IOutboundPortApiAuthenticationProvider _apiAuthenticationService;
+    private readonly ILogger<ViewModelActivateApi> _logger;
     private readonly IOutboundPortEVisitorConfigRepository _configService;
     private readonly IInboundPortLocalizationProvider _localizationService;
 
@@ -33,15 +38,18 @@ public sealed partial class ViewModelActivateApi : ObservableObject
     public ViewModelActivateApi(
         IOutboundPortApiAuthenticationProvider apiAuthenticationService,
         IOutboundPortEVisitorConfigRepository configService,
-        IInboundPortLocalizationProvider localizationService)
+        IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelActivateApi> logger)
     {
         ArgumentNullException.ThrowIfNull(apiAuthenticationService);
         ArgumentNullException.ThrowIfNull(configService);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _apiAuthenticationService = apiAuthenticationService;
         _configService = configService;
         _localizationService = localizationService;
+        _logger = logger;
 
         var config = _configService.LoadConfig();
         Username = config?.Settings?.ApiUsername ?? string.Empty;
@@ -91,6 +99,11 @@ public sealed partial class ViewModelActivateApi : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ObjectDisposedException)
         {
+            _logger.LogWarning(
+                LogEventIds.Configuration.CredentialStoreLegacyImportFailed,
+                ex,
+                "Importing credentials from the legacy file failed.");
+
             StatusMessage = _localizationService.RetrieveString(KeyActivateApiImportError);
             StatusColor = HexColorError;
             Username = string.Empty;
@@ -129,6 +142,16 @@ public sealed partial class ViewModelActivateApi : ObservableObject
             StatusColor = HexColorSuccess;
 
             WeakReferenceMessenger.Default.Send(new ApiCredentialsUpdatedMessage());
+        }
+        catch (InvalidOperationException exception)
+        {
+            _logger.LogError(
+                LogEventIds.Configuration.ApiKeyEncryptionFailed,
+                exception,
+                "Saving the API credentials failed; the configuration was not written.");
+
+            StatusMessage = _localizationService.RetrieveString(KeyActivateApiSaveError);
+            StatusColor = HexColorError;
         }
         finally
         {

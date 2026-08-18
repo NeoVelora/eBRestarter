@@ -7,25 +7,28 @@ using Microsoft.Extensions.Logging;
 using RestSharp;
 using RestSharp.Authenticators;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Infrastructure.Api.Interfaces;
 using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
 using eBRestarter.Infrastructure.ObjectArchetypes.Model;
 
 namespace eBRestarter.Infrastructure.API;
 
-public sealed class RestSharpClient(
+public sealed partial class RestSharpClient(
     ILogger<RestSharpClient> logger,
-    HttpMessageHandler? httpMessageHandler = null)
+    IHttpClientFactory httpClientFactory)
     : eBRestarter.Infrastructure.Api.Interfaces.IRestClient
 {
+
+    public const string HttpClientName = "eBRestarter.RestSharp";
 
     private const string RateLimitRemainingHeaderName = "X-Ratelimit-Remaining";
     private const int RemainingRateLimitThreshold = 10;
     private const string RequestTimeoutErrorMessage = "The request has exceeded the time limit";
 
 
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private readonly ILogger<RestSharpClient> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly HttpMessageHandler? _httpMessageHandler = httpMessageHandler;
 
 
     public ApiResponse ExecuteGet(ApiRequest request)
@@ -43,7 +46,7 @@ public sealed class RestSharpClient(
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Error during synchronous API invocation: {Url}", request.Url);
+            LogSynchronousInvocationFailed(exception, request.Url);
 
             return MapExceptionToResponse(exception);
         }
@@ -65,7 +68,7 @@ public sealed class RestSharpClient(
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Error during asynchronous API invocation: {Url}", request.Url);
+            LogAsynchronousInvocationFailed(exception, request.Url);
 
             return MapExceptionToResponse(exception);
         }
@@ -90,17 +93,14 @@ public sealed class RestSharpClient(
             Timeout = TimeSpan.FromSeconds(request.TimeoutSeconds)
         };
 
-        if (_httpMessageHandler is not null)
-        {
-            options.ConfigureMessageHandler = _ => _httpMessageHandler;
-        }
-
         if (!string.IsNullOrWhiteSpace(request.Username) && !string.IsNullOrWhiteSpace(request.Password))
         {
             options.Authenticator = new HttpBasicAuthenticator(request.Username, request.Password);
         }
 
-        return new RestClient(options);
+        HttpClient pooledHttpClient = _httpClientFactory.CreateClient(HttpClientName);
+
+        return new RestClient(pooledHttpClient, options, disposeHttpClient: false);
     }
 
     private static ApiResponse MapExceptionToResponse(Exception exception)
@@ -136,7 +136,7 @@ public sealed class RestSharpClient(
 
         if (response.ResponseStatus == ResponseStatus.TimedOut)
         {
-            _logger.LogWarning("API error: Local timeout at {Url}", response.Request.Resource);
+            LogRequestTimedOut(response.Request.Resource);
 
             return new ApiResponse
             {
@@ -156,7 +156,7 @@ public sealed class RestSharpClient(
             _ => ResponseCode.NoConnectionToServer
         };
 
-        _logger.LogWarning("API Error: {Status} - {Msg}", response.StatusCode, response.ErrorMessage);
+        LogApiErrorResponse(response.StatusCode, response.ErrorMessage);
 
         return new ApiResponse
         {
@@ -165,4 +165,29 @@ public sealed class RestSharpClient(
             ErrorMessage = response.ErrorMessage ?? response.StatusDescription
         };
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.ApiRequestFailed,
+        Level = LogLevel.Error,
+        Message = "Error during synchronous API invocation: {Url}")]
+    private partial void LogSynchronousInvocationFailed(Exception exception, string url);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.ApiRequestFailed,
+        Level = LogLevel.Error,
+        Message = "Error during asynchronous API invocation: {Url}")]
+    private partial void LogAsynchronousInvocationFailed(Exception exception, string url);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.ApiRequestTimedOut,
+        Level = LogLevel.Warning,
+        Message = "API error: local timeout at {Resource}")]
+    private partial void LogRequestTimedOut(string? resource);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.ApiErrorResponse,
+        Level = LogLevel.Warning,
+        Message = "API error: {StatusCode} - {ErrorMessage}")]
+    private partial void LogApiErrorResponse(HttpStatusCode statusCode, string? errorMessage);
 }

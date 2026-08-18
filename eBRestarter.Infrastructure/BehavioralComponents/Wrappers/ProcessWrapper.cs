@@ -18,17 +18,15 @@ public sealed class ProcessWrapper : IProcessWrapper
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         var processes = Process.GetProcessesByName(name);
-        try
+
+        int runningCount = processes.Length;
+
+        foreach (var process in processes)
         {
-            return processes.Length > 0;
+            process.Dispose();
         }
-        finally
-        {
-            foreach (var process in processes)
-            {
-                process.Dispose();
-            }
-        }
+
+        return runningCount > 0;
     }
 
     public void KillProcess(string name)
@@ -36,15 +34,12 @@ public sealed class ProcessWrapper : IProcessWrapper
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         var processes = Process.GetProcessesByName(name);
+
         foreach (var process in processes)
         {
-            try
+            using (process)
             {
                 process.Kill();
-            }
-            finally
-            {
-                process.Dispose();
             }
         }
     }

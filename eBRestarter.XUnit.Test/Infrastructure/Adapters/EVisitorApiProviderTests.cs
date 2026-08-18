@@ -1,44 +1,38 @@
-using eBRestarter.Infrastructure.Adapters.RestSharp;
-using eBRestarter.Infrastructure.Network;
-using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Infrastructure.Adapters.RestSharp;
-using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Core.Domain.ValueObjects;
-using eBRestarter.Infrastructure.Api;
-using eBRestarter.Infrastructure.Browser;
-using eBRestarter.Infrastructure.OperatingSystem;
-using eBRestarter.Infrastructure.Utilities;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Infrastructure.Api.Interfaces;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API;
+using eBRestarter.Infrastructure.Api;
+using eBRestarter.Infrastructure.Api.Interfaces;
+using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.Tests.Infrastructure.Adapters
 {
     public class EVisitorApiProviderTests
     {
-        private readonly Mock<IRestClient> _mockRestClient;
-        private readonly Mock<IOutboundPortEVisitorConfigRepository> _mockConfigService;
-        private readonly Mock<ILogger<AdapterEVisitorApiProvider>> _mockLogger;
+        private readonly IRestClient _mockRestClient;
+        private readonly IOutboundPortEVisitorConfigRepository _mockConfigService;
+        private readonly FakeLogger<AdapterEVisitorApiProvider> _mockLogger;
         private readonly AdapterEVisitorApiProvider _sut;
 
         public EVisitorApiProviderTests()
         {
-            _mockRestClient = new Mock<IRestClient>();
-            _mockConfigService = new Mock<IOutboundPortEVisitorConfigRepository>();
-            _mockLogger = new Mock<ILogger<AdapterEVisitorApiProvider>>();
+            _mockRestClient = Substitute.For<IRestClient>();
+            _mockConfigService = Substitute.For<IOutboundPortEVisitorConfigRepository>();
+            _mockLogger = new FakeLogger<AdapterEVisitorApiProvider>();
 
             _sut = new AdapterEVisitorApiProvider(
-                _mockRestClient.Object,
-                _mockConfigService.Object,
-                _mockLogger.Object);
+                _mockConfigService,
+                _mockLogger,
+                _mockRestClient);
         }
 
         [Fact]
@@ -47,8 +41,8 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
             string json = @"{ ""ip"": ""192.168.1.1"", ""host"": ""test.host.com"", ""countryCode"": ""DE"", ""countryName"": ""Germany"" }";
 
             _mockRestClient
-                .Setup(r => r.ExecuteGetAsync(It.Is<ApiRequest>(req => req.Url == ApiWebLinks.IpLink)))
-                .ReturnsAsync(new ApiResponse { IsSuccess = true, Content = json });
+                .ExecuteGetAsync(Arg.Is<ApiRequest>(req => req.Url == ApiWebLinks.IpLink))
+                .Returns(new ApiResponse { IsSuccess = true, Content = json });
 
             var result = await _sut.RetrieveIpInfoAsync();
 
@@ -63,14 +57,14 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
         public async Task GetIpInfoAsync_ShouldReturnNull_OnFailureOrInvalidJson()
         {
             _mockRestClient
-                .Setup(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()))
-                .ReturnsAsync(new ApiResponse { IsSuccess = false });
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(new ApiResponse { IsSuccess = false });
 
             var resultFail = await _sut.RetrieveIpInfoAsync();
 
             _mockRestClient
-                .Setup(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()))
-                .ReturnsAsync(new ApiResponse { IsSuccess = true, Content = "Kein { gueltiges ] JSON" });
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(new ApiResponse { IsSuccess = true, Content = "Invalid { JSON [" });
 
             var resultInvalid = await _sut.RetrieveIpInfoAsync();
 
@@ -82,12 +76,12 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
         public async Task GetEarningsAsync_ShouldReturnNull_WhenCredentialsAreMissing()
         {
             var emptyConfig = new AppConfig();
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(emptyConfig);
+            _mockConfigService.LoadConfig().Returns(emptyConfig);
 
             var result = await _sut.RetrieveEarningsAsync();
 
             result.ShouldBeNull();
-            _mockRestClient.Verify(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()), Times.Never);
+            await _mockRestClient.DidNotReceive().ExecuteGetAsync(Arg.Any<ApiRequest>());
         }
 
         [Fact]
@@ -96,13 +90,12 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
             var validConfig = new AppConfig();
             validConfig.Settings.ApiUsername = "user";
             validConfig.Settings.ApiKey = "pass";
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(validConfig);
+            _mockConfigService.LoadConfig().Returns(validConfig);
 
             _mockRestClient
-                .Setup(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()))
-                .ReturnsAsync((ApiRequest req) =>
-                {
-                    if (req.Url == ApiWebLinks.HourlyEarnings)
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(ci => {
+                    if (ci.Arg<ApiRequest>().Url == ApiWebLinks.HourlyEarnings)
                     {
                         return new ApiResponse { IsSuccess = true, Content = @"{""1"": 10.5, ""3"": 20.25}" };
                     }
@@ -124,11 +117,9 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
             result.TodaySum.ShouldBe(30.75);
             result.DailyEarnings[4].ShouldBe(150.5);
             result.DailyEarnings[14].ShouldBe(200.0);
-
             result.MonthlySum.ShouldBe(350.5);
             result.MonthlyEarnings[0].ShouldBe(150.5);
             result.MonthlyEarnings[1].ShouldBe(200.0);
-
             result.YearlySum.ShouldBe(350.5);
         }
 
@@ -138,13 +129,12 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
             var validConfig = new AppConfig();
             validConfig.Settings.ApiUsername = "u";
             validConfig.Settings.ApiKey = "p";
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(validConfig);
+            _mockConfigService.LoadConfig().Returns(validConfig);
 
             _mockRestClient
-                .Setup(r => r.ExecuteGetAsync(It.IsAny<ApiRequest>()))
-                .ReturnsAsync((ApiRequest req) =>
-                {
-                    if (req.Url == ApiWebLinks.HourlyEarnings)
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(ci => {
+                    if (ci.Arg<ApiRequest>().Url == ApiWebLinks.HourlyEarnings)
                     {
                         return new ApiResponse { IsSuccess = true, Content = @"[15.0, 5.0]" };
                     }
@@ -160,5 +150,3 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
         }
     }
 }
-
-

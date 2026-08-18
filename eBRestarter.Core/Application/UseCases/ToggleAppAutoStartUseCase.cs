@@ -12,10 +12,8 @@ public sealed class ToggleAppAutoStartUseCase(
     IOutboundPortAutoStartRepository startupManagerService)
     : IUseCaseToggleAppAutoStart
 {
-
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly IOutboundPortAutoStartRepository _startupManagerService = startupManagerService ?? throw new ArgumentNullException(nameof(startupManagerService));
-
 
     public async Task<bool> InitializeAndGetStateAsync()
     {

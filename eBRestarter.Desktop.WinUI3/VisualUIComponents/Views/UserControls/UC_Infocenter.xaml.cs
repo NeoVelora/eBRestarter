@@ -11,9 +11,10 @@ public sealed partial class UC_Infocenter : UserControl
 
     public UC_Infocenter()
     {
+        ViewModelInfocenter = App.AppHost!.Services.GetRequiredService<ViewModelInfocenter>();
+
         InitializeComponent();
 
-        ViewModelInfocenter = App.AppHost!.Services.GetRequiredService<ViewModelInfocenter>();
 
         this.DataContext = ViewModelInfocenter;
     }

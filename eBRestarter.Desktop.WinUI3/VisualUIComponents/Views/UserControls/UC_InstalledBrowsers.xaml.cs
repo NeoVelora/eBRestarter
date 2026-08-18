@@ -11,9 +11,10 @@ namespace eBRestarter.Desktop.WinUI3.VisualUIComponents.Views.UserControls
 
         public UC_InstalledBrowsers()
         {
-            InitializeComponent();
+        ViewModelInstalledBrowsers = App.AppHost!.Services.GetRequiredService<ViewModelInstalledBrowsers>();
 
-            ViewModelInstalledBrowsers = App.AppHost!.Services.GetRequiredService<ViewModelInstalledBrowsers>();
+        InitializeComponent();
+
 
             this.DataContext = ViewModelInstalledBrowsers;
         }

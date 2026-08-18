@@ -1,12 +1,15 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.Globalization;
 using System;
 using System.Globalization;
 using System.Threading;
+using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
@@ -34,6 +37,7 @@ public sealed partial class App : Application
     public static IHost? AppHost { get; private set; }
 
     public static Microsoft.UI.Dispatching.DispatcherQueue? AppDispatcherQueue { get; private set; }
+
     public static Window? MainWindoweBRestarter { get; private set; }
 
 
@@ -42,11 +46,15 @@ public sealed partial class App : Application
         InitializeComponent();
 
         AppHost = CreateHostBuilder().Build();
+
+        RegisterGlobalExceptionHandlers();
     }
 
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        var logger = AppHost!.Services.GetRequiredService<ILogger<App>>();
+
         StartupDisplayPreferences? launchConfig = null;
 
         try
@@ -63,8 +71,13 @@ public sealed partial class App : Application
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogWarning(
+                LogEventIds.UserInterface.StartupConfigurationFailed,
+                ex,
+                "Loading the startup configuration failed; falling back to the default language.");
+
             ApplicationLanguages.PrimaryLanguageOverride = DefaultLanguageCode;
         }
 
@@ -75,11 +88,16 @@ public sealed partial class App : Application
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Fehler beim Starten des ComputerRestartSchedulers: {ex.Message}");
+            logger.LogError(
+                LogEventIds.UserInterface.SchedulerStartFailed,
+                ex,
+                "Starting the computer restart scheduler failed; scheduled restarts will not run.");
         }
 
         MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
         AppDispatcherQueue = MainWindoweBRestarter.DispatcherQueue;
+
+        MainWindoweBRestarter.Closed += OnMainWindowClosed;
 
         try
         {
@@ -92,10 +110,66 @@ public sealed partial class App : Application
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Fehler beim Laden des Themes: {ex.Message}");
+            logger.LogWarning(
+                LogEventIds.UserInterface.ThemeLoadFailed,
+                ex,
+                "Applying the configured theme failed; the default theme stays active.");
         }
 
         MainWindoweBRestarter.Activate();
+    }
+
+    private static void RegisterGlobalExceptionHandlers()
+    {
+        Current.UnhandledException += OnUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+    }
+
+    private static void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs args)
+    {
+        var logger = AppHost?.Services.GetService<ILogger<App>>();
+
+        logger?.LogCritical(
+            LogEventIds.UserInterface.UnhandledUiException,
+            args.Exception,
+            "Unhandled exception reached the UI thread; the application is terminating.");
+    }
+
+    private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs args)
+    {
+        var logger = AppHost?.Services.GetService<ILogger<App>>();
+
+        foreach (var innerException in args.Exception.Flatten().InnerExceptions)
+        {
+            logger?.LogError(
+                LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
+                innerException,
+                "A fire-and-forget task faulted and its result was never observed.");
+        }
+
+        args.SetObserved();
+    }
+
+    private static void OnMainWindowClosed(object sender, WindowEventArgs args)
+    {
+        var logger = AppHost?.Services.GetService<ILogger<App>>();
+
+        try
+        {
+            if (sender is Window closedWindow)
+            {
+                closedWindow.Closed -= OnMainWindowClosed;
+            }
+
+            AppHost?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(
+                LogEventIds.UserInterface.HostDisposeFailed,
+                ex,
+                "Disposing the application host during shutdown failed.");
+        }
     }
 
     private static IHostBuilder CreateHostBuilder()
@@ -107,8 +181,10 @@ public sealed partial class App : Application
                 cfg.SetBasePath(AppContext.BaseDirectory);
                 cfg.AddJsonFile(AppSettingsFileName, optional: false, reloadOnChange: true);
             })
-            .ConfigureServices((_, services) =>
+            .ConfigureServices((context, services) =>
             {
+                services.AddApplicationLogging(context.Configuration);
+
                 services.AddInfrastructureServices();
                 services.AddApplicationServices();
                 services.AddNavigationService();

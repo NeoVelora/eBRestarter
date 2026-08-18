@@ -16,7 +16,9 @@ public sealed class ProcessAdapter(
     public string ProcessName => _process.ProcessName;
 
     public IntPtr MainWindowHandle => _process.MainWindowHandle;
+
     public StreamReader StandardError => _process.StandardError;
+
     public StreamReader StandardOutput => _process.StandardOutput;
 
 

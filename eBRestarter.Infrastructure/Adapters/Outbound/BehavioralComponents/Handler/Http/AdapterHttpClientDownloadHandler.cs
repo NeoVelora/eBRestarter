@@ -20,6 +20,12 @@ public sealed class AdapterHttpClientDownloadHandler : IOutboundPortHttpDownload
     private const long UnknownContentLength = -1L;
     private const string UserAgentHeaderName = "User-Agent";
 
+    private const string InsecureSchemeExceptionMessage = "Only HTTPS downloads are permitted. Rejected URL scheme: ";
+
+    private const long MaximumDownloadSizeBytes = 512L * 1024 * 1024;
+
+    private const string SizeLimitExceededExceptionMessage = "The download exceeds the permitted maximum size of 512 MB and was aborted.";
+
     private readonly HttpClient _httpClient;
 
 
@@ -43,6 +49,12 @@ public sealed class AdapterHttpClientDownloadHandler : IOutboundPortHttpDownload
         ArgumentNullException.ThrowIfNull(url);
         ArgumentNullException.ThrowIfNull(destinationPath);
 
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? requestUri)
+            || !string.Equals(requestUri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal))
+        {
+            throw new ArgumentException($"{InsecureSchemeExceptionMessage}{url}", nameof(url));
+        }
+
         return DownloadFileCoreAsync(url, destinationPath, progress, cancel);
     }
 
@@ -57,6 +69,11 @@ public sealed class AdapterHttpClientDownloadHandler : IOutboundPortHttpDownload
 
         var totalBytes = response.Content.Headers.ContentLength ?? UnknownContentLength;
         var canReportProgress = totalBytes != UnknownContentLength;
+
+        if (totalBytes > MaximumDownloadSizeBytes)
+        {
+            throw new InvalidOperationException(SizeLimitExceededExceptionMessage);
+        }
 
         var contentStream = await response.Content.ReadAsStreamAsync(cancel).ConfigureAwait(false);
         await using (contentStream.ConfigureAwait(false))
@@ -76,9 +93,14 @@ public sealed class AdapterHttpClientDownloadHandler : IOutboundPortHttpDownload
 
                     while ((bytesRead = await contentStream.ReadAsync(buffer.AsMemory(0, BufferSizeBytes), cancel).ConfigureAwait(false)) > 0)
                     {
-                        await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancel).ConfigureAwait(false);
-
                         totalRead += bytesRead;
+
+                        if (totalRead > MaximumDownloadSizeBytes)
+                        {
+                            throw new InvalidOperationException(SizeLimitExceededExceptionMessage);
+                        }
+
+                        await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancel).ConfigureAwait(false);
 
                         if (canReportProgress && progress is not null)
                         {

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
 using System.Management;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -8,6 +7,7 @@ using System.Threading.Tasks;
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
 
@@ -72,12 +72,20 @@ public sealed class AdapterWmiHardwareProvider : IOutboundPortHardwareInfoProvid
             using var searcher = new ManagementObjectSearcher($"SELECT {property} FROM {wmiClass}");
             using var collection = searcher.Get();
 
-            var firstObj = collection.Cast<ManagementBaseObject>().FirstOrDefault();
-            return firstObj?[property]?.ToString();
+            using var enumerator = collection.GetEnumerator();
+
+            if (!enumerator.MoveNext())
+            {
+                return null;
+            }
+
+            using var managementObject = enumerator.Current;
+
+            return managementObject[property]?.ToString();
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorRetrievingWmiDataLogMessage, wmiClass, property);
+            _logger.LogError(LogEventIds.OperatingSystem.WmiQueryFailed, exception, ErrorRetrievingWmiDataLogMessage, wmiClass, property);
         }
 
         return null;

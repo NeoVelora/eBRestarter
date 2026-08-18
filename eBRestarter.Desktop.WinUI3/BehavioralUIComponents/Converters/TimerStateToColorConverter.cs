@@ -3,25 +3,23 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 using System;
 
-namespace eBRestarter.Desktop.WinUI3.Converters
+namespace eBRestarter.Desktop.WinUI3.Converters;
+
+public sealed partial class TimerStateToColorConverter : IValueConverter
 {
-    public sealed partial class TimerStateToColorConverter : IValueConverter
+    public object Convert(object value, Type targetType, object parameter, string language)
     {
-
-        public object Convert(object value, Type targetType, object parameter, string language)
+        if ((bool)value)
         {
-            if ((bool)value)
-            {
-                var color = ColorHelper.FromArgb(179, 12, 46, 0);
+            var color = ColorHelper.FromArgb(179, 12, 46, 0);
 
-                return new SolidColorBrush(color);
-            }
-
-            var startColor = ColorHelper.FromArgb(13, 178, 144, 0);
-
-            return new SolidColorBrush(startColor);
+            return new SolidColorBrush(color);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, string language) => throw new NotImplementedException();
+        var startColor = ColorHelper.FromArgb(13, 178, 144, 0);
+
+        return new SolidColorBrush(startColor);
     }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) => throw new NotImplementedException();
 }

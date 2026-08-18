@@ -1,13 +1,12 @@
-using eBRestarter.Infrastructure.Adapters.WindowsOS;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System.Collections.Generic;
 using Xunit;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 {
@@ -16,30 +15,29 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void IsExtensionInstalled_ShouldReturnTrue_WhenExtensionFolderExists()
         {
-            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
-            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
-            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
-            var mockLogger = new Mock<ILogger<AdapterChromeBrowserWrapper>>();
-            
+            var mockProcess = Substitute.For<IOutboundPortOsProcessControl>();
+            var mockSettings = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            var mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
+            var mockLogger = new FakeLogger<AdapterChromeBrowserWrapper>();
 
             string localAppData = @"C:\Users\Test\AppData\Local";
-            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath("LocalAppData")).Returns(localAppData);
+            mockFileSystem.ResolveEnvironmentPath("LocalAppData").Returns(localAppData);
 
             mockFileSystem
-                .Setup(fs => fs.CombinePaths(It.IsAny<string[]>()))
-                .Returns<string[]>(paths => string.Join(@"\", paths));
+                .CombinePaths(Arg.Any<string[]>())
+                .Returns(ci => string.Join(@"\", ci.Arg<string[]>()));
 
             string defaultProfilePath = $@"{localAppData}\Google\Chrome\User Data\Default";
-            mockFileSystem.Setup(fs => fs.DirectoryExists(defaultProfilePath)).Returns(true);
+            mockFileSystem.DirectoryExists(defaultProfilePath).Returns(true);
 
             string chromeExtensionId = "agchmcconfdfcenopioeilpgjngelefk";
             string expectedExtensionDir = $@"{defaultProfilePath}\Extensions\{chromeExtensionId}";
 
-            mockFileSystem.Setup(fs => fs.DirectoryExists(expectedExtensionDir)).Returns(true);
+            mockFileSystem.DirectoryExists(expectedExtensionDir).Returns(true);
 
-            var ChromeBrowser = new AdapterChromeBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var chromeBrowser = new AdapterChromeBrowserWrapper(mockProcess, mockSettings, mockFileSystem, mockLogger);
 
-            bool result = ChromeBrowser.IsExtensionInstalled();
+            bool result = chromeBrowser.IsExtensionInstalled();
 
             result.ShouldBeTrue();
         }
@@ -47,23 +45,19 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void IsExtensionInstalled_ShouldReturnFalse_WhenExtensionFolderIsMissing()
         {
-            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
-            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
-            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
-            var mockLogger = new Mock<ILogger<AdapterChromeBrowserWrapper>>();
-            
+            var mockProcess = Substitute.For<IOutboundPortOsProcessControl>();
+            var mockSettings = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            var mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
+            var mockLogger = new FakeLogger<AdapterChromeBrowserWrapper>();
 
-            mockFileSystem.Setup(fs => fs.ResolveEnvironmentPath(It.IsAny<string>())).Returns(@"C:\FakeAppData");
+            mockFileSystem.ResolveEnvironmentPath(Arg.Any<string>()).Returns(@"C:\FakeAppData");
+            mockFileSystem.DirectoryExists(Arg.Any<string>()).Returns(false);
 
-            mockFileSystem.Setup(fs => fs.DirectoryExists(It.IsAny<string>())).Returns(false);
+            var chromeBrowser = new AdapterChromeBrowserWrapper(mockProcess, mockSettings, mockFileSystem, mockLogger);
 
-            var ChromeBrowser = new AdapterChromeBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
-
-            bool result = ChromeBrowser.IsExtensionInstalled();
+            bool result = chromeBrowser.IsExtensionInstalled();
 
             result.ShouldBeFalse();
         }
     }
 }
-
-

@@ -1,12 +1,17 @@
 using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 using Microsoft.UI.Dispatching;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -33,6 +38,7 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
     private const string NeutralForegroundHex = "#000000";
 
     private readonly IOutboundPortBrowser _browser;
+    private readonly ILogger<ViewModelBrowserAddonStatus> _logger;
     private readonly IInboundPortLocalizationProvider _localizationService;
 
     private readonly DispatcherQueue _dispatcherQueue;
@@ -40,13 +46,16 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
 
     public ViewModelBrowserAddonStatus(
         IOutboundPortBrowser browser,
-        IInboundPortLocalizationProvider localizationService)
+        IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelBrowserAddonStatus> logger)
     {
         ArgumentNullException.ThrowIfNull(browser);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _browser = browser;
         _localizationService = localizationService;
+        _logger = logger;
 
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread()
             ?? throw new InvalidOperationException($"{nameof(ViewModelBrowserAddonStatus)} must be constructed on a thread with a WinUI DispatcherQueue (UI thread).");
@@ -60,7 +69,7 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
         InstallStatusText = _localizationService.RetrieveString(KeyAddonStatusChecking);
         ButtonText = _localizationService.RetrieveString(KeyAddonLoading);
 
-        RefreshStatus();
+        RefreshStatusAsync().Forget(_logger, nameof(RefreshStatusAsync));
     }
 
 
@@ -95,50 +104,89 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
     [RelayCommand]
     private void OpenStore()
     {
-        if (!string.IsNullOrWhiteSpace(_browser.ExtensionInstallUrl))
+        if (string.IsNullOrWhiteSpace(_browser.ExtensionInstallUrl))
         {
-            _browser.Start(_browser.ExtensionInstallUrl);
+            return;
+        }
+
+        if (!_browser.Start(_browser.ExtensionInstallUrl))
+        {
+            _logger.LogWarning(
+                LogEventIds.Browser.BrowserStartFailed,
+                "Could not open the extension store for {BrowserType}; the browser did not start.",
+                _browser.Type);
         }
     }
 
-    public void RefreshStatus()
+    public async Task RefreshStatusAsync()
     {
-        _dispatcherQueue.TryEnqueue(() =>
+        BrowserAddonProbeResult probeResult;
+
+        try
         {
-            string installedFormat = _localizationService.RetrieveString(KeyAddonBrowserInstalled);
+            probeResult = await Task.Run(Probe).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogDebug(
+                LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+                "Probing add-on status for {BrowserType} failed: {Reason}",
+                _browser.Type,
+                exception.Message);
+
+            return;
+        }
+
+        _dispatcherQueue.TryEnqueue(() => ApplyProbeResult(probeResult));
+    }
+
+    private void ApplyProbeResult(BrowserAddonProbeResult probeResult)
+    {
+        if (!probeResult.IsInstalled)
+        {
             string notInstalledFormat = _localizationService.RetrieveString(KeyAddonBrowserNotInstalled);
 
-            if (!_browser.IsInstalled)
-            {
-                InstallStatusText = string.Format(notInstalledFormat, BrowserName);
-                InstallStatusColor = InstallStatusColorBrowserNotInstalledHex;
-                AddonStatusText = AddonPlaceholderDash;
-                AddonStatusIcon = AddonStatusIconEmpty;
-                IsButtonEnabled = false;
-                ButtonText = _localizationService.RetrieveString(KeyAddonBtnBrowserMissing);
-                return;
-            }
+            InstallStatusText = string.Format(notInstalledFormat, BrowserName);
+            InstallStatusColor = InstallStatusColorBrowserNotInstalledHex;
+            AddonStatusText = AddonPlaceholderDash;
+            AddonStatusIcon = AddonStatusIconEmpty;
+            IsButtonEnabled = false;
+            ButtonText = _localizationService.RetrieveString(KeyAddonBtnBrowserMissing);
 
-            InstallStatusText = string.Format(installedFormat, BrowserName);
-            InstallStatusColor = InstallStatusColorBrowserInstalledHex;
-            IsButtonEnabled = true;
+            return;
+        }
 
-            bool extensionIsInstalled = _browser.IsExtensionInstalled(string.Empty);
+        string installedFormat = _localizationService.RetrieveString(KeyAddonBrowserInstalled);
 
-            if (extensionIsInstalled)
-            {
-                AddonStatusText = _localizationService.RetrieveString(KeyAddonExtensionInstalled);
-                AddonStatusIcon = AddonStatusIconExtensionInstalled;
-                AddonStatusColor = AddonStatusColorExtensionInstalledHex;
-                ButtonText = _localizationService.RetrieveString(KeyAddonBtnManage);
-            }
-            else
-            {
-                AddonStatusText = _localizationService.RetrieveString(KeyAddonExtensionNotInstalled);
-                AddonStatusIcon = AddonStatusIconExtensionNotInstalled;
-                AddonStatusColor = AddonStatusColorExtensionNotInstalledHex;
-                ButtonText = _localizationService.RetrieveString(KeyAddonBtnInstall);
-            }
-        });
+        InstallStatusText = string.Format(installedFormat, BrowserName);
+        InstallStatusColor = InstallStatusColorBrowserInstalledHex;
+        IsButtonEnabled = true;
+
+        if (probeResult.IsExtensionInstalled)
+        {
+            AddonStatusText = _localizationService.RetrieveString(KeyAddonExtensionInstalled);
+            AddonStatusIcon = AddonStatusIconExtensionInstalled;
+            AddonStatusColor = AddonStatusColorExtensionInstalledHex;
+            ButtonText = _localizationService.RetrieveString(KeyAddonBtnManage);
+        }
+        else
+        {
+            AddonStatusText = _localizationService.RetrieveString(KeyAddonExtensionNotInstalled);
+            AddonStatusIcon = AddonStatusIconExtensionNotInstalled;
+            AddonStatusColor = AddonStatusColorExtensionNotInstalledHex;
+            ButtonText = _localizationService.RetrieveString(KeyAddonBtnInstall);
+        }
     }
+
+    private BrowserAddonProbeResult Probe()
+    {
+        bool isInstalled = _browser.IsInstalled;
+
+        bool isExtensionInstalled = isInstalled && _browser.IsExtensionInstalled(string.Empty);
+
+        return new BrowserAddonProbeResult(isInstalled, isExtensionInstalled);
+    }
+
+
+    private readonly record struct BrowserAddonProbeResult(bool IsInstalled, bool IsExtensionInstalled);
 }

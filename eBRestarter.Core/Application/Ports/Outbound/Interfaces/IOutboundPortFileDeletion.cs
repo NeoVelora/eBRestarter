@@ -1,10 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace eBRestarter.Core.Application.Ports.Outbound.Interfaces;
 
 public interface IOutboundPortFileDeletion
 {
-    Task<int> CountFilesAsync(List<string> directories);
-
-    Task DeleteFilesAsync(List<string> directories, IProgress<string> statusReporter, IProgress<int> valueReporter, CancellationToken token);
+    Task DeleteFilesAsync(
+        List<string> directories,
+        IProgress<string> statusReporter,
+        IProgress<int> completedDirectoriesReporter,
+        CancellationToken token);
 
     void DeleteSingleFile(string filePath);
 }

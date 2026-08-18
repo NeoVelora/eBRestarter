@@ -1,12 +1,14 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Core.Domain.ValueObjects;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Repositories.Config;
 
@@ -28,6 +30,9 @@ public sealed class EVRestarterConfigRepository(
         TypeInfoResolver = AppConfigJsonContext.Default
     };
 
+    private readonly Lock _cacheLock = new();
+    private string? _cachedConfigJson;
+
 
     public AppConfig LoadConfig()
     {
@@ -42,24 +47,26 @@ public sealed class EVRestarterConfigRepository(
 
         try
         {
-            var jsonString = _fileSystem.ReadAllText(filePath);
+            var jsonString = ReadConfigJsonCached(filePath);
             return JsonSerializer.Deserialize<AppConfig>(jsonString, _jsonOptions) ?? new AppConfig();
         }
         catch (JsonException exception)
         {
-            _logger.LogError(exception, "Configuration file at {Path} is not valid JSON.", filePath);
+            _logger.LogError(LogEventIds.Configuration.ConfigurationInvalidJson, exception, "Configuration file at {Path} is not valid JSON.", filePath);
+            InvalidateCache();
             return new AppConfig();
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Critical error occurred while loading configuration from {Path}.", filePath);
+            _logger.LogError(LogEventIds.Configuration.ConfigurationLoadFailed, exception, "Critical error occurred while loading configuration from {Path}.", filePath);
+            InvalidateCache();
             return new AppConfig();
         }
     }
 
     public void ResetConfig()
     {
-        _logger.LogWarning("Configuration is being reset to default values.");
+        _logger.LogWarning(LogEventIds.Configuration.ConfigurationReset, "Configuration is being reset to default values.");
         var defaultConfig = new AppConfig();
         SaveConfig(defaultConfig);
     }
@@ -83,18 +90,39 @@ public sealed class EVRestarterConfigRepository(
 
             _fileSystem.WriteAllText(filePath, jsonString);
 
-            if (_logger.IsEnabled(LogLevel.Information))
+            lock (_cacheLock)
             {
-                _logger.LogInformation("Configuration saved successfully to {Path}.", filePath);
+                _cachedConfigJson = jsonString;
+            }
+
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug(LogEventIds.Configuration.ConfigurationSaved, "Configuration saved successfully to {Path}.", filePath);
             }
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Error while saving configuration to {Path}.", filePath);
+            InvalidateCache();
+            _logger.LogError(LogEventIds.Configuration.ConfigurationSaveFailed, exception, "Error while saving configuration to {Path}.", filePath);
         }
     }
 
+    private void InvalidateCache()
+    {
+        lock (_cacheLock)
+        {
+            _cachedConfigJson = null;
+        }
+    }
 
+    private string ReadConfigJsonCached(string filePath)
+    {
+        lock (_cacheLock)
+        {
+            _cachedConfigJson ??= _fileSystem.ReadAllText(filePath);
+            return _cachedConfigJson;
+        }
+    }
 }
 
 [JsonSerializable(typeof(AppConfig))]

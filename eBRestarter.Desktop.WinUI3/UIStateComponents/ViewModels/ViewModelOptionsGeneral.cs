@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.BehavioralComponents.Extensions;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Handlers;
@@ -23,10 +23,12 @@ using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.UIOptionDTO;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public sealed partial class ViewModelOptionsGeneral : ObservableObject
+public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposable
 {
     private const string AdminRequiredMessage = "Es sind Administratorrechte erforderlich, um diese Aktion auszuführen. Bitte starten Sie die Anwendung als Administrator.";
     private const string DarkThemeName = "Dark";
@@ -60,6 +62,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
     private const string OptionsUpdateNoUpdateTitleResourceKey = "Options_UpdateNoUpdate_Title";
 
     private readonly IInboundPortOsAppPathProvider _appPathProvider;
+    private readonly ILogger<ViewModelOptionsGeneral> _logger;
     private readonly IInboundPortComputerRestartService _computerRestartScheduler;
     private readonly IUseCaseConfigureAutoLogon _configureAutoLogonUseCase;
     private readonly IDialogService _dialogService;
@@ -75,6 +78,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
     private readonly IUIOptionsProvider _uiOptionsService;
     private readonly IOutboundPortSystemInfoProvider _windowsSystemInfo;
 
+    private volatile bool _disposed;
     private bool _isInitializing;
 
     private readonly AppConfig _currentConfig;
@@ -119,7 +123,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
             return;
         }
 
-        ToggleAutoStartAsync(value).Forget();
+        ToggleAutoStartAsync(value).Forget(_logger, nameof(ToggleAutoStartAsync));
     }
 
     [ObservableProperty] public partial string UpdateMessage { get; set; } = string.Empty;
@@ -194,6 +198,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository,
         ILanguageHandler languageService,
         IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelOptionsGeneral> logger,
         IUseCaseManageApplicationUpdates manageApplicationUpdatesUseCase,
         IInboundPortNextRestartDateHandler nextRestartDateHandler,
         IOutboundPortOsAutoLogonRepository osAutoLogonPort,
@@ -210,6 +215,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
         ArgumentNullException.ThrowIfNull(evRestarterConfigRepository);
         ArgumentNullException.ThrowIfNull(languageService);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(manageApplicationUpdatesUseCase);
         ArgumentNullException.ThrowIfNull(nextRestartDateHandler);
         ArgumentNullException.ThrowIfNull(osAutoLogonPort);
@@ -228,6 +234,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
         _evRestarterConfigRepository = evRestarterConfigRepository;
         _languageService = languageService;
         _localizationService = localizationService;
+        _logger = logger;
         _manageApplicationUpdatesUseCase = manageApplicationUpdatesUseCase;
         _nextRestartDateHandler = nextRestartDateHandler;
         _osAutoLogonPort = osAutoLogonPort;
@@ -277,7 +284,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
 
         _computerRestartScheduler.NextRestartDateChanged += OnNextRestartDateChanged;
 
-        InitializeAsync().Forget();
+        InitializeAsync().Forget(_logger, nameof(InitializeAsync));
     }
 
     [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
@@ -322,7 +329,11 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.Update.UpdateCheckFailed,
+                exception,
+                "Checking for application updates failed.");
+
             string errorFormat = _localizationService.RetrieveString(OptionsUpdateCheckErrorMessageResourceKey);
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(OptionsUpdateErrorTitleResourceKey),
@@ -455,8 +466,25 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
         }
     }
 
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        _computerRestartScheduler.NextRestartDateChanged -= OnNextRestartDateChanged;
+    }
+
     private void OnNextRestartDateChanged(object? sender, DateTime? newDate)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         _dispatcherQueue.TryEnqueue(() =>
         {
             _currentConfig.Computer.SetNextRestartDate(newDate);
@@ -474,7 +502,10 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.Update.UpdateDownloaded,
+                exception,
+                "Performing the application update failed.");
 
             string errorFormat = _localizationService.RetrieveString(OptionsUpdateFailedMessageResourceKey);
 

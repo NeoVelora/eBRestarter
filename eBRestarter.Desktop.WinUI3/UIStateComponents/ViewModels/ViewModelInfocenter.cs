@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -22,6 +24,7 @@ public sealed partial class ViewModelInfocenter : ObservableObject
     private const string InfocenterVersionPrefixResourceKey = "Infocenter_VersionPrefix";
 
     private readonly IDialogService _dialogService;
+    private readonly ILogger<ViewModelInfocenter> _logger;
     private readonly IInboundPortLocalizationProvider _localizationService;
     private readonly IInboundPortSystemInformationProvider _systemInformationProvider;
 
@@ -36,12 +39,15 @@ public sealed partial class ViewModelInfocenter : ObservableObject
     public ViewModelInfocenter(
         IDialogService dialogService,
         IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelInfocenter> logger,
         IInboundPortSystemInformationProvider systemInformationProvider)
     {
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(systemInformationProvider);
 
+        _logger = logger;
         _dialogService = dialogService;
         _localizationService = localizationService;
         _systemInformationProvider = systemInformationProvider;
@@ -60,20 +66,35 @@ public sealed partial class ViewModelInfocenter : ObservableObject
     }
 
     [RelayCommand]
-    public static void OpenSupportWebsite(string? url)
+    public void OpenSupportWebsite(string? url)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
             return;
         }
 
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? targetUri)
+            || (!string.Equals(targetUri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal)
+                && !string.Equals(targetUri.Scheme, Uri.UriSchemeHttp, StringComparison.Ordinal)))
+        {
+            _logger.LogWarning(
+                LogEventIds.Security.UnsafeUrlLaunchBlocked,
+                "Blocked an attempt to shell-execute a non-web URL: {Url}",
+                url);
+
+            return;
+        }
+
         try
         {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(targetUri.AbsoluteUri) { UseShellExecute = true });
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.OperatingSystem.ProcessStartFailed,
+                exception,
+                "Opening the web URL in the default browser failed.");
         }
     }
 
@@ -96,7 +117,10 @@ public sealed partial class ViewModelInfocenter : ObservableObject
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.OperatingSystem.WmiQueryFailed,
+                exception,
+                "Loading hardware and operating system information failed.");
 
             string failureMessage = _localizationService.RetrieveString(InfocenterLoadFailedResourceKey);
 

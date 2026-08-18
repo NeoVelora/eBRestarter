@@ -14,11 +14,9 @@ public sealed partial class StringKeyToStyleConverter : IValueConverter
             {
                 return styleResource as Style;
             }
-
         }
 
         return null;
-
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

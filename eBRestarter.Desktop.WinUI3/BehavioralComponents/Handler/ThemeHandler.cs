@@ -19,9 +19,7 @@ public sealed class ThemeHandler(
     private readonly IAppWindowHelper _appWindowHelper = appWindowHelper ?? throw new ArgumentNullException(nameof(appWindowHelper));
     private readonly IMainWindowProvider _mainWindowProvider = mainWindowProvider ?? throw new ArgumentNullException(nameof(mainWindowProvider));
 
-
     public AppTheme CurrentTheme { get; private set; } = AppTheme.Light;
-
 
     public void SetTheme(AppTheme theme)
     {

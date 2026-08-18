@@ -6,5 +6,3 @@ public interface IOutboundPortBrowserFactory
 {
     IOutboundPortBrowser Create(BrowserType type);
 }
-
-

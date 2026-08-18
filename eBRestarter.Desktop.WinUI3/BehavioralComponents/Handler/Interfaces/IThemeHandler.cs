@@ -7,5 +7,6 @@ public interface IThemeHandler
     AppTheme CurrentTheme { get; }
 
     void SetTheme(AppTheme theme);
+
     void SetTheme(string themeName);
 }

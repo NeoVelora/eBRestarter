@@ -1,7 +1,9 @@
+using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.Text.Json;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Utilities;
@@ -20,8 +22,9 @@ public static class EVisitorApiResponseUtility
     private const string ValuePropertyName = "value";
 
 
-    public static double[] ParseDailyEarnings(string jsonContent, int daysInMonth)
+    public static double[] ParseDailyEarnings(string jsonContent, int daysInMonth, ILogger logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         var dailyEarnings = new double[daysInMonth];
 
         if (string.IsNullOrWhiteSpace(jsonContent) || daysInMonth <= 0)
@@ -53,18 +56,21 @@ public static class EVisitorApiResponseUtility
                 dailyEarnings[index] = Math.Round(dailyEarnings[index], 2);
             }
         }
-        catch (JsonException)
+        catch (Exception exception)
         {
-        }
-        catch (Exception)
-        {
+            logger.LogWarning(
+                LogEventIds.Api.ApiResponseParsingFailed,
+                exception,
+                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
+                nameof(ParseDailyEarnings));
         }
 
         return dailyEarnings;
     }
 
-    public static double[] ParseHourlyEarnings(string jsonContent)
+    public static double[] ParseHourlyEarnings(string jsonContent, ILogger logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         var hourly = new double[HoursInDayCount];
 
         if (string.IsNullOrWhiteSpace(jsonContent))
@@ -86,18 +92,21 @@ public static class EVisitorApiResponseUtility
                 ParseHourlyEarningsFromJsonArray(root, hourly);
             }
         }
-        catch (JsonException)
+        catch (Exception exception)
         {
-        }
-        catch (Exception)
-        {
+            logger.LogWarning(
+                LogEventIds.Api.ApiResponseParsingFailed,
+                exception,
+                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
+                nameof(ParseHourlyEarnings));
         }
 
         return hourly;
     }
 
-    public static IpInfoData? ParseIpInfo(string jsonContent)
+    public static IpInfoData? ParseIpInfo(string jsonContent, ILogger logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         if (string.IsNullOrWhiteSpace(jsonContent))
         {
             return null;
@@ -114,18 +123,21 @@ public static class EVisitorApiResponseUtility
                 CountryCode: RetrieveStringSafe(root, CountryCodePropertyName),
                 CountryName: RetrieveStringSafe(root, CountryNamePropertyName));
         }
-        catch (JsonException)
+        catch (Exception exception)
         {
-            return null;
-        }
-        catch (Exception)
-        {
+            logger.LogWarning(
+                LogEventIds.Api.ApiResponseParsingFailed,
+                exception,
+                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
+                nameof(ParseIpInfo));
+
             return null;
         }
     }
 
-    public static double[] ParseMonthlyEarnings(string jsonContent)
+    public static double[] ParseMonthlyEarnings(string jsonContent, ILogger logger)
     {
+        ArgumentNullException.ThrowIfNull(logger);
         var monthlyEarnings = new double[MonthsInYearCount];
 
         if (string.IsNullOrWhiteSpace(jsonContent))
@@ -157,11 +169,13 @@ public static class EVisitorApiResponseUtility
                 monthlyEarnings[index] = Math.Round(monthlyEarnings[index], 2);
             }
         }
-        catch (JsonException)
+        catch (Exception exception)
         {
-        }
-        catch (Exception)
-        {
+            logger.LogWarning(
+                LogEventIds.Api.ApiResponseParsingFailed,
+                exception,
+                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
+                nameof(ParseMonthlyEarnings));
         }
 
         return monthlyEarnings;

@@ -5,7 +5,9 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
+using eBRestarter.Core.Application.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.WindowsOS;
 
@@ -59,11 +61,10 @@ public sealed partial class AdapterWindowsAutoLogonRepository : IOutboundPortOsA
 
             SetLsaSecret(DefaultPasswordKey, null);
 
-            _logger.LogInformation(AutoLogonDisabledLogMessage);
+            _logger.LogInformation(LogEventIds.Security.AutoLogonDisabled, AutoLogonDisabledLogMessage);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, DisableAutoLogonFailedExceptionMessage);
             throw new InvalidOperationException(DisableAutoLogonFailedExceptionMessage, ex);
         }
     }
@@ -96,7 +97,7 @@ public sealed partial class AdapterWindowsAutoLogonRepository : IOutboundPortOsA
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogInformation(AutoLogonEnabledLogMessage, username);
+                _logger.LogInformation(LogEventIds.Security.AutoLogonEnabled, AutoLogonEnabledLogMessage, LogRedaction.MaskIdentifier(username));
             }
         }
         catch (Exception ex) when (ex is not InvalidOperationException)
@@ -127,7 +128,7 @@ public sealed partial class AdapterWindowsAutoLogonRepository : IOutboundPortOsA
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ErrorReadingPasswordLessRegistryKeyLogMessage);
+            _logger.LogError(LogEventIds.Security.PasswordlessReadFailed, ex, ErrorReadingPasswordLessRegistryKeyLogMessage);
         }
 
         return false;
@@ -141,7 +142,7 @@ public sealed partial class AdapterWindowsAutoLogonRepository : IOutboundPortOsA
 
             if (key is null)
             {
-                _logger.LogWarning(PasswordLessKeyNotFoundWarningLogMessage);
+                _logger.LogWarning(LogEventIds.Security.PasswordlessRegistryKeyMissing, PasswordLessKeyNotFoundWarningLogMessage);
             }
             else
             {
@@ -150,7 +151,7 @@ public sealed partial class AdapterWindowsAutoLogonRepository : IOutboundPortOsA
 
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
-                    _logger.LogInformation(PasswordLessModeChangedLogMessage, enable ? ActiveStateText : InactiveStateText, valueToSet);
+                    _logger.LogInformation(LogEventIds.Security.PasswordlessModeChanged, PasswordLessModeChangedLogMessage, enable ? ActiveStateText : InactiveStateText, valueToSet);
                 }
             }
         }

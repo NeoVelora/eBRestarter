@@ -3,7 +3,9 @@ namespace eBRestarter.Core.Domain.ValueObjects;
 public sealed record Computer
 {
     public DateTime? NextRestartDate { get; set; }
+
     public int ComputerRestartIntervalDays { get; set; }
+
     public int RestartClockTime { get; set; }
 
     public Computer() { }

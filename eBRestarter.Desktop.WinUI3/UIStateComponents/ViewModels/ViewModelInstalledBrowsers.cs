@@ -2,15 +2,19 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.BehavioralComponents.Extensions;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -19,12 +23,18 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
     private const int BrowserListRefreshIntervalSeconds = 2;
 
     private readonly IOutboundPortBrowserDiscoveryProvider _browserService;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<ViewModelInstalledBrowsers> _logger;
     private readonly IDialogService _dialogService;
     private readonly IUseCaseDownloadBrowser _downloadBrowserUseCase;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly IInboundPortLocalizationProvider _localizationService;
 
     private readonly DispatcherTimer _refreshTimer;
+
+    private volatile bool _disposed;
+
+    private int _refreshInFlight;
 
 
     public ObservableCollection<ViewModelBrowserItem> Browsers { get; } = [];
@@ -34,13 +44,18 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
         IDialogService dialogService,
         IUseCaseDownloadBrowser downloadBrowserUseCase,
         IInboundPortLocalizationProvider localizationService,
+        ILoggerFactory loggerFactory,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository)
     {
         ArgumentNullException.ThrowIfNull(browserService);
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(downloadBrowserUseCase);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(loggerFactory);
         ArgumentNullException.ThrowIfNull(evRestarterConfigRepository);
+
+        _loggerFactory = loggerFactory;
+        _logger = loggerFactory.CreateLogger<ViewModelInstalledBrowsers>();
 
         _browserService = browserService;
         _dialogService = dialogService;
@@ -54,13 +69,20 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
         };
         _refreshTimer.Tick += OnRefreshTimerTick;
 
-        LoadBrowsersSmartAsync().Forget();
+        LoadBrowsersSmartAsync().Forget(_logger, nameof(LoadBrowsersSmartAsync));
 
         _refreshTimer.Start();
     }
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
         _refreshTimer.Stop();
         _refreshTimer.Tick -= OnRefreshTimerTick;
         GC.SuppressFinalize(this);
@@ -85,14 +107,39 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
                 _downloadBrowserUseCase,
                 _evRestarterConfigRepository,
                 _dialogService,
-                _localizationService);
+                _localizationService,
+                _loggerFactory.CreateLogger<ViewModelBrowserItem>());
 
             Browsers.Add(newBrowserItem);
         }
     }
 
-    private void OnRefreshTimerTick(object? sender, object eventArgs)
+    private async void OnRefreshTimerTick(object? sender, object eventArgs)
     {
-        LoadBrowsersSmartAsync().Forget();
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (Interlocked.Exchange(ref _refreshInFlight, 1) == 1)
+        {
+            return;
+        }
+
+        try
+        {
+            await LoadBrowsersSmartAsync();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+                exception,
+                "Loading the installed browser list failed.");
+        }
+        finally
+        {
+            Volatile.Write(ref _refreshInFlight, 0);
+        }
     }
 }

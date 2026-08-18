@@ -9,9 +9,11 @@ using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Update;
 using eBRestarter.Infrastructure.Api.Interfaces;
 using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.Update;
 
@@ -41,12 +43,26 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
     private const string UpdateFileNameFormat = "eBRestarter_Update_{0}.exe";
     private const char VersionTagPrefix = 'v';
 
+    private const string RejectedDownloadHostLogMessage = "Refusing update download: {Url} does not point to an approved GitHub release host.";
+    private const string RejectedDownloadSchemeLogMessage = "Refusing update download: {Url} does not use HTTPS.";
+    private const string SignatureRejectedAbortLogMessage = "Update aborted: the downloaded package {Path} does not carry a valid, trusted code signature. The file was deleted and NOT executed.";
+    private const string UpdateStagingFolderFormat = "eBRestarter_Update_{0}";
+
+    private static readonly string[] ApprovedDownloadHosts =
+    [
+        "github.com",
+        "www.github.com",
+        "objects.githubusercontent.com",
+        "release-assets.githubusercontent.com"
+    ];
+
     private readonly IOutboundPortApplicationLifetime _applicationLifetimeUseCase;
     private readonly IOutboundPortFileSystem _fileSystemPort;
     private readonly IOutboundPortHttpDownload _httpDownloadPort;
     private readonly ILogger<AdapterGitHubUpdateService> _logger;
     private readonly IOutboundPortOsProcessControl _processControlPort;
     private readonly IRestClient _restClientUseCase;
+    private readonly IOutboundPortExecutableSignatureVerifier _signatureVerifier;
 
 
     public AdapterGitHubUpdateService(
@@ -55,7 +71,8 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         IOutboundPortHttpDownload httpDownloadPort,
         ILogger<AdapterGitHubUpdateService> logger,
         IOutboundPortOsProcessControl processControlPort,
-        IRestClient restClientUseCase)
+        IRestClient restClientUseCase,
+        IOutboundPortExecutableSignatureVerifier signatureVerifier)
     {
         ArgumentNullException.ThrowIfNull(applicationLifetimeUseCase);
         ArgumentNullException.ThrowIfNull(fileSystemPort);
@@ -63,6 +80,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(processControlPort);
         ArgumentNullException.ThrowIfNull(restClientUseCase);
+        ArgumentNullException.ThrowIfNull(signatureVerifier);
 
         _applicationLifetimeUseCase = applicationLifetimeUseCase;
         _fileSystemPort = fileSystemPort;
@@ -70,6 +88,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         _logger = logger;
         _processControlPort = processControlPort;
         _restClientUseCase = restClientUseCase;
+        _signatureVerifier = signatureVerifier;
     }
 
 
@@ -87,7 +106,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
 
         if (!response.IsSuccess || string.IsNullOrEmpty(response.Content))
         {
-            _logger.LogWarning(UpdateCheckFailedLogMessage, response.StatusCode);
+            _logger.LogWarning(LogEventIds.Update.UpdateCheckFailed, UpdateCheckFailedLogMessage, response.StatusCode);
 
             return new UpdateInfo { IsUpdateAvailable = false, CurrentVersion = currentVersion.ToString() };
         }
@@ -136,7 +155,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorParsingGitHubResponseLogMessage);
+            _logger.LogError(LogEventIds.Update.UpdateResponseParsingFailed, exception, ErrorParsingGitHubResponseLogMessage);
 
             return new UpdateInfo { IsUpdateAvailable = false };
         }
@@ -153,15 +172,25 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
     {
         if (string.IsNullOrWhiteSpace(updateInfo.DownloadUrl))
         {
-            _logger.LogError(NoDownloadUrlFoundLogMessage);
+            _logger.LogError(LogEventIds.Update.UpdateDownloadUrlMissing, NoDownloadUrlFoundLogMessage);
+            return;
+        }
+
+        if (!IsApprovedDownloadUrl(updateInfo.DownloadUrl))
+        {
             return;
         }
 
         try
         {
             var tempDir = _fileSystemPort.ResolveEnvironmentPath(TempEnvironmentVariable);
+            var stagingFolderName = string.Format(UpdateStagingFolderFormat, Guid.NewGuid().ToString("N"));
+            var stagingDirectory = _fileSystemPort.CombinePaths(tempDir, stagingFolderName);
+
+            _fileSystemPort.CreateDirectory(stagingDirectory);
+
             var updateFileName = string.Format(UpdateFileNameFormat, updateInfo.LatestVersion);
-            var tempFile = _fileSystemPort.CombinePaths(tempDir, updateFileName);
+            var tempFile = _fileSystemPort.CombinePaths(stagingDirectory, updateFileName);
 
             await _httpDownloadPort.DownloadFileAsync(
                 updateInfo.DownloadUrl,
@@ -171,7 +200,15 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogInformation(UpdateDownloadedLogMessage, tempFile);
+                _logger.LogInformation(LogEventIds.Update.UpdateDownloaded, UpdateDownloadedLogMessage, tempFile);
+            }
+
+            if (!_signatureVerifier.IsTrustedPublisher(tempFile))
+            {
+                _logger.LogError(LogEventIds.Security.SignatureVerificationRejected, SignatureRejectedAbortLogMessage, tempFile);
+                _fileSystemPort.DeleteFile(tempFile);
+
+                return;
             }
 
             await _processControlPort.StartExecutableAsync(tempFile).ConfigureAwait(false);
@@ -182,5 +219,24 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         {
             throw new InvalidOperationException(DownloadAndInstallFailedExceptionMessage, exception);
         }
+    }
+
+    private bool IsApprovedDownloadUrl(string downloadUrl)
+    {
+        if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out Uri? uri)
+            || !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal))
+        {
+            _logger.LogError(LogEventIds.Security.DownloadSchemeRejected, RejectedDownloadSchemeLogMessage, downloadUrl);
+            return false;
+        }
+
+        if (Array.Exists(ApprovedDownloadHosts, approvedHost => string.Equals(uri.Host, approvedHost, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        _logger.LogError(LogEventIds.Security.DownloadHostRejected, RejectedDownloadHostLogMessage, downloadUrl);
+
+        return false;
     }
 }

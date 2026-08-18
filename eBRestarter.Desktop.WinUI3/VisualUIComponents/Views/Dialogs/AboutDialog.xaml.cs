@@ -10,9 +10,10 @@ public sealed partial class AboutDialog : ContentDialog
 
     public AboutDialog()
     {
+        ViewModelAbout = App.AppHost!.Services.GetRequiredService<ViewModelAbout>();
+
         this.InitializeComponent();
 
-        ViewModelAbout = App.AppHost!.Services.GetRequiredService<ViewModelAbout>();
 
         this.DataContext = ViewModelAbout;
     }

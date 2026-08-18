@@ -1,8 +1,9 @@
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
 using Shouldly;
 using System;
 using System.IO;
 using Xunit;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
+using eBRestarter.Infrastructure.BehavioralComponents.Providers;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
@@ -24,7 +25,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             actualPath.ShouldBe(expectedPath);
             actualPath.ShouldNotBeNullOrWhiteSpace();
-            Path.IsPathRooted(actualPath).ShouldBeTrue("Der Pfad muss ein absoluter Systempfad (z.B. C:\\...) sein.");
+            Path.IsPathRooted(actualPath).ShouldBeTrue("The path must be an absolute system path.");
         }
 
         [Fact]
@@ -76,4 +77,3 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
-

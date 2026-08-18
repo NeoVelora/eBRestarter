@@ -1,18 +1,12 @@
-using eBRestarter.Infrastructure.Network;
-using eBRestarter.Infrastructure.Adapters.Authentication;
-using eBRestarter.Infrastructure.Adapters.RestSharp;
-using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Infrastructure.Adapters.RestSharp;
-using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Core.Application.Enums;
-using eBRestarter.Infrastructure.Repositories.Authentication;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System.Threading.Tasks;
 using Xunit;
+using eBRestarter.Core.Application.Common.Results;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API.Authentication;
 using eBRestarter.Infrastructure.Api.Interfaces;
-using eBRestarter.Infrastructure.ObjectArchetypes.Model;
 using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
+using eBRestarter.Infrastructure.ObjectArchetypes.Model;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
 {
@@ -21,7 +15,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
         [Fact]
         public async Task VerifyCredentialsAsync_ShouldReturnTrue_WhenApiCallIsSuccessful()
         {
-            var mockRestClient = new Mock<IRestClient>();
+            var mockRestClient = Substitute.For<IRestClient>();
 
             string testUsername = "TestUser";
             string testApiKey = "SecretKey123";
@@ -33,24 +27,24 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
             };
 
             mockRestClient
-                .Setup(client => client.ExecuteGetAsync(It.IsAny<ApiRequest>()))
-                .ReturnsAsync(fakeSuccessResponse);
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(fakeSuccessResponse);
 
-            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient.Object);
+            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient);
 
             var (isValid, message) = await apiUseCase.VerifyCredentialsAsync(testUsername, testApiKey);
 
             isValid.ShouldBeTrue();
             message.ShouldBe("Connection successful!");
 
-            mockRestClient.Verify(client => client.ExecuteGetAsync(It.Is<ApiRequest>(req =>
-                req.Username == testUsername && req.Password == testApiKey)), Times.Once);
+            await mockRestClient.Received(1).ExecuteGetAsync(Arg.Is<ApiRequest>(req =>
+                req.Username == testUsername && req.Password == testApiKey));
         }
 
         [Fact]
         public async Task VerifyCredentialsAsync_ShouldReturnFalseAndSpecificMessage_WhenCredentialsAreInvalid()
         {
-            var mockRestClient = new Mock<IRestClient>();
+            var mockRestClient = Substitute.For<IRestClient>();
 
             var fakeUnauthorizedResponse = new ApiResponse
             {
@@ -59,10 +53,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
             };
 
             mockRestClient
-                .Setup(client => client.ExecuteGetAsync(It.IsAny<ApiRequest>()))
-                .ReturnsAsync(fakeUnauthorizedResponse);
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(fakeUnauthorizedResponse);
 
-            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient.Object);
+            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient);
 
             var (isValid, message) = await apiUseCase.VerifyCredentialsAsync("WrongUser", "WrongKey");
 
@@ -73,9 +67,9 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
         [Fact]
         public async Task VerifyCredentialsAsync_ShouldReturnFalseAndErrorMessage_OnGeneralApiError()
         {
-            var mockRestClient = new Mock<IRestClient>();
+            var mockRestClient = Substitute.For<IRestClient>();
 
-            string systemErrorMessage = "Es konnte keine Verbindung zum Zielserver hergestellt werden (Timeout).";
+            string systemErrorMessage = "Connection timed out.";
 
             var fakeGeneralErrorResponse = new ApiResponse
             {
@@ -85,10 +79,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
             };
 
             mockRestClient
-                .Setup(client => client.ExecuteGetAsync(It.IsAny<ApiRequest>()))
-                .ReturnsAsync(fakeGeneralErrorResponse);
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(fakeGeneralErrorResponse);
 
-            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient.Object);
+            var apiUseCase = new AdapterEVisitorApiAuthenticationProvider(mockRestClient);
 
             var (isValid, message) = await apiUseCase.VerifyCredentialsAsync("User", "Key");
 
@@ -97,5 +91,3 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
         }
     }
 }
-
-

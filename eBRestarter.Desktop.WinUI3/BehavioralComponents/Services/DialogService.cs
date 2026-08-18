@@ -31,10 +31,8 @@ public sealed class DialogService(
 
     private readonly IMainWindowProvider _mainWindowProvider = mainWindowProvider ?? throw new ArgumentNullException(nameof(mainWindowProvider));
 
-
     private XamlRoot XamlRoot => _mainWindowProvider.MainWindow.Content.XamlRoot;
     private ElementTheme CurrentTheme => (_mainWindowProvider.MainWindow.Content as FrameworkElement)?.RequestedTheme ?? ElementTheme.Default;
-
 
     public async Task<bool> ShowConfirmationAsync(
         string title,

@@ -11,9 +11,7 @@ public sealed class ManageApplicationUpdatesUseCase(
     IOutboundPortUpdate updateService)
     : IUseCaseManageApplicationUpdates
 {
-
     private readonly IOutboundPortUpdate _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
-
 
     public async Task<CheckUpdateResponse> CheckForUpdatesAsync()
     {

@@ -1,8 +1,6 @@
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -10,14 +8,16 @@ using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.WindowsOS;
+using NSubstitute.ExceptionExtensions;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsStartupRepositoryTests
     {
-        private readonly Mock<ILogger<AdapterWindowsStartupRepository>> _mockLogger;
-        private readonly Mock<IOutboundPortSystemConfigurationRepository> _mockRegistry;
-        private readonly Mock<IOutboundPortProcessInfoProvider> _mockProcessInfo;
+        private readonly FakeLogger<AdapterWindowsStartupRepository> _mockLogger;
+        private readonly IOutboundPortSystemConfigurationRepository _mockRegistry;
+        private readonly IOutboundPortProcessInfoProvider _mockProcessInfo;
         private readonly AdapterWindowsStartupRepository _sut;
 
         private const string RegistryPathRun = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
@@ -26,26 +26,25 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
         public WindowsStartupRepositoryTests()
         {
-            _mockLogger = new Mock<ILogger<AdapterWindowsStartupRepository>>();
-            _mockRegistry = new Mock<IOutboundPortSystemConfigurationRepository>();
-            _mockProcessInfo = new Mock<IOutboundPortProcessInfoProvider>();
+            _mockLogger = new FakeLogger<AdapterWindowsStartupRepository>();
+            _mockRegistry = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            _mockProcessInfo = Substitute.For<IOutboundPortProcessInfoProvider>();
 
-            _sut = new AdapterWindowsStartupRepository(_mockLogger.Object, _mockRegistry.Object, _mockProcessInfo.Object);
+            _sut = new AdapterWindowsStartupRepository(_mockLogger, _mockProcessInfo, _mockRegistry);
         }
 
         [Fact]
         public void EnableAutoStart_ShouldSetRegistryKey_WithCurrentExePath()
         {
             string fakeExePath = @"C:\TestApp\eBRestarter.exe";
-            _mockProcessInfo.Setup(p => p.GetCurrentExecutablePath()).Returns(fakeExePath);
+            _mockProcessInfo.GetCurrentExecutablePath().Returns(fakeExePath);
 
             _sut.EnableAutoStart();
 
-            _mockRegistry.Verify(r => r.SetUserValue(
+            _mockRegistry.Received(1).SetUserValue(
                 RegistryPathRun,
                 "eBRestarter",
-                fakeExePath),
-            Times.Once);
+                $"\"{fakeExePath}\"");
         }
 
         [Fact]
@@ -53,17 +52,21 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             _sut.DisableAutoStart();
 
-            _mockRegistry.Verify(r => r.DeleteUserValue(RegistryPathRun, "eBRestarter"), Times.Once);
+            _mockRegistry.Received(1).DeleteUserValue(RegistryPathRun, "eBRestarter");
         }
 
         [Fact]
         public void EnableAutoStart_ShouldCatchException_AndNotCrash()
         {
-            _mockProcessInfo.Setup(p => p.GetCurrentExecutablePath()).Returns("dummy.exe");
-            _mockRegistry.Setup(r => r.SetUserValue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<object>()))
-                         .Throws(new UnauthorizedAccessException("Access Denied"));
+            _mockProcessInfo.GetCurrentExecutablePath().Returns("dummy.exe");
+            _mockRegistry
+                .When(r => r.SetUserValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<object>()))
+                .Do(_ => throw new UnauthorizedAccessException("Access Denied"));
 
-            Should.NotThrow(() => _sut.EnableAutoStart());
+            Action act = () => _sut.EnableAutoStart();
+
+            var exception = act.ShouldThrow<InvalidOperationException>();
+            exception.InnerException.ShouldBeOfType<UnauthorizedAccessException>();
         }
 
         [Theory]
@@ -79,7 +82,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             }
             fakeRegistryEntries.Add("SomeOtherApp", @"C:\Other\app.exe");
 
-            _mockRegistry.Setup(r => r.GetUserValues(RegistryPathRun)).Returns(fakeRegistryEntries);
+            _mockRegistry.GetUserValues(RegistryPathRun).Returns(fakeRegistryEntries);
 
             bool result = await _sut.IsAutoStartEnabledAsync();
 
@@ -93,11 +96,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             _sut.SetBrowserStartupBoost(enable);
 
-            _mockRegistry.Verify(r => r.SetSystemValue(
+            _mockRegistry.Received(1).SetSystemValue(
                 RegistryPathEdgePolicies,
                 "StartupBoostEnabled",
-                expectedDword),
-            Times.Once);
+                expectedDword);
         }
 
         [Theory]
@@ -107,7 +109,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [InlineData("InvalidString", true)]
         public void IsBrowserStartupBoostEnabled_ShouldReturnExpectedResult(object? registryValue, bool expectedResult)
         {
-            _mockRegistry.Setup(r => r.GetSystemValue(RegistryPathEdgePolicies, "StartupBoostEnabled"))
+            _mockRegistry.GetSystemValue(RegistryPathEdgePolicies, "StartupBoostEnabled")
                          .Returns(registryValue);
 
             bool result = _sut.IsBrowserStartupBoostEnabled();
@@ -122,22 +124,23 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             _sut.SetAutoLogon(enableAutoLogon);
 
-            _mockRegistry.Verify(r => r.SetSystemValue(
+            _mockRegistry.Received(1).SetSystemValue(
                 RegistryPathPasswordLess,
                 "DevicePasswordLessBuildVersion",
-                expectedDword),
-            Times.Once);
+                expectedDword);
         }
 
         [Fact]
         public void SetAutoLogon_ShouldCatchUnauthorizedAccessException_Gracefully()
         {
-            _mockRegistry.Setup(r => r.SetSystemValue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<object>()))
-                         .Throws(new UnauthorizedAccessException("Need Admin Rights"));
+            _mockRegistry
+                .When(r => r.SetSystemValue(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<object>()))
+                .Do(_ => throw new UnauthorizedAccessException("Need Admin Rights"));
 
-            Should.NotThrow(() => _sut.SetAutoLogon(true));
+            Action act = () => _sut.SetAutoLogon(true);
+
+            var exception = act.ShouldThrow<UnauthorizedAccessException>();
+            exception.Message.ShouldContain("Administrator");
         }
     }
 }
-
-

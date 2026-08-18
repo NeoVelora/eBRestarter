@@ -12,5 +12,3 @@ public interface IOutboundPortCredentialStoreRepository
 
     ApiCredentials? ImportFromLegacyFile(string filePath);
 }
-
-

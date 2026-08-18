@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.WindowsOS;
 
@@ -23,13 +24,11 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
     private const string EdgeStartupBoostEnabledValueName = "StartupBoostEnabled";
     private const string EdgeStartupBoostLogMessage = "Edge Startup Boost set to {State} (Value: {Value}).";
     private const string ErrorCheckingAutostartStatusLogMessage = "Error while checking autostart status.";
-    private const string ErrorConfiguringAutoLogonLogMessage = "Error configuring AutoLogon settings.";
     private const string ErrorRemovingAutostartLogMessage = "Error removing autostart from registry.";
     private const string ErrorRetrievingAutostartEntriesLogMessage = "Error retrieving autostart entries.";
     private const string ErrorSettingAutostartLogMessage = "Error setting autostart in registry.";
     private const string FailedEdgePolicyExceptionMessage = "Failed to set Edge Startup Boost policy.";
     private const string FailedPasswordLessExceptionMessage = "Failed to configure PasswordLess AutoLogon registry setting.";
-    private const string GeneralErrorEdgePolicyLogMessage = "General error setting Edge Startup Boost.";
     private const int InactiveDwordValue = 2;
     private const string InactiveStateText = "Inactive";
     private const string RegistryPathEdgePolicies = @"SOFTWARE\Policies\Microsoft\Edge";
@@ -61,11 +60,10 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
         try
         {
             _registry.DeleteUserValue(RegistryPathRun, ApplicationAutostartKey);
-            _logger.LogInformation(AutostartRemovedLogMessage);
+            _logger.LogInformation(LogEventIds.OperatingSystem.AutoStartDisabled, AutostartRemovedLogMessage);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorRemovingAutostartLogMessage);
             throw new InvalidOperationException(ErrorRemovingAutostartLogMessage, exception);
         }
     }
@@ -81,12 +79,11 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
         try
         {
             string exePath = _processInfo.GetCurrentExecutablePath();
-            _registry.SetUserValue(RegistryPathRun, ApplicationAutostartKey, exePath);
-            _logger.LogInformation(AutostartCreatedLogMessage);
+            _registry.SetUserValue(RegistryPathRun, ApplicationAutostartKey, $"\"{exePath}\"");
+            _logger.LogInformation(LogEventIds.OperatingSystem.AutoStartEnabled, AutostartCreatedLogMessage);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorSettingAutostartLogMessage);
             throw new InvalidOperationException(ErrorSettingAutostartLogMessage, exception);
         }
     }
@@ -107,7 +104,7 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorCheckingAutostartStatusLogMessage);
+            _logger.LogError(LogEventIds.OperatingSystem.AutoStartStatusReadFailed, exception, ErrorCheckingAutostartStatusLogMessage);
             return Task.FromResult(false);
         }
     }
@@ -130,7 +127,7 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(exception, CouldNotReadEdgePolicyLogMessage);
+            _logger.LogWarning(LogEventIds.OperatingSystem.EdgeStartupBoostReadFailed, exception, CouldNotReadEdgePolicyLogMessage);
         }
 
         return true;
@@ -144,7 +141,7 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorRetrievingAutostartEntriesLogMessage);
+            _logger.LogError(LogEventIds.OperatingSystem.AutoStartStatusReadFailed, exception, ErrorRetrievingAutostartEntriesLogMessage);
             return [];
         }
     }
@@ -158,7 +155,7 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogInformation(AutoLogonSettingLogMessage, enable ? ActiveStateText : InactiveStateText, dwordValue);
+                _logger.LogInformation(LogEventIds.Security.PasswordlessModeChanged, AutoLogonSettingLogMessage, enable ? ActiveStateText : InactiveStateText, dwordValue);
             }
         }
         catch (UnauthorizedAccessException exception)
@@ -167,7 +164,6 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorConfiguringAutoLogonLogMessage);
             throw new InvalidOperationException(FailedPasswordLessExceptionMessage, exception);
         }
     }
@@ -182,7 +178,7 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
-                _logger.LogInformation(EdgeStartupBoostLogMessage, enable ? ActiveStateText : InactiveStateText, dwordValue);
+                _logger.LogInformation(LogEventIds.OperatingSystem.EdgeStartupBoostChanged, EdgeStartupBoostLogMessage, enable ? ActiveStateText : InactiveStateText, dwordValue);
             }
         }
         catch (UnauthorizedAccessException exception)
@@ -191,7 +187,6 @@ public sealed class AdapterWindowsStartupRepository : IOutboundPortAutoStartRepo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, GeneralErrorEdgePolicyLogMessage);
             throw new InvalidOperationException(FailedEdgePolicyExceptionMessage, exception);
         }
     }

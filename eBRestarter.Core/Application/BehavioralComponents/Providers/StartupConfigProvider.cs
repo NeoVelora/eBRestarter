@@ -15,8 +15,6 @@ public sealed class StartupConfigProvider(IOutboundPortEVisitorConfigRepository 
     private const string DefaultThemeName = "Light";
 
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
-
-
     public StartupDisplayPreferences RetrieveStartupPreferences()
     {
         var appConfig = _configService.LoadConfig();

@@ -7,7 +7,6 @@ public static class HumanReadableTimeUtility
     private const int MinimumThreshold = 1;
     private const string ZeroSecondsText = "0s";
 
-
     public static string Format(int seconds)
     {
         if (seconds <= 0)

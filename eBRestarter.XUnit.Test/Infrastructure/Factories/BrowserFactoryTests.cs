@@ -1,14 +1,16 @@
-using eBRestarter.Core.Application.Ports.Outbound;
-using eBRestarter.Infrastructure.Factories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System;
 using Xunit;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
+using eBRestarter.Infrastructure.BehavioralComponents.Factories;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Factories
 {
@@ -22,54 +24,53 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
         [InlineData(BrowserType.Vivaldi, typeof(AdapterVivaldiBrowserWrapper))]
         public void Create_ShouldReturnCorrectBrowserInstance_ForValidBrowserType(BrowserType inputType, Type expectedClassType)
         {
-            var mockServiceProvider = new Mock<IServiceProvider>();
+            var mockProcess = Substitute.For<IOutboundPortOsProcessControl>();
+            var mockSettings = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            var mockFs = Substitute.For<IOutboundPortFileSystem>();
 
-            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
-            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
-            var mockFs = new Mock<IOutboundPortFileSystem>();
+            var fakeChrome = new AdapterChromeBrowserWrapper(mockProcess, mockSettings, mockFs, new FakeLogger<AdapterChromeBrowserWrapper>());
+            var fakeFirefox = new AdapterFirefoxBrowserWrapper(mockProcess, mockSettings, mockFs, new FakeLogger<AdapterFirefoxBrowserWrapper>());
+            var fakeEdge = new AdapterEdgeBrowserWrapper(mockProcess, mockSettings, mockFs, new FakeLogger<AdapterEdgeBrowserWrapper>());
+            var fakeBrave = new AdapterBraveBrowserWrapper(mockProcess, mockSettings, mockFs, new FakeLogger<AdapterBraveBrowserWrapper>());
+            var fakeVivaldi = new AdapterVivaldiBrowserWrapper(mockProcess, mockSettings, mockFs, new FakeLogger<AdapterVivaldiBrowserWrapper>());
 
-            var fakeChrome = new AdapterChromeBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<AdapterChromeBrowserWrapper>>().Object);
-            var fakeFirefox = new AdapterFirefoxBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<AdapterFirefoxBrowserWrapper>>().Object);
-            var fakeEdge = new AdapterEdgeBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<AdapterEdgeBrowserWrapper>>().Object);
-            var fakeBrave = new AdapterBraveBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<AdapterBraveBrowserWrapper>>().Object);
-            var fakeVivaldi = new AdapterVivaldiBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<AdapterVivaldiBrowserWrapper>>().Object);
+            var services = new ServiceCollection();
+            services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Chrome, fakeChrome);
+            services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Firefox, fakeFirefox);
+            services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Edge, fakeEdge);
+            services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Brave, fakeBrave);
+            services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Vivaldi, fakeVivaldi);
 
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(AdapterChromeBrowserWrapper))).Returns(fakeChrome);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(AdapterFirefoxBrowserWrapper))).Returns(fakeFirefox);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(AdapterEdgeBrowserWrapper))).Returns(fakeEdge);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(AdapterBraveBrowserWrapper))).Returns(fakeBrave);
-            mockServiceProvider.Setup(sp => sp.GetService(typeof(AdapterVivaldiBrowserWrapper))).Returns(fakeVivaldi);
+            var factory = new BrowserFactory(services.BuildServiceProvider());
 
-            var factory = new BrowserFactory(mockServiceProvider.Object);
             var result = factory.Create(inputType);
-            result.ShouldNotBeNull();
 
+            result.ShouldNotBeNull();
             result.ShouldBeOfType(expectedClassType);
         }
 
         [Fact]
         public void Create_ShouldThrowNotSupportedException_ForInvalidBrowserType()
         {
-            var mockServiceProvider = new Mock<IServiceProvider>();
-            var factory = new BrowserFactory(mockServiceProvider.Object);
+            var factory = new BrowserFactory(new ServiceCollection().BuildServiceProvider());
 
             var invalidBrowserType = (BrowserType)999;
-            var exception = Should.Throw<NotSupportedException>(() =>
-            {
-                factory.Create(invalidBrowserType);
-            });
 
-            exception.Message.ShouldContain("ist noch nicht implementiert");
+            Action act = () => factory.Create(invalidBrowserType);
+
+            var exception = act.ShouldThrow<NotSupportedException>();
+            exception.Message.ShouldContain("is not supported");
+            exception.Message.ShouldContain(nameof(BrowserFactory));
         }
 
         [Fact]
         public void Create_ShouldResolveBrowser_ViaKeyedServices()
         {
             var services = new ServiceCollection();
-            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
-            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
-            var mockFs = new Mock<IOutboundPortFileSystem>();
-            var fakeChrome = new AdapterChromeBrowserWrapper(mockProcess.Object, mockSettings.Object, mockFs.Object, new Mock<ILogger<AdapterChromeBrowserWrapper>>().Object);
+            var mockProcess = Substitute.For<IOutboundPortOsProcessControl>();
+            var mockSettings = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            var mockFs = Substitute.For<IOutboundPortFileSystem>();
+            var fakeChrome = new AdapterChromeBrowserWrapper(mockProcess, mockSettings, mockFs, new FakeLogger<AdapterChromeBrowserWrapper>());
 
             services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Chrome, fakeChrome);
             var sp = services.BuildServiceProvider();
@@ -81,5 +82,3 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
         }
     }
 }
-
-

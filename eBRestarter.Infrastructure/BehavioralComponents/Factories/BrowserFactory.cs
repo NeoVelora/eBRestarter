@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Frozen;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
@@ -14,13 +17,21 @@ public sealed class BrowserFactory(
 
     private const string UnsupportedBrowserErrorMessagePattern = "Browser '{0}' is not supported by {1}.";
 
+    private static readonly FrozenDictionary<BrowserType, object> BoxedBrowserTypeKeys =
+        Enum.GetValues<BrowserType>()
+            .ToFrozenDictionary(
+                static browserType => browserType,
+                static browserType => (object)browserType,
+                EqualityComparer<BrowserType>.Default);
+
 
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
 
     public IOutboundPortBrowser Create(BrowserType type)
     {
-        if (_serviceProvider.GetKeyedService<IOutboundPortBrowser>(type) is { } keyedBrowser)
+        if (BoxedBrowserTypeKeys.TryGetValue(type, out object? cachedKey)
+            && _serviceProvider.GetKeyedService<IOutboundPortBrowser>(cachedKey) is { } keyedBrowser)
         {
             return keyedBrowser;
         }

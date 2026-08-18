@@ -71,14 +71,27 @@ public sealed class AdapterWindowsFileSystem : IOutboundPortFileSystem
             return path;
         }
 
-        return variable.ToLowerInvariant() switch
+        if (string.Equals(variable, AppDataEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
         {
-            AppDataEnvironmentVariableName => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            LocalAppDataEnvironmentVariableName => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            ProgramFilesEnvironmentVariableName => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            ProgramFilesX86EnvironmentVariableName => Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-            _ => string.Empty
-        };
+            return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        }
+
+        if (string.Equals(variable, LocalAppDataEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        }
+
+        if (string.Equals(variable, ProgramFilesEnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        }
+
+        if (string.Equals(variable, ProgramFilesX86EnvironmentVariableName, StringComparison.OrdinalIgnoreCase))
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+        }
+
+        return string.Empty;
     }
 
     public void WriteAllText(string path, string content)

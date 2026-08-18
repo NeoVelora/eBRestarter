@@ -15,7 +15,6 @@ public sealed class NavigationService : INavigationService
 
     private readonly Dictionary<string, Type> _pages = [];
 
-
     public void AttachFrame(Frame frame)
     {
         ArgumentNullException.ThrowIfNull(frame);

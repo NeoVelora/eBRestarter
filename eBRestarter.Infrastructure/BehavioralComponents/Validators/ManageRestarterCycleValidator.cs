@@ -1,6 +1,7 @@
 using FluentValidation;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Domain.Validators;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Validators;
 
@@ -10,6 +11,7 @@ public sealed class ManageRestarterCycleValidator : AbstractValidator<ManageRest
     private const string BrowserTypeRequiredErrorMessage = "A valid browser type must be selected.";
     private const string PauseTimeCannotBeNegativeErrorMessage = "Pause time cannot be negative.";
     private const string RuntimeGreaterThanZeroErrorMessage = "Runtime must be greater than 0 seconds.";
+    private const string UsernameRequiredErrorMessage = "A username is required to start the restarter.";
 
 
     public ManageRestarterCycleValidator()
@@ -25,5 +27,13 @@ public sealed class ManageRestarterCycleValidator : AbstractValidator<ManageRest
         RuleFor(request => request.PauseSeconds)
             .GreaterThanOrEqualTo(0)
             .WithMessage(PauseTimeCannotBeNegativeErrorMessage);
+
+        RuleFor(request => request.Username)
+            .NotEmpty()
+            .WithMessage(UsernameRequiredErrorMessage);
+
+        RuleFor(request => request.Username)
+            .Must(EVisitorUsernamePolicy.IsValid)
+            .WithMessage(EVisitorUsernamePolicy.RuleDescription);
     }
 }

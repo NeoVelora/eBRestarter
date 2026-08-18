@@ -1,33 +1,37 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Network;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
 
 namespace eBRestarter.Core.Application.UseCases;
 
 public sealed class DownloadBrowserUseCase(
     IOutboundPortHttpDownload downloadService,
     IOutboundPortFileSystem fileSystemPort,
+    IOutboundPortApplicationLogger<DownloadBrowserUseCase> logger,
     IInboundPortOsAppPathProvider pathProvider,
-    IOutboundPortOsProcessControl processControlPort)
+    IOutboundPortOsProcessControl processControlPort,
+    IOutboundPortExecutableSignatureVerifier signatureVerifier)
     : IUseCaseDownloadBrowser
 {
-
     private const string InstallerFileNameSuffix = "_Installer.exe";
-
+    private const string UntrustedInstallerExceptionMessage = "The downloaded browser installer does not carry a valid, trusted code signature and was not executed.";
 
     private readonly IOutboundPortHttpDownload _downloadService = downloadService ?? throw new ArgumentNullException(nameof(downloadService));
     private readonly IOutboundPortFileSystem _fileSystemPort = fileSystemPort ?? throw new ArgumentNullException(nameof(fileSystemPort));
+    private readonly IOutboundPortApplicationLogger<DownloadBrowserUseCase> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IInboundPortOsAppPathProvider _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
     private readonly IOutboundPortOsProcessControl _processControlPort = processControlPort ?? throw new ArgumentNullException(nameof(processControlPort));
-
+    private readonly IOutboundPortExecutableSignatureVerifier _signatureVerifier = signatureVerifier ?? throw new ArgumentNullException(nameof(signatureVerifier));
 
     public void CleanupPartialDownload(string browserName)
     {
@@ -44,7 +48,11 @@ public sealed class DownloadBrowserUseCase(
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ObjectDisposedException)
         {
-            Debug.WriteLine(exception);
+            _logger.LogWarning(
+                LogEventIds.Update.BrowserInstallerCleanupFailed,
+                exception,
+                "Partial installer download for {BrowserName} could not be removed.",
+                browserName);
         }
     }
 
@@ -95,6 +103,13 @@ public sealed class DownloadBrowserUseCase(
 
     private async Task StartInstallerCoreAsync(string installerPath)
     {
+        if (!_signatureVerifier.IsTrustedPublisher(installerPath))
+        {
+            _fileSystemPort.DeleteFile(installerPath);
+
+            throw new InvalidOperationException(UntrustedInstallerExceptionMessage);
+        }
+
         await _processControlPort.StartExecutableAsync(installerPath).ConfigureAwait(false);
     }
 }

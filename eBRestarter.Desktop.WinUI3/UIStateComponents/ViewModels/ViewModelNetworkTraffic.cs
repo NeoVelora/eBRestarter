@@ -12,6 +12,8 @@ using eBRestarter.Core.Application.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.ObservableModel;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -30,22 +32,28 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
     private const string SentDataIconPath = "/Resources/Visuals/Icons/LightTheme/send-data-light_theme.png";
 
     private readonly IInboundPortLocalizationProvider _localizationService;
+    private readonly ILogger<ViewModelNetworkTraffic> _logger;
     private readonly IInboundPortNetworkInfoProvider _networkService;
 
     private readonly DispatcherQueue _dispatcherQueue;
     private readonly Timer _timer;
+
+    private volatile bool _disposed;
 
 
     public ObservableCollection<NetworkCardDisplayModel> NetworkCards { get; } = [];
 
     public ViewModelNetworkTraffic(
         IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelNetworkTraffic> logger,
         IInboundPortNetworkInfoProvider networkService)
     {
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(networkService);
 
         _localizationService = localizationService;
+        _logger = logger;
         _networkService = networkService;
 
         _dispatcherQueue =
@@ -63,11 +71,39 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
         _timer.Stop();
         _timer.Elapsed -= OnTimerElapsed;
         _timer.Dispose();
 
         GC.SuppressFinalize(this);
+    }
+
+    public void StartPolling()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _timer.Start();
+        Task.Run(PerformUpdate);
+    }
+
+    public void StopPolling()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _timer.Stop();
     }
 
     private void ApplyDataToUi(bool isNetworkAvailable, IEnumerable<NetworkStats>? stats)
@@ -122,6 +158,11 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
 
     private void OnTimerElapsed(object? sender, ElapsedEventArgs elapsedEventArgs)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         PerformUpdate();
     }
 
@@ -141,7 +182,11 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogDebug(
+                LogEventIds.UserInterface.ViewModelOperationFailed,
+                "Reading network interface statistics failed: {Reason}",
+                exception.Message);
+
             isAvailable = false;
         }
 

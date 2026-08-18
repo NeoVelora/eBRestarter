@@ -12,11 +12,9 @@ public sealed class WinUIFrameNavigator(
 {
     private readonly Frame _frame = frame ?? throw new ArgumentNullException(nameof(frame));
 
-
     public bool CanGoBack => _frame.CanGoBack;
 
     public object Content => _frame.Content;
-
 
     public void GoBack() => _frame.GoBack();
 

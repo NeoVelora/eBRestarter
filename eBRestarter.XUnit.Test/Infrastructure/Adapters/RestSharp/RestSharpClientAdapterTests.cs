@@ -1,32 +1,39 @@
-using eBRestarter.Infrastructure.Network;
-using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Core.Application.Enums;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using System.Net;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
 using Xunit;
-using eBRestarter.Infrastructure.Api;
+using eBRestarter.Core.Application.Common.Results;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
+using eBRestarter.Infrastructure.API;
 using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
+using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using Microsoft.Extensions.Logging.Testing;
+using System.Net.Http;
+using System.Linq;
+using Shouldly;
+using System;
 
 namespace eBRestarter.Tests.Infrastructure.Services
 {
     public class RestSharpClientAdapterTests : IDisposable
     {
-        private readonly Mock<ILogger<RestSharpClient>> _loggerMock;
+        private readonly FakeLogger<RestSharpClient> _loggerMock;
         private readonly RestSharpClient _sut;
         private readonly WireMockServer _server;
 
         public RestSharpClientAdapterTests()
         {
-            _loggerMock = new Mock<ILogger<RestSharpClient>>();
-            _sut = new RestSharpClient(_loggerMock.Object);
+            _loggerMock = new FakeLogger<RestSharpClient>();
+            var httpClientFactory = Substitute.For<IHttpClientFactory>();
+            httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+
+            _sut = new RestSharpClient(_loggerMock, httpClientFactory);
 
             _server = WireMockServer.Start();
         }
-
 
         [Fact]
         public async Task ExecuteGetAsync_Success_ReturnsSuccessAndContent()
@@ -102,7 +109,7 @@ namespace eBRestarter.Tests.Infrastructure.Services
 
             var result = await _sut.ExecuteGetAsync(requestModel);
 
-            Assert.True(result.IsSuccess, "Die Anfrage ist fehlgeschlagen. Das bedeutet, dass der Auth-Header nicht oder falsch gesendet wurde.");
+            Assert.True(result.IsSuccess, "The request failed, indicating that the Authorization header was missing or improperly formatted.");
         }
 
         [Fact]
@@ -121,7 +128,6 @@ namespace eBRestarter.Tests.Infrastructure.Services
             Assert.True(result.StatusCode == ResponseCode.HTTPTimeout || result.StatusCode == ResponseCode.GeneralExceptionError);
         }
 
-
         [Fact]
         public void ExecuteGet_SyncCall_Success_ReturnsSuccessAndContent()
         {
@@ -137,17 +143,14 @@ namespace eBRestarter.Tests.Infrastructure.Services
             Assert.Equal("Sync Content", result.Content);
         }
 
-
         private void VerifyLoggerWarningWasCalled()
         {
-            _loggerMock.Verify(
-                x => x.Log(
-                    LogLevel.Warning,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("API Error")),
-                    It.IsAny<Exception>(),
-                    It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
-                Times.Once);
+            var matchingWarnings = _loggerMock.Collector.GetSnapshot()
+                .Where(entry => entry.Level == LogLevel.Warning
+                                && entry.Message.Contains("api error", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            matchingWarnings.ShouldNotBeEmpty();
         }
 
         public void Dispose()
@@ -157,5 +160,3 @@ namespace eBRestarter.Tests.Infrastructure.Services
         }
     }
 }
-
-

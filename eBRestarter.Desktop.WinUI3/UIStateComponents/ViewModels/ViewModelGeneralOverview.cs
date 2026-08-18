@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
+using System.Globalization;
 using System.Threading.Tasks;
 
 using Microsoft.UI.Dispatching;
@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Messaging;
 
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
+using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 
@@ -25,13 +26,19 @@ using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public sealed partial class ViewModelGeneralOverview : ObservableObject
+public sealed partial class ViewModelGeneralOverview : ObservableObject,
+                                                      IDisposable,
+                                                      IRecipient<ApiCredentialsUpdatedMessage>,
+                                                      IRecipient<ApiCredentialsRemovedMessage>
 {
     private const double ChartValueChangeEpsilon = 0.0001;
     private const int ColumnSeriesCornerRadius = 5;
+    private const int DaysPerMonthLabelCount = 31;
     private const int EarningsRefreshTriggerMinute = 5;
     private const int EarningsRefreshTriggerSecond = 0;
     private const int InitialHourlyChartSlotCount = 24;
@@ -63,10 +70,12 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
     private const string KeyGeneralToday = "General_Today";
 
     private readonly IOutboundPortEVisitorConfigRepository _configService;
+    private readonly ILogger<ViewModelGeneralOverview> _logger;
     private readonly IOutboundPortEVisitorApiProvider _eVisitorApiService;
     private readonly IInboundPortLocalizationProvider _localizationService;
     private readonly INavigationService _navigationService;
 
+    private volatile bool _disposed;
     private bool _isApiConfigured;
 
     private EarningsData? _cachedEarnings;
@@ -75,17 +84,23 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
     private readonly ColumnSeries<ObservableValue> _mainColumnSeries;
     private readonly DispatcherTimer _timer;
 
+    private readonly ICartesianAxis[][] _xAxesByPivotIndex;
+
 
     public ViewModelGeneralOverview(
         INavigationService navigationService,
         IOutboundPortEVisitorApiProvider eVisitorApiService,
         IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelGeneralOverview> logger,
         IOutboundPortEVisitorConfigRepository configService)
     {
         ArgumentNullException.ThrowIfNull(navigationService);
         ArgumentNullException.ThrowIfNull(eVisitorApiService);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(configService);
+
+        _logger = logger;
 
         _navigationService = navigationService;
         _eVisitorApiService = eVisitorApiService;
@@ -131,34 +146,15 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
         Series = [_mainColumnSeries];
 
+        _xAxesByPivotIndex = BuildXAxesForAllPivots();
+
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(TimerTickIntervalSeconds) };
         _timer.Tick += OnTimerTick;
         _timer.Start();
 
         Task.Run(LoadDataAsync);
 
-        WeakReferenceMessenger.Default.Register<ApiCredentialsUpdatedMessage>(this, (_, __) =>
-        {
-            _isApiConfigured = true;
-            _dispatcherQueue.TryEnqueue(() => OnPropertyChanged(nameof(ChartTitle)));
-            Task.Run(LoadDataAsync);
-        });
-
-        WeakReferenceMessenger.Default.Register<ApiCredentialsRemovedMessage>(this, (_, __) =>
-        {
-            _isApiConfigured = false;
-            _dispatcherQueue.TryEnqueue(() =>
-            {
-                ResetChart();
-                _cachedEarnings = null;
-                UpdateChartData();
-                EarningsThisDaySum = DefaultPlaceholderDash;
-                EarningsThisMonthSum = DefaultPlaceholderDash;
-                EarningsThisYearSum = DefaultPlaceholderDash;
-                ClockNextEarningsRefresh = DefaultPlaceholderDash;
-                OnPropertyChanged(nameof(ChartTitle));
-            });
-        });
+        WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
 
@@ -231,10 +227,59 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     public bool UseScreenshotFakeData { get; set; } = false;
 
-    public Axis[] XAxes => GetXAxesForCurrentPivot();
+    public IEnumerable<ICartesianAxis> XAxes => _xAxesByPivotIndex[Math.Clamp(SelectedPivotIndex, 0, _xAxesByPivotIndex.Length - 1)];
 
-    public Axis[] YAxes { get; set; } = null!;
+    public IEnumerable<ICartesianAxis> YAxes { get; set; } = null!;
 
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        _timer.Stop();
+        _timer.Tick -= OnTimerTick;
+
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+    }
+
+    public void Receive(ApiCredentialsUpdatedMessage message)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _isApiConfigured = true;
+        _dispatcherQueue.TryEnqueue(() => OnPropertyChanged(nameof(ChartTitle)));
+        Task.Run(LoadDataAsync);
+    }
+
+    public void Receive(ApiCredentialsRemovedMessage message)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _isApiConfigured = false;
+
+        _dispatcherQueue.TryEnqueue(() =>
+        {
+            ResetChart();
+            _cachedEarnings = null;
+            UpdateChartData();
+            EarningsThisDaySum = DefaultPlaceholderDash;
+            EarningsThisMonthSum = DefaultPlaceholderDash;
+            EarningsThisYearSum = DefaultPlaceholderDash;
+            ClockNextEarningsRefresh = DefaultPlaceholderDash;
+            OnPropertyChanged(nameof(ChartTitle));
+        });
+    }
 
     private double[] GenerateFakeEarningsData()
     {
@@ -272,31 +317,44 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
         };
     }
 
-    private Axis[] GetXAxesForCurrentPivot()
+    private ICartesianAxis[][] BuildXAxesForAllPivots()
     {
-        var xAxis = new Axis { TextSize = 12, LabelsRotation = 0 };
+        var dayOfMonthLabels = new string[DaysPerMonthLabelCount];
 
-        switch (SelectedPivotIndex)
+        for (int day = 1; day <= DaysPerMonthLabelCount; day++)
         {
-            case 0:
-                xAxis.Name = _localizationService.RetrieveString(KeyChartXAxisTime);
-                break;
-
-            case 1:
-                xAxis.Name = _localizationService.RetrieveString(KeyChartXAxisDay);
-                xAxis.Labels = [.. Enumerable.Range(1, 31).Select(index => index.ToString())];
-                break;
-
-            case 2:
-                xAxis.Name = _localizationService.RetrieveString(KeyChartXAxisMonth);
-                string monthsString = _localizationService.RetrieveString(KeyChartMonthsShort);
-                xAxis.Labels = !string.IsNullOrEmpty(monthsString)
-                    ? monthsString.Split(',')
-                    : ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-                break;
+            dayOfMonthLabels[day - 1] = day.ToString(CultureInfo.InvariantCulture);
         }
 
-        return [xAxis];
+        string monthsString = _localizationService.RetrieveString(KeyChartMonthsShort);
+
+        string[] monthLabels = !string.IsNullOrEmpty(monthsString)
+            ? monthsString.Split(',')
+            : ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+
+        return
+        [
+            [new Axis
+            {
+                TextSize = 12,
+                LabelsRotation = 0,
+                Name = _localizationService.RetrieveString(KeyChartXAxisTime)
+            }],
+            [new Axis
+            {
+                TextSize = 12,
+                LabelsRotation = 0,
+                Name = _localizationService.RetrieveString(KeyChartXAxisDay),
+                Labels = dayOfMonthLabels
+            }],
+            [new Axis
+            {
+                TextSize = 12,
+                LabelsRotation = 0,
+                Name = _localizationService.RetrieveString(KeyChartXAxisMonth),
+                Labels = monthLabels
+            }]
+        ];
     }
 
     [RelayCommand]
@@ -358,7 +416,10 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
         }
         catch (Exception ex)
         {
-            Debug.WriteLine(ex);
+            _logger.LogError(
+                LogEventIds.Api.EarningsRetrievalFailed,
+                ex,
+                "Refreshing the earnings overview failed.");
         }
     }
 
@@ -369,6 +430,11 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject
 
     private void OnTimerTick(object? sender, object eventArgs)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         var now = DateTime.Now;
         if (now.Minute == EarningsRefreshTriggerMinute && now.Second == EarningsRefreshTriggerSecond)
         {

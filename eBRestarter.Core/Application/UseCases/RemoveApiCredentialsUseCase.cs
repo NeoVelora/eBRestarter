@@ -10,7 +10,6 @@ public sealed class RemoveApiCredentialsUseCase(
 {
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
 
-
     public void Execute()
     {
         var currentConfig = _configService.LoadConfig();

@@ -1,19 +1,21 @@
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System;
 using Xunit;
+using eBRestarter.Core.Application.Common.Results;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
+using NSubstitute.ExceptionExtensions;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
 {
     public class WindowsSystemInfoProviderTests
     {
-        private readonly Mock<ILogger<AdapterWindowsSystemInfoProvider>> _mockLogger;
-        private readonly Mock<IOutboundPortSystemConfigurationRepository> _mockRegistry;
+        private readonly FakeLogger<AdapterWindowsSystemInfoProvider> _mockLogger;
+        private readonly IOutboundPortSystemConfigurationRepository _mockRegistry;
         private readonly AdapterWindowsSystemInfoProvider _sut;
 
         private const string RegistryPathCurrentVersion = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
@@ -22,16 +24,16 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
 
         public WindowsSystemInfoProviderTests()
         {
-            _mockLogger = new Mock<ILogger<AdapterWindowsSystemInfoProvider>>();
-            _mockRegistry = new Mock<IOutboundPortSystemConfigurationRepository>();
+            _mockLogger = new FakeLogger<AdapterWindowsSystemInfoProvider>();
+            _mockRegistry = Substitute.For<IOutboundPortSystemConfigurationRepository>();
 
-            _sut = new AdapterWindowsSystemInfoProvider(_mockLogger.Object, _mockRegistry.Object);
+            _sut = new AdapterWindowsSystemInfoProvider(_mockLogger, _mockRegistry);
         }
 
         [Fact]
         public void GetCurrentOsDisplayVersion_ShouldReturnVersion_WhenRegistryKeyExists()
         {
-            _mockRegistry.Setup(r => r.GetSystemValue(RegistryPathCurrentVersion, "DisplayVersion"))
+            _mockRegistry.GetSystemValue(RegistryPathCurrentVersion, "DisplayVersion")
                          .Returns("22H2");
 
             var result = _sut.RetrieveCurrentOsDisplayVersion();
@@ -45,7 +47,7 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [InlineData("   ")]
         public void GetCurrentOsDisplayVersion_ShouldReturnUnknown_WhenKeyIsMissingOrEmpty(object? invalidValue)
         {
-            _mockRegistry.Setup(r => r.GetSystemValue(RegistryPathCurrentVersion, "DisplayVersion"))
+            _mockRegistry.GetSystemValue(RegistryPathCurrentVersion, "DisplayVersion")
                          .Returns(invalidValue);
 
             var result = _sut.RetrieveCurrentOsDisplayVersion();
@@ -56,7 +58,7 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [Fact]
         public void GetCurrentOsDisplayVersion_ShouldReturnError_OnException()
         {
-            _mockRegistry.Setup(r => r.GetSystemValue(It.IsAny<string>(), It.IsAny<string>()))
+            _mockRegistry.GetSystemValue(Arg.Any<string>(), Arg.Any<string>())
                          .Throws(new UnauthorizedAccessException("No rights"));
 
             var result = _sut.RetrieveCurrentOsDisplayVersion();
@@ -67,7 +69,7 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [Fact]
         public void GetCurrentOsBuildVersion_ShouldCombineEnvironmentBuild_WithUbrFromRegistry()
         {
-            _mockRegistry.Setup(r => r.GetSystemValue(RegistryPathCurrentVersion, "UBR"))
+            _mockRegistry.GetSystemValue(RegistryPathCurrentVersion, "UBR")
                          .Returns(1234);
 
             string expectedBuild = $"{Environment.OSVersion.Version.Build}.1234";
@@ -80,7 +82,7 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [Fact]
         public void GetCurrentOsBuildVersion_ShouldDefaultToZero_WhenUbrIsMissing()
         {
-            _mockRegistry.Setup(r => r.GetSystemValue(RegistryPathCurrentVersion, "UBR"))
+            _mockRegistry.GetSystemValue(RegistryPathCurrentVersion, "UBR")
                          .Returns(null);
 
             string expectedBuild = $"{Environment.OSVersion.Version.Build}.0";
@@ -93,8 +95,8 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [Fact]
         public void GetCurrentOsBuildVersion_ShouldReturnError_OnException()
         {
-            _mockRegistry.Setup(r => r.GetSystemValue(It.IsAny<string>(), It.IsAny<string>()))
-                         .Throws(new Exception("Registry defekt"));
+            _mockRegistry.GetSystemValue(Arg.Any<string>(), Arg.Any<string>())
+                         .Throws(new Exception("Registry error"));
 
             var result = _sut.RetrieveCurrentOsBuildVersion();
 
@@ -110,8 +112,8 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [InlineData("UnbekannterBrowserXYZ", "-")]
         public void GetCurrentStandardBrowserName_ShouldMapProgIdCorrectly(string progId, string expectedBrowserName)
         {
-            _mockRegistry.Setup(r => r.GetUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns(progId);
-            _mockRegistry.Setup(r => r.GetUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns(progId);
+            _mockRegistry.GetUserValue(RegistryPathUserChoiceHttp, "ProgId").Returns(progId);
+            _mockRegistry.GetUserValue(RegistryPathUserChoiceHttps, "ProgId").Returns(progId);
 
             var result = _sut.RetrieveCurrentStandardBrowserName();
 
@@ -121,8 +123,8 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [Fact]
         public void GetCurrentStandardBrowserName_ShouldHandleMismatch_BetweenHttpAndHttps()
         {
-            _mockRegistry.Setup(r => r.GetUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns("ChromeHTML");
-            _mockRegistry.Setup(r => r.GetUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns("FirefoxURL");
+            _mockRegistry.GetUserValue(RegistryPathUserChoiceHttp, "ProgId").Returns("ChromeHTML");
+            _mockRegistry.GetUserValue(RegistryPathUserChoiceHttps, "ProgId").Returns("FirefoxURL");
 
             var result = _sut.RetrieveCurrentStandardBrowserName();
 
@@ -135,8 +137,8 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [InlineData(null, null)]
         public void GetCurrentStandardBrowserName_ShouldReturnDash_WhenAnyProgIdIsMissing(string? httpProgId, string? httpsProgId)
         {
-            _mockRegistry.Setup(r => r.GetUserValue(RegistryPathUserChoiceHttp, "ProgId")).Returns(httpProgId);
-            _mockRegistry.Setup(r => r.GetUserValue(RegistryPathUserChoiceHttps, "ProgId")).Returns(httpsProgId);
+            _mockRegistry.GetUserValue(RegistryPathUserChoiceHttp, "ProgId").Returns(httpProgId);
+            _mockRegistry.GetUserValue(RegistryPathUserChoiceHttps, "ProgId").Returns(httpsProgId);
 
             var result = _sut.RetrieveCurrentStandardBrowserName();
 
@@ -146,7 +148,7 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         [Fact]
         public void GetCurrentStandardBrowserName_ShouldReturnDash_OnException()
         {
-            _mockRegistry.Setup(r => r.GetUserValue(It.IsAny<string>(), It.IsAny<string>()))
+            _mockRegistry.GetUserValue(Arg.Any<string>(), Arg.Any<string>())
                          .Throws(new UnauthorizedAccessException("No rights for HKCU"));
 
             var result = _sut.RetrieveCurrentStandardBrowserName();
@@ -155,5 +157,3 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
         }
     }
 }
-
-

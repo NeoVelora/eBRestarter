@@ -10,9 +10,10 @@ public sealed partial class ActivateApiDialog : ContentDialog
 
     public ActivateApiDialog()
     {
+        ViewModelActivateApi = App.AppHost!.Services.GetRequiredService<ViewModelActivateApi>();
+
         InitializeComponent();
 
-        ViewModelActivateApi = App.AppHost!.Services.GetRequiredService<ViewModelActivateApi>();
 
         this.DataContext = ViewModelActivateApi;
     }

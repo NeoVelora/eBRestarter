@@ -17,7 +17,5 @@ public static class ApiWebLinks
             return $"https://www.ebesucher.de/api/visitor_exchange.json/account/earnings_hourly/{dateStr}?timezone=Europe%2FBerlin";
         }
     }
-
-
 }
 

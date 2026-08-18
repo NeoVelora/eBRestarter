@@ -11,7 +11,6 @@ public sealed class BoolToImageConverter : IValueConverter
 
     public string? ImagePathWhenTrue { get; set; }
 
-
     public object Convert(object value, Type targetType, object parameter, string language)
     {
         bool isTrue = value is bool boolValue && boolValue;

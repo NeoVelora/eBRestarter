@@ -5,8 +5,11 @@ namespace eBRestarter.Desktop.WinUI3.ObjectArchetypes.Models.FormModels;
 public sealed class AutoLogonDialogResult
 {
     public bool IsDeactivateAction { get; set; }
+
     public bool DisablePasswordlessMode { get; set; }
+
     public bool RestorePasswordlessMode { get; set; }
+
     public AutoLogonCredentials? Credentials { get; set; }
 
     public static AutoLogonDialogResult Deactivate(bool restorePasswordlessMode = false) => new()

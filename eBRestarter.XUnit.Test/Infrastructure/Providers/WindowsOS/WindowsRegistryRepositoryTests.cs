@@ -1,10 +1,11 @@
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.WindowsOS;
 using Microsoft.Win32;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Security;
 using Xunit;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.WindowsOS;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
@@ -16,7 +17,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         public WindowsRegistryRepositoryTests()
         {
             _sut = new AdapterWindowsRegistryRepository();
-
             _tempTestKey = $@"Software\eBRestarter_TestSandbox_{Guid.NewGuid()}";
         }
 
@@ -24,7 +24,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         public void SetAndGetCurrentUserValue_ShouldWriteAndReadCorrectly()
         {
             string valueName = "TestString";
-            string expectedValue = "Hallo Registry!";
+            string expectedValue = "Hello Registry!";
 
             _sut.SetUserValue(_tempTestKey, valueName, expectedValue);
             var actualValue = _sut.GetUserValue(_tempTestKey, valueName);
@@ -43,7 +43,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             var resultAfterDelete = _sut.GetUserValue(_tempTestKey, valueName);
 
             resultAfterDelete.ShouldBeNull();
-
             Should.NotThrow(() => _sut.DeleteUserValue(_tempTestKey, valueName));
         }
 
@@ -81,7 +80,9 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             var result = _sut.GetSystemValue(winNtPath, valueName);
 
             result.ShouldNotBeNull();
-            result.ToString().ShouldContain("Windows");
+            string? productName = result.ToString();
+            productName.ShouldNotBeNullOrWhiteSpace();
+            productName!.ShouldContain("Windows");
         }
 
         [Fact]
@@ -102,9 +103,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             catch (Exception ex)
             {
                 (ex is UnauthorizedAccessException || ex is SecurityException)
-                    .ShouldBeTrue("Erwartete fehlende Berechtigung, da der Test-Runner nicht als Administrator l�uft.");
+                    .ShouldBeTrue("Expected access restriction exception when running without elevated administrator privileges.");
             }
         }
+
         public void Dispose()
         {
             try
@@ -119,7 +121,8 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             catch
             {
             }
+
+            GC.SuppressFinalize(this);
         }
     }
 }
-

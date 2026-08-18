@@ -7,7 +7,6 @@ namespace eBRestarter.Desktop.WinUI3.Extensions.DependencyInjections;
 
 public static class NavigationServiceExtensions
 {
-
     public static IServiceCollection AddNavigationService(this IServiceCollection services)
     {
         services.AddSingleton<INavigationService>(_ =>

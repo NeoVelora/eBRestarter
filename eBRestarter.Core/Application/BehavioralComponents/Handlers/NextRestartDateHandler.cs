@@ -9,7 +9,6 @@ public sealed class NextRestartDateHandler(IRestartCalculationHandler restartCal
 {
     private readonly IRestartCalculationHandler _restartCalculationHandler = restartCalculationHandler ?? throw new ArgumentNullException(nameof(restartCalculationHandler));
 
-
     public DateTime RetrieveNextRestartDate(int intervalDays, int restartClockTime) =>
         _restartCalculationHandler.RetrieveNextRestartDate(intervalDays, restartClockTime);
 }

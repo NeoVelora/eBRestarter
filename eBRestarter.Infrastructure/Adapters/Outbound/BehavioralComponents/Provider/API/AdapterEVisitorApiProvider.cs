@@ -11,6 +11,7 @@ using eBRestarter.Infrastructure.Api;
 using eBRestarter.Infrastructure.Api.Interfaces;
 using eBRestarter.Infrastructure.BehavioralComponents.Utilities;
 using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API;
 
@@ -83,7 +84,7 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorRetrievingEarningsLogMessage);
+            _logger.LogError(LogEventIds.Api.EarningsRetrievalFailed, exception, ErrorRetrievingEarningsLogMessage);
             return null;
         }
     }
@@ -105,11 +106,11 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
 
         try
         {
-            return EVisitorApiResponseUtility.ParseIpInfo(response.Content);
+            return EVisitorApiResponseUtility.ParseIpInfo(response.Content, _logger);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorParsingIpDataLogMessage);
+            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingIpDataLogMessage);
             return null;
         }
     }
@@ -144,11 +145,11 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
 
         try
         {
-            return EVisitorApiResponseUtility.ParseDailyEarnings(response.Content, daysInMonth);
+            return EVisitorApiResponseUtility.ParseDailyEarnings(response.Content, daysInMonth, _logger);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorParsingDailyEarningsLogMessage);
+            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingDailyEarningsLogMessage);
             return new double[daysInMonth];
         }
     }
@@ -172,11 +173,11 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
 
         try
         {
-            return EVisitorApiResponseUtility.ParseHourlyEarnings(response.Content);
+            return EVisitorApiResponseUtility.ParseHourlyEarnings(response.Content, _logger);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorParsingHourlyEarningsLogMessage);
+            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingHourlyEarningsLogMessage);
             return new double[HoursInDayCount];
         }
     }
@@ -209,11 +210,11 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
 
         try
         {
-            return EVisitorApiResponseUtility.ParseMonthlyEarnings(response.Content);
+            return EVisitorApiResponseUtility.ParseMonthlyEarnings(response.Content, _logger);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, ErrorParsingMonthlyEarningsLogMessage);
+            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingMonthlyEarningsLogMessage);
             return new double[MonthsInYearCount];
         }
     }

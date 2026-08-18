@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 namespace eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
 
 public interface IInboundPortComputerRestartService

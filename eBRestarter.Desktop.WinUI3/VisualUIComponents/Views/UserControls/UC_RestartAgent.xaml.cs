@@ -11,9 +11,10 @@ public sealed partial class UC_RestartAgent : UserControl
 
     public UC_RestartAgent()
     {
+        ViewModelRestartTask = App.AppHost!.Services.GetRequiredService<ViewModelRestartTask>();
+
         InitializeComponent();
 
-        ViewModelRestartTask = App.AppHost!.Services.GetRequiredService<ViewModelRestartTask>();
 
         this.DataContext = ViewModelRestartTask;
     }

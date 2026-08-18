@@ -6,7 +6,10 @@ public sealed class BrowserCleanupScheduleHandler(TimeProvider timeProvider) : I
 
     public bool ShouldRunCleanupNow(int deleteBrowserCacheIntervalDays, DateTime nextBrowserDeleteCacheDate)
     {
-        if (deleteBrowserCacheIntervalDays <= 0) return false;
+        if (deleteBrowserCacheIntervalDays <= 0)
+        {
+            return false;
+        }
 
         return _timeProvider.GetLocalNow().Date >= nextBrowserDeleteCacheDate.Date;
     }

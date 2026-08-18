@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 namespace eBRestarter.Desktop.WinUI3.VisualUIComponents.Views.UserControls;
 
@@ -15,7 +16,7 @@ public sealed partial class UC_EarningsAmount : UserControl
     public static readonly DependencyProperty HeaderImageEarningsProperty =
         DependencyProperty.Register(
             nameof(HeaderImageEarnings),
-            typeof(object),
+            typeof(ImageSource),
             typeof(UC_EarningsAmount),
             new PropertyMetadata(null));
 
@@ -39,9 +40,9 @@ public sealed partial class UC_EarningsAmount : UserControl
         set => SetValue(HeaderTitleEarningsProperty, value);
     }
 
-    public object HeaderImageEarnings
+    public ImageSource HeaderImageEarnings
     {
-        get => (object)GetValue(HeaderImageEarningsProperty);
+        get => (ImageSource)GetValue(HeaderImageEarningsProperty);
         set => SetValue(HeaderImageEarningsProperty, value);
     }
 

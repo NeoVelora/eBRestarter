@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
@@ -17,11 +18,10 @@ public sealed class ComputerRestartService(
     IOutboundPortOsProcessControl processService,
     TimeProvider timeProvider) : IInboundPortComputerRestartService, IDisposable
 {
-    private static readonly TimeSpan SchedulerTimerInterval = TimeSpan.FromSeconds(30);
-
     private const int ApplicationExitSuccessCode = 0;
     private const int MissedSlotToleranceMinutes = 5;
     private const int ProcessCloseTimeoutMilliseconds = 30000;
+    private static readonly TimeSpan SchedulerTimerInterval = TimeSpan.FromSeconds(30);
 
     private readonly IOutboundPortApplicationLifetime _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
@@ -33,20 +33,20 @@ public sealed class ComputerRestartService(
 
     private Task? _backgroundTask;
     private CancellationTokenSource? _cts;
-    private readonly System.Threading.Lock _syncLock = new();
+    private readonly Lock _syncLock = new();
     private PeriodicTimer? _timer;
 
 
     public event EventHandler<DateTime?>? NextRestartDateChanged;
 
-
     public void StartScheduler()
     {
         lock (_syncLock)
         {
-            if (_backgroundTask is not null) return;
+            if (_backgroundTask is not null)
+                return;
 
-            _logger.LogInformation("Computer Restart Scheduler started.");
+            _logger.LogInformation(LogEventIds.RestarterCycle.RestartSchedulerStarted, "Computer Restart Scheduler started.");
 
             _cts = new CancellationTokenSource();
             _timer = new PeriodicTimer(SchedulerTimerInterval, _timeProvider);
@@ -66,7 +66,8 @@ public sealed class ComputerRestartService(
 
         lock (_syncLock)
         {
-            if (_backgroundTask is null) return;
+            if (_backgroundTask is null)
+                return;
 
             cts = _cts;
             backgroundTask = _backgroundTask;
@@ -93,17 +94,22 @@ public sealed class ComputerRestartService(
             }
             catch (OperationCanceledException)
             {
+                _logger.LogDebug(
+                    LogEventIds.RestarterCycle.RestartSchedulerStopped,
+                    "Restart scheduler background task was cancelled during shutdown.");
             }
         }
 
-        _logger.LogInformation("Computer Restart Scheduler stopped.");
+        _logger.LogInformation(LogEventIds.RestarterCycle.RestartSchedulerStopped, "Computer Restart Scheduler stopped.");
     }
 
     public void Dispose()
     {
         lock (_syncLock)
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
+
             _disposed = true;
 
             _cts?.Cancel();
@@ -128,10 +134,16 @@ public sealed class ComputerRestartService(
         }
         catch (OperationCanceledException)
         {
+            _logger.LogDebug(
+                LogEventIds.RestarterCycle.RestartSchedulerStopped,
+                "Restart scheduler loop was requested to terminate.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled fault occurred within the restart scheduler loop runtime.");
+            _logger.LogError(
+                LogEventIds.RestarterCycle.RestartSchedulerLoopFaulted,
+                ex,
+                "An unhandled fault occurred within the restart scheduler loop runtime.");
         }
     }
 
@@ -140,23 +152,22 @@ public sealed class ComputerRestartService(
         var appConfig = _configService.LoadConfig();
 
         if (appConfig.Computer.NextRestartDate is null || appConfig.Computer.ComputerRestartIntervalDays <= 0)
-        {
             return;
-        }
 
         var now = _timeProvider.GetLocalNow();
         var targetDateTime = appConfig.Computer.NextRestartDate.Value.Date.AddHours(appConfig.Computer.RestartClockTime);
 
         if (now < targetDateTime)
-        {
             return;
-        }
 
         var today = now.Date;
 
         if (now > targetDateTime.AddMinutes(MissedSlotToleranceMinutes))
         {
-            _logger.LogWarning("Missed the targeted automated computer restart slot scheduled at {Target}. Recalculating new target execution window...", targetDateTime);
+            _logger.LogWarning(
+                LogEventIds.RestarterCycle.RestartSlotMissed,
+                "Missed the targeted automated computer restart slot scheduled at {Target}. Recalculating new target execution window...",
+                targetDateTime);
 
             DateTime newTargetDate = now.Hour >= appConfig.Computer.RestartClockTime
                 ? today.AddDays(appConfig.Computer.ComputerRestartIntervalDays).AddHours(appConfig.Computer.RestartClockTime)
@@ -181,21 +192,30 @@ public sealed class ComputerRestartService(
 
     private async Task ExecuteRestartSequenceAsync()
     {
-        _logger.LogWarning("Initiating automated computer system hardware restart sequence...");
+        _logger.LogWarning(
+            LogEventIds.RestarterCycle.RestartSequenceInitiated,
+            "Initiating automated computer system hardware restart sequence...");
 
         try
         {
-            _logger.LogInformation("Requesting graceful closure across all active desktop applications windows...");
+            _logger.LogInformation(
+                LogEventIds.RestarterCycle.RestartClosingApplications,
+                "Requesting graceful closure across all active desktop applications windows...");
             await _processService.CloseAllOpenProgramsAsync(ProcessCloseTimeoutMilliseconds);
 
-            _logger.LogInformation("Dispatching system level hardware reboot instruction sets...");
+            _logger.LogInformation(
+                LogEventIds.RestarterCycle.RestartDispatchingReboot,
+                "Dispatching system level hardware reboot instruction sets...");
             _processService.ShutdownComputer();
 
             _applicationLifetime.ExitApplication(ApplicationExitSuccessCode);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "A fatal fault aborted the smooth processing execution tracking tasks during the machine reboot phase sequence.");
+            _logger.LogCritical(
+                LogEventIds.RestarterCycle.RestartSequenceFailed,
+                ex,
+                "A fatal fault aborted the smooth processing execution tracking tasks during the machine reboot phase sequence.");
         }
     }
 }

@@ -1,8 +1,4 @@
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System.IO;
 using Xunit;
@@ -13,22 +9,21 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsOsPathProviderAdapterTests
     {
-        private readonly Mock<IOutboundPortAppPathProvider> _mockPathProvider;
+        private readonly IOutboundPortAppPathProvider _mockPathProvider;
         private readonly WindowsAppPathProvider _sut;
 
         public WindowsOsPathProviderAdapterTests()
         {
-            _mockPathProvider = new Mock<IOutboundPortAppPathProvider>();
+            _mockPathProvider = Substitute.For<IOutboundPortAppPathProvider>();
 
-            _sut = new WindowsAppPathProvider(_mockPathProvider.Object);
+            _sut = new WindowsAppPathProvider(_mockPathProvider);
         }
-
 
         [Fact]
         public void GetAppDataPath_ShouldCombineLocalAppData_WithSkylarAndAppFolder()
         {
             string fakeLocalAppData = @"C:\FakeUsers\Max\AppData\Local";
-            _mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(fakeLocalAppData);
+            _mockPathProvider.RetrieveLocalAppDataDirectory().Returns(fakeLocalAppData);
 
             string expectedPath = Path.Combine(fakeLocalAppData, "Skylar", "eBRestarter");
 
@@ -37,12 +32,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             actualPath.ShouldBe(expectedPath);
         }
 
-
         [Fact]
         public void GetDownloadsPath_ShouldCombineUserProfile_WithDownloadsFolder()
         {
             string fakeUserProfile = @"C:\FakeUsers\Max";
-            _mockPathProvider.Setup(p => p.RetrieveUserProfileDirectory()).Returns(fakeUserProfile);
+            _mockPathProvider.RetrieveUserProfileDirectory().Returns(fakeUserProfile);
 
             string expectedPath = Path.Combine(fakeUserProfile, "Downloads");
 
@@ -51,12 +45,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             actualPath.ShouldBe(expectedPath);
         }
 
-
         [Fact]
         public void GetConfigFilePath_ShouldCombineAppDataPath_WithConfigFileName()
         {
             string fakeLocalAppData = @"C:\FakeUsers\Max\AppData\Local";
-            _mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(fakeLocalAppData);
+            _mockPathProvider.RetrieveLocalAppDataDirectory().Returns(fakeLocalAppData);
 
             string expectedPath = Path.Combine(fakeLocalAppData, "Skylar", "eBRestarter", "eBRestarterConfig.json");
 
@@ -69,7 +62,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         public void GetLogFilePath_ShouldCombineAppDataPath_WithLogFileName()
         {
             string fakeLocalAppData = @"C:\FakeUsers\Max\AppData\Local";
-            _mockPathProvider.Setup(p => p.RetrieveLocalAppDataDirectory()).Returns(fakeLocalAppData);
+            _mockPathProvider.RetrieveLocalAppDataDirectory().Returns(fakeLocalAppData);
 
             string expectedPath = Path.Combine(fakeLocalAppData, "Skylar", "eBRestarter", "log.txt");
 
@@ -79,5 +72,3 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
-
-

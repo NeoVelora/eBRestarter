@@ -1,3 +1,5 @@
+using System;
+
 using eBRestarter.Desktop.WinUI3.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
@@ -12,8 +14,8 @@ public sealed partial class InstallAddOnDialog : ContentDialog
     {
         InitializeComponent();
 
-        ViewModelInstallAddOn = App.AppHost!.Services.GetRequiredService<ViewModelInstallAddOn>();
-        
+        ViewModelInstallAddOn = App.AppHost!.Services.GetRequiredService<Func<ViewModelInstallAddOn>>()();
+
         DataContext = ViewModelInstallAddOn;
 
         Closed += (_, _) => ViewModelInstallAddOn.Dispose();

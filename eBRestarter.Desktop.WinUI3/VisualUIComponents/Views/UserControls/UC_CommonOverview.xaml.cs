@@ -12,9 +12,10 @@ public sealed partial class UC_CommonOverview : UserControl
     
     public UC_CommonOverview()
     {
+        ViewModelGeneralOverView = App.AppHost!.Services.GetRequiredService<ViewModelGeneralOverview>();
+
         InitializeComponent();
 
-        ViewModelGeneralOverView = App.AppHost!.Services.GetRequiredService<ViewModelGeneralOverview>();
 
         this.DataContext = ViewModelGeneralOverView;
     }

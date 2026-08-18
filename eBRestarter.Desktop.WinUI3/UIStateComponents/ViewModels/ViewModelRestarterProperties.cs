@@ -8,9 +8,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.BehavioralComponents.Extensions;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
@@ -18,16 +19,19 @@ using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Domain.Validators;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.UIOptionDTO;
 using eBRestarter.Infrastructure.Common.Statics;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
-public sealed partial class ViewModelRestarterProperties : ObservableObject
+public sealed partial class ViewModelRestarterProperties : ObservableObject, IDisposable
 {
     private const string ActivateResourceKey = "Activate";
     private const int BrowserInstallCheckIntervalSeconds = 5;
@@ -36,12 +40,17 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
     private const string NextDeletionProcessResourceKey = "NextDeletionProcess";
 
     private readonly IOutboundPortBrowserDiscoveryProvider _browserService;
+    private readonly ILogger<ViewModelRestarterProperties> _logger;
     private readonly IDialogService _dialogService;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly IInboundPortLocalizationProvider _localizationService;
     private readonly IOutboundPortOsProcessControl _osProcessControlPort;
     private readonly IUseCaseScheduleBrowserCleanup _scheduleBrowserCleanupUseCase;
     private readonly IUIOptionsProvider _uiOptionsService;
+
+    private volatile bool _disposed;
+
+    private int _browserCheckInFlight;
 
     private readonly DispatcherTimer _browserCheckTimer;
     private readonly AppConfig _currentConfig;
@@ -171,6 +180,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
         IDialogService dialogService,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository,
         IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelRestarterProperties> logger,
         IOutboundPortOsProcessControl osProcessControlPort,
         IUseCaseScheduleBrowserCleanup scheduleBrowserCleanupUseCase,
         IUIOptionsProvider uiOptionsService)
@@ -179,6 +189,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(evRestarterConfigRepository);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(osProcessControlPort);
         ArgumentNullException.ThrowIfNull(scheduleBrowserCleanupUseCase);
         ArgumentNullException.ThrowIfNull(uiOptionsService);
@@ -187,6 +198,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
         _dialogService = dialogService;
         _evRestarterConfigRepository = evRestarterConfigRepository;
         _localizationService = localizationService;
+        _logger = logger;
         _osProcessControlPort = osProcessControlPort;
         _scheduleBrowserCleanupUseCase = scheduleBrowserCleanupUseCase;
         _uiOptionsService = uiOptionsService;
@@ -230,7 +242,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
         _browserCheckTimer.Tick += OnBrowserCheckTimerTick;
         _browserCheckTimer.Start();
 
-        CheckInstalledBrowsersAsync().Forget();
+        CheckInstalledBrowsersAsync().Forget(_logger, nameof(CheckInstalledBrowsersAsync));
     }
 
     [RelayCommand(CanExecute = nameof(CanAddUsername))]
@@ -265,7 +277,20 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
     [RelayCommand]
     private Task ShowInstallAddOnInfoDialogAsync() => _dialogService.ShowInstallAddOnInfoDialogAsync();
 
-    private bool CanAddUsername() => !string.IsNullOrWhiteSpace(Username);
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        _browserCheckTimer.Stop();
+        _browserCheckTimer.Tick -= OnBrowserCheckTimerTick;
+    }
+
+    private bool CanAddUsername() => EVisitorUsernamePolicy.IsValid(Username);
 
     private async Task CheckInstalledBrowsersAsync()
     {
@@ -290,13 +315,30 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject
 
     private async void OnBrowserCheckTimerTick(object? sender, object eventArgs)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (Interlocked.Exchange(ref _browserCheckInFlight, 1) == 1)
+        {
+            return;
+        }
+
         try
         {
-            await CheckInstalledBrowsersAsync();
+            await CheckInstalledBrowsersAsync().ConfigureAwait(false);
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+                exception,
+                "Checking for installed browsers failed.");
+        }
+        finally
+        {
+            Volatile.Write(ref _browserCheckInFlight, 0);
         }
     }
 }

@@ -1,7 +1,5 @@
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.WindowsOS;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System;
 using System.Diagnostics;
@@ -9,22 +7,27 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using eBRestarter.Core.Application.Common.Results;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.WindowsOS;
 using eBRestarter.Infrastructure.BehavioralComponents.Wrappers;
+using NSubstitute.ExceptionExtensions;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
     public class WindowsProcessServiceTests
     {
-        private readonly Mock<ILogger<AdapterWindowsProcessControlWrapper>> _mockLogger;
-        private readonly Mock<IProcessWrapper> _mockProcessWrapper;
+        private readonly FakeLogger<AdapterWindowsProcessControlWrapper> _mockLogger;
+        private readonly IProcessWrapper _mockProcessWrapper;
         private readonly AdapterWindowsProcessControlWrapper _sut;
 
         public WindowsProcessServiceTests()
         {
-            _mockLogger = new Mock<ILogger<AdapterWindowsProcessControlWrapper>>();
-            _mockProcessWrapper = new Mock<IProcessWrapper>();
+            _mockLogger = new FakeLogger<AdapterWindowsProcessControlWrapper>();
+            _mockProcessWrapper = Substitute.For<IProcessWrapper>();
 
-            _sut = new AdapterWindowsProcessControlWrapper(_mockLogger.Object, _mockProcessWrapper.Object);
+            _sut = new AdapterWindowsProcessControlWrapper(_mockLogger, _mockProcessWrapper);
         }
 
         [Fact]
@@ -34,10 +37,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             _sut.StartExecutable(exePath);
 
-            _mockProcessWrapper.Verify(w => w.Start(It.Is<ProcessStartInfo>(info =>
+            _mockProcessWrapper.Received(1).Start(Arg.Is<ProcessStartInfo>(info =>
                 info.FileName == exePath &&
                 info.UseShellExecute == true
-            )), Times.Once);
+            ));
         }
 
         [Fact]
@@ -46,26 +49,26 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             string msiPath = @"C:\Install\setup.msi";
             string expectedSystemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
             string expectedMsiExecPath = Path.Combine(expectedSystemFolder, "msiexec.exe");
-            var mockProcess = new Mock<IProcess>();
+            var mockProcess = Substitute.For<IProcess>();
 
             var outStream = new MemoryStream(Encoding.UTF8.GetBytes("Installation OK"));
             var errStream = new MemoryStream(Encoding.UTF8.GetBytes(""));
-            mockProcess.Setup(p => p.StandardOutput).Returns(new StreamReader(outStream));
-            mockProcess.Setup(p => p.StandardError).Returns(new StreamReader(errStream));
+            mockProcess.StandardOutput.Returns(new StreamReader(outStream));
+            mockProcess.StandardError.Returns(new StreamReader(errStream));
 
-            _mockProcessWrapper.Setup(w => w.Start(It.IsAny<ProcessStartInfo>())).Returns(mockProcess.Object);
+            _mockProcessWrapper.Start(Arg.Any<ProcessStartInfo>()).Returns(mockProcess);
 
             _sut.RunInstaller(msiPath);
 
-            _mockProcessWrapper.Verify(w => w.Start(It.Is<ProcessStartInfo>(info =>
+            _mockProcessWrapper.Received(1).Start(Arg.Is<ProcessStartInfo>(info =>
                 info.FileName == expectedMsiExecPath &&
                 info.Arguments == $"/i \"{msiPath}\"" &&
                 info.UseShellExecute == false &&
                 info.RedirectStandardOutput == true &&
                 info.CreateNoWindow == true
-            )), Times.Once);
+            ));
 
-            mockProcess.Verify(p => p.WaitForExit(), Times.Once);
+            mockProcess.Received(1).WaitForExit();
         }
 
         [Fact]
@@ -76,11 +79,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             _sut.OpenUrlInBrowser(browserPath, url);
 
-            _mockProcessWrapper.Verify(w => w.Start(It.Is<ProcessStartInfo>(info =>
+            _mockProcessWrapper.Received(1).Start(Arg.Is<ProcessStartInfo>(info =>
                 info.FileName == browserPath &&
                 info.Arguments == url &&
                 info.UseShellExecute == true
-            )), Times.Once);
+            ));
         }
 
         [Fact]
@@ -91,10 +94,10 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             _sut.ShutdownComputer();
 
-            _mockProcessWrapper.Verify(w => w.Start(It.Is<ProcessStartInfo>(info =>
+            _mockProcessWrapper.Received(1).Start(Arg.Is<ProcessStartInfo>(info =>
                 info.FileName == expectedShutdownPath &&
                 info.Arguments == "/r /f /t 0"
-            )), Times.Once);
+            ));
         }
 
         [Fact]
@@ -106,84 +109,81 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 
             _sut.OpenDirectoryInFileBrowser(targetFolder);
 
-            _mockProcessWrapper.Verify(w => w.Start(It.Is<ProcessStartInfo>(info =>
+            _mockProcessWrapper.Received(1).Start(Arg.Is<ProcessStartInfo>(info =>
                 info.FileName == expectedExplorerPath &&
                 info.Arguments == $"\"{targetFolder}\""
-            )), Times.Once);
+            ));
         }
 
         [Fact]
         public void CloseApplication_ShouldCallKill_WhenProcessIsRunning()
         {
             string processName = "notepad";
-            _mockProcessWrapper.Setup(w => w.IsProcessRunning(processName)).Returns(true);
+            _mockProcessWrapper.IsProcessRunning(processName).Returns(true);
 
             _sut.CloseApplication(processName);
 
-            _mockProcessWrapper.Verify(w => w.KillProcess(processName), Times.Once);
+            _mockProcessWrapper.Received(1).KillProcess(processName);
         }
 
         [Fact]
         public void CloseApplication_ShouldDoNothing_WhenProcessIsNotRunning()
         {
             string processName = "notepad";
-            _mockProcessWrapper.Setup(w => w.IsProcessRunning(processName)).Returns(false);
+            _mockProcessWrapper.IsProcessRunning(processName).Returns(false);
 
             _sut.CloseApplication(processName);
 
-            _mockProcessWrapper.Verify(w => w.KillProcess(It.IsAny<string>()), Times.Never);
+            _mockProcessWrapper.DidNotReceive().KillProcess(Arg.Any<string>());
         }
 
         [Fact]
         public async Task CloseAllOpenProgramsAsync_ShouldIgnoreSystemAndHeadlessProcesses()
         {
-            var systemMock = new Mock<IProcess>();
-            systemMock.Setup(p => p.ProcessName).Returns("System");
+            var systemMock = Substitute.For<IProcess>();
+            systemMock.ProcessName.Returns("System");
 
-            var headlessMock = new Mock<IProcess>();
-            headlessMock.Setup(p => p.ProcessName).Returns("BackgroundService");
-            headlessMock.Setup(p => p.MainWindowHandle).Returns(IntPtr.Zero);
+            var headlessMock = Substitute.For<IProcess>();
+            headlessMock.ProcessName.Returns("BackgroundService");
+            headlessMock.MainWindowHandle.Returns(IntPtr.Zero);
 
-            var validAppMock = new Mock<IProcess>();
-            validAppMock.Setup(p => p.ProcessName).Returns("Notepad");
-            validAppMock.Setup(p => p.MainWindowHandle).Returns(new IntPtr(1234));
-            validAppMock.Setup(p => p.WaitForExitAsync()).Returns(Task.CompletedTask);
-            _mockProcessWrapper.Setup(w => w.GetProcesses()).Returns(new IProcess[]
+            var validAppMock = Substitute.For<IProcess>();
+            validAppMock.ProcessName.Returns("Notepad");
+            validAppMock.MainWindowHandle.Returns(new IntPtr(1234));
+            validAppMock.WaitForExitAsync().Returns(Task.CompletedTask);
+            _mockProcessWrapper.GetProcesses().Returns(new IProcess[]
             {
-                systemMock.Object,
-                headlessMock.Object,
-                validAppMock.Object
+                systemMock,
+                headlessMock,
+                validAppMock
             });
 
             await _sut.CloseAllOpenProgramsAsync(5000);
 
-            systemMock.Verify(p => p.WaitForExitAsync(), Times.Never);
-
-            headlessMock.Verify(p => p.WaitForExitAsync(), Times.Never);
-
-            validAppMock.Verify(p => p.WaitForExitAsync(), Times.Once);
-
-            validAppMock.Verify(p => p.Dispose(), Times.Once);
+            await systemMock.DidNotReceive().WaitForExitAsync();
+            await headlessMock.DidNotReceive().WaitForExitAsync();
+            await validAppMock.Received(1).WaitForExitAsync();
+            validAppMock.Received(1).Dispose();
         }
 
         [Fact]
         public async Task StartExecutableAsync_ShouldAwaitProcessExit()
         {
-            var mockProcess = new Mock<IProcess>();
-            mockProcess.Setup(p => p.WaitForExitAsync()).Returns(Task.CompletedTask);
+            var mockProcess = Substitute.For<IProcess>();
+            mockProcess.WaitForExitAsync().Returns(Task.CompletedTask);
 
-            _mockProcessWrapper.Setup(w => w.Start(It.IsAny<ProcessStartInfo>())).Returns(mockProcess.Object);
+            _mockProcessWrapper.Start(Arg.Any<ProcessStartInfo>()).Returns(mockProcess);
 
             await _sut.StartExecutableAsync("test.exe");
 
-            mockProcess.Verify(p => p.WaitForExitAsync(), Times.Once);
+            await mockProcess.Received(1).WaitForExitAsync();
         }
 
         [Fact]
         public async Task StartExecutableAsync_ShouldRethrowException()
         {
             _mockProcessWrapper
-                .Setup(w => w.Start(It.IsAny<ProcessStartInfo>()))
+                .Start(Arg.Any<ProcessStartInfo>())
                 .Throws(new InvalidOperationException("Access Denied"));
 
             Func<Task> act = async () => await _sut.StartExecutableAsync("test.exe");
@@ -192,5 +192,3 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         }
     }
 }
-
-

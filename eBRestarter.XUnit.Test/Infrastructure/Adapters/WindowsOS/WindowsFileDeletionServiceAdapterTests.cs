@@ -1,4 +1,3 @@
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.WindowsOS;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -7,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.WindowsOS;
+using eBRestarter.Tests.TestDoubles;
 
 namespace eBRestarter.Tests.Infrastructure.Handlers
 {
@@ -21,25 +22,6 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
             _baseTestDir = Path.Combine(Path.GetTempPath(), $"FileDeletionTest_{Guid.NewGuid()}");
             Directory.CreateDirectory(_baseTestDir);
         }
-
-
-        [Fact]
-        public async Task CountFilesAsync_ShouldReturnCorrectNumberOfFiles_IncludingSubdirectories()
-        {
-            string subDir = Path.Combine(_baseTestDir, "Sub");
-            Directory.CreateDirectory(subDir);
-
-            File.WriteAllText(Path.Combine(_baseTestDir, "file1.txt"), "test");
-            File.WriteAllText(Path.Combine(_baseTestDir, "file2.txt"), "test");
-            File.WriteAllText(Path.Combine(subDir, "file3.txt"), "test");
-
-            var dirs = new List<string> { _baseTestDir };
-
-            int count = await _sut.CountFilesAsync(dirs);
-
-            count.ShouldBe(3);
-        }
-
 
         [Fact]
         public async Task DeleteFilesAsync_ShouldCleanUpEverything_ExceptExclusions()
@@ -56,8 +38,8 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
             var statusUpdates = new List<string>();
             var progressUpdates = new List<int>();
 
-            var statusReporter = new Progress<string>(s => statusUpdates.Add(s));
-            var valueReporter = new Progress<int>(v => progressUpdates.Add(v));
+            var statusReporter = new SynchronousProgress<string>(statusUpdates.Add);
+            var valueReporter = new SynchronousProgress<int>(progressUpdates.Add);
 
             await _sut.DeleteFilesAsync(
                 new List<string> { subDir },
@@ -65,9 +47,8 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
                 valueReporter,
                 CancellationToken.None);
 
-            File.Exists(normalFile).ShouldBeFalse("Normale Datei sollte gelÃ¶scht sein.");
-            File.Exists(protectedFile).ShouldBeTrue("moz-extension Datei sollte ignoriert worden sein.");
-
+            File.Exists(normalFile).ShouldBeFalse("Standard file should be deleted.");
+            File.Exists(protectedFile).ShouldBeTrue("moz-extension file should be preserved.");
 
             statusUpdates.ShouldContain("Finalizing cleanup operations...");
             progressUpdates.ShouldNotBeEmpty();
@@ -95,7 +76,6 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
             Directory.GetFiles(_baseTestDir).Length.ShouldBe(10);
         }
 
-
         [Fact]
         public void DeleteSingleFile_ShouldWork_IfFileExists()
         {
@@ -110,7 +90,9 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
         [Fact]
         public void DeleteSingleFile_ShouldNotThrow_IfFileDoesNotExist()
         {
-            Should.NotThrow(() => _sut.DeleteSingleFile("C:\\NonExistentFile.xyz"));
+            const string nonExistentPath = @"C:\NonExistentFile.xyz";
+
+            Should.NotThrow(() => _sut.DeleteSingleFile(nonExistentPath));
         }
 
         public void Dispose()
@@ -119,8 +101,8 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
             {
                 try { Directory.Delete(_baseTestDir, true); } catch { }
             }
+
+            GC.SuppressFinalize(this);
         }
     }
 }
-
-

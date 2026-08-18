@@ -1,22 +1,19 @@
-using eBRestarter.Infrastructure.Adapters.WindowsOS;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System.Collections.Generic;
 using Xunit;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
 {
     public class BrowserBaseTests
     {
-
-        private class TestDummyBrowser : AdapterBrowserBaseWrapper
+        private sealed class TestDummyBrowser : AdapterBrowserBaseWrapper
         {
             public TestDummyBrowser(IOutboundPortOsProcessControl os, IOutboundPortSystemConfigurationRepository settings, IOutboundPortFileSystem fs, ILogger logger) : base(os, settings, fs, logger) { }
 
@@ -48,11 +45,11 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [InlineData("", "Unknown")]
         public void CleanVersionString_ShouldExtractVersionNumberCorrectly(string? rawVersion, string expectedResult)
         {
-            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
-            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
-            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
-            var mockLogger = new Mock<ILogger>();
-            var dummyBrowser = new TestDummyBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var mockProcess = Substitute.For<IOutboundPortOsProcessControl>();
+            var mockSettings = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            var mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
+            var mockLogger = Substitute.For<ILogger>();
+            var dummyBrowser = new TestDummyBrowser(mockProcess, mockSettings, mockFileSystem, mockLogger);
 
             var result = dummyBrowser.ExposeCleanVersionString(rawVersion);
 
@@ -62,51 +59,45 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Browsers
         [Fact]
         public void Start_ShouldFindExecutableAndCallProcessService_WithUrlAndArguments()
         {
-            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
-            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
-            
-            var mockLogger = new Mock<ILogger>();
+            var mockProcess = Substitute.For<IOutboundPortOsProcessControl>();
+            var mockSettings = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            var mockLogger = Substitute.For<ILogger>();
 
-            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
-            mockFileSystem.
-                Setup(fs => fs.FileExists(@"C:\FakePath\browser.exe")).
-                Returns(true);
+            var mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
+            mockFileSystem
+                .FileExists(@"C:\FakePath\browser.exe")
+                .Returns(true);
 
-            
-            var dummyBrowser = new TestDummyBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var dummyBrowser = new TestDummyBrowser(mockProcess, mockSettings, mockFileSystem, mockLogger);
 
             const string testUrl = "https://www.ebesucher.com/surfbar/test";
             const string testArgs = "--incognito";
 
             dummyBrowser.Start(testUrl, testArgs);
 
-            mockProcess.Verify(p => p.OpenUrlInBrowser(
+            mockProcess.Received(1).OpenUrlInBrowser(
                 @"C:\FakePath\browser.exe",
-                "https://www.ebesucher.com/surfbar/test --incognito"
-            ), Times.Once);
+                "\"https://www.ebesucher.com/surfbar/test\" --incognito"
+            );
         }
 
         [Fact]
         public void Start_ShouldLogError_WhenExecutableIsNotFound()
         {
-            var mockProcess = new Mock<IOutboundPortOsProcessControl>();
-            var mockSettings = new Mock<IOutboundPortSystemConfigurationRepository>();
-            
-            var mockLogger = new Mock<ILogger>();
+            var mockProcess = Substitute.For<IOutboundPortOsProcessControl>();
+            var mockSettings = Substitute.For<IOutboundPortSystemConfigurationRepository>();
+            var mockLogger = Substitute.For<ILogger>();
 
-            var mockFileSystem = new Mock<IOutboundPortFileSystem>();
+            var mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
             mockFileSystem
-                .Setup(fs => fs.FileExists(It.IsAny<string>()))
+                .FileExists(Arg.Any<string>())
                 .Returns(false);
 
-            
-            var dummyBrowser = new TestDummyBrowser(mockProcess.Object, mockSettings.Object, mockFileSystem.Object, mockLogger.Object);
+            var dummyBrowser = new TestDummyBrowser(mockProcess, mockSettings, mockFileSystem, mockLogger);
 
             dummyBrowser.Start("https://test.com");
 
-            mockProcess.Verify(p => p.OpenUrlInBrowser(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            mockProcess.DidNotReceive().OpenUrlInBrowser(Arg.Any<string>(), Arg.Any<string>());
         }
     }
 }
-
-

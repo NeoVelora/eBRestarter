@@ -43,7 +43,6 @@ public static class InfrastructureServiceRegistration
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
-        services.AddLogging(builder => builder.AddDebug());
 
         services.AddSingleton<IProcessWrapper, ProcessWrapper>();
         services.AddSingleton<IOutboundPortOsProcessControl, AdapterWindowsProcessControlWrapper>();
@@ -55,6 +54,8 @@ public static class InfrastructureServiceRegistration
         services.AddSingleton<IOutboundPortUpdate, AdapterGitHubUpdateService>();
         services.AddSingleton<IOutboundPortFileDeletion, AdapterWindowsFileDeletionService>();
         services.AddSingleton<IOutboundPortEncryption, AdapterWindowsEncryptionUtility>();
+
+        services.AddSingleton<IOutboundPortExecutableSignatureVerifier, AdapterWindowsAuthenticodeVerifier>();
         services.AddSingleton<IOutboundPortBrowserFactory, BrowserFactory>();
         services.AddSingleton<IOutboundPortBrowserDiscoveryProvider, AdapterWindowsBrowserDiscoveryProvider>();
         services.AddSingleton<IOutboundPortSystemInfoProvider, AdapterWindowsSystemInfoProvider>();
@@ -82,6 +83,9 @@ public static class InfrastructureServiceRegistration
         services.AddKeyedTransient<IOutboundPortBrowser, AdapterVivaldiBrowserWrapper>(BrowserType.Vivaldi);
 
         services.AddSingleton<IOutboundPortHttpDownload, AdapterHttpClientDownloadHandler>();
+
+        services.AddHttpClient(RestSharpClient.HttpClientName)
+                .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
         services.AddSingleton<IRestClient, RestSharpClient>();
         services.AddSingleton<IOutboundPortApiAuthenticationProvider, AdapterEVisitorApiAuthenticationProvider>();
@@ -115,5 +119,3 @@ public static class InfrastructureServiceRegistration
         return services;
     }
 }
-
-

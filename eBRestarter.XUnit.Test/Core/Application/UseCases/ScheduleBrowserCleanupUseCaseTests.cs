@@ -1,30 +1,30 @@
-using eBRestarter.Core.Application.Ports.Inbound.UseCases.ScheduleBrowserCleanup;
-using eBRestarter.Core.Application.Enums;
-using eBRestarter.Core.Application.Models.Records;
-using eBRestarter.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Time.Testing;
-using Moq;
+using NSubstitute;
 using Shouldly;
 using System;
 using Xunit;
-using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Core.Domain.ValueObjects;
+using NSubstitute.ExceptionExtensions;
 
 namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
 {
     public class ScheduleBrowserCleanupUseCaseTests
     {
-        private readonly Mock<IOutboundPortEVisitorConfigRepository> _mockConfigService;
+        private readonly IOutboundPortEVisitorConfigRepository _mockConfigService;
         private readonly FakeTimeProvider _fakeTimeProvider;
         private readonly ScheduleBrowserCleanupUseCase _sut;
 
         public ScheduleBrowserCleanupUseCaseTests()
         {
-            _mockConfigService = new Mock<IOutboundPortEVisitorConfigRepository>();
+            _mockConfigService = Substitute.For<IOutboundPortEVisitorConfigRepository>();
             _fakeTimeProvider = new FakeTimeProvider();
 
             _sut = new ScheduleBrowserCleanupUseCase(
-                _mockConfigService.Object,
+                _mockConfigService,
                 _fakeTimeProvider);
         }
 
@@ -39,11 +39,11 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
             _fakeTimeProvider.SetUtcNow(testDate);
 
             var dummyConfig = new AppConfig { Browser = new BrowserConfig() };
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
+            _mockConfigService.LoadConfig().Returns(dummyConfig);
 
             AppConfig? savedConfig = null;
-            _mockConfigService.Setup(c => c.SaveConfig(It.IsAny<AppConfig>()))
-                              .Callback<AppConfig>(config => savedConfig = config);
+            _mockConfigService.When(s => s.SaveConfig(Arg.Any<AppConfig>()))
+                .Do(ci => savedConfig = ci.Arg<AppConfig>());
 
             var request = new ScheduleBrowserCleanupRequest(validIntervalDays);
 
@@ -59,7 +59,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
             savedConfig.Browser.DeleteBrowserCacheIntervalDays.ShouldBe(validIntervalDays);
             savedConfig.Browser.NextBrowserDeleteCacheDate.ShouldBe(expectedDate);
 
-            _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Once);
+            _mockConfigService.Received(1).SaveConfig(Arg.Any<AppConfig>());
         }
 
         [Theory]
@@ -71,11 +71,11 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
         public void UpdateSchedule_ShouldDeactivate_AndClearNextDate_WhenIntervalIsInvalid(int invalidIntervalDays)
         {
             var dummyConfig = new AppConfig { Browser = new BrowserConfig() };
-            _mockConfigService.Setup(c => c.LoadConfig()).Returns(dummyConfig);
+            _mockConfigService.LoadConfig().Returns(dummyConfig);
 
             AppConfig? savedConfig = null;
-            _mockConfigService.Setup(c => c.SaveConfig(It.IsAny<AppConfig>()))
-                              .Callback<AppConfig>(config => savedConfig = config);
+            _mockConfigService.When(s => s.SaveConfig(Arg.Any<AppConfig>()))
+                .Do(ci => savedConfig = ci.Arg<AppConfig>());
 
             var request = new ScheduleBrowserCleanupRequest(invalidIntervalDays);
 
@@ -89,7 +89,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
             savedConfig.Browser.DeleteBrowserCacheIntervalDays.ShouldBe(0);
             savedConfig.Browser.NextBrowserDeleteCacheDate.ShouldBe(DateTime.MinValue);
 
-            _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Once);
+            _mockConfigService.Received(1).SaveConfig(Arg.Any<AppConfig>());
         }
 
         [Fact]
@@ -97,12 +97,12 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ScheduleBrowserCleanup
         {
             var request = new ScheduleBrowserCleanupRequest(7);
 
-            _mockConfigService.Setup(c => c.LoadConfig()).Throws(new UnauthorizedAccessException("Access denied"));
+            _mockConfigService.LoadConfig().Throws(new UnauthorizedAccessException("Access denied"));
 
             var exception = Should.Throw<UnauthorizedAccessException>(() => _sut.UpdateSchedule(request));
             exception.Message.ShouldBe("Access denied");
 
-            _mockConfigService.Verify(c => c.SaveConfig(It.IsAny<AppConfig>()), Times.Never);
+            _mockConfigService.DidNotReceive().SaveConfig(Arg.Any<AppConfig>());
         }
     }
 }

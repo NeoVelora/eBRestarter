@@ -27,8 +27,7 @@ public sealed class RestartTaskDisplayStateHandler(
     private readonly ICacheDeletionIntervalValidator _intervalValidator = intervalValidator ?? throw new ArgumentNullException(nameof(intervalValidator));
     private readonly IInboundPortLocalizationProvider _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-
-
+    
     public RestartTaskDisplayState RetrieveInitialState(AppConfig config)
     {
         if (config is null)

@@ -4,6 +4,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Infrastructure.Common.Statics;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
@@ -236,7 +237,7 @@ public sealed class AdapterFirefoxBrowserWrapper(
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Error while parsing profiles.ini at {IniPath}", iniPath);
+            _logger.LogError(LogEventIds.Browser.BrowserProfileFileUnreadable, exception, "Error while parsing profiles.ini at {IniPath}", iniPath);
         }
 
         return profiles;

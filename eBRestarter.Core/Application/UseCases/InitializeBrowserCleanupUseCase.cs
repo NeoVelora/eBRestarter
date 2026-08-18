@@ -11,10 +11,8 @@ public sealed class InitializeBrowserCleanupUseCase(
     TimeProvider timeProvider)
     : IUseCaseInitializeBrowserCleanup
 {
-
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-
 
     public Task ExecuteAsync()
     {

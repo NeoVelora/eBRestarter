@@ -10,8 +10,9 @@ public sealed partial class UC_OptionsGeneral : UserControl
 
     public UC_OptionsGeneral()
     {
-        InitializeComponent();
         ViewModel = App.AppHost!.Services.GetRequiredService<ViewModelOptionsGeneral>();
+
+        InitializeComponent();
         this.DataContext = ViewModel;
     }
 }

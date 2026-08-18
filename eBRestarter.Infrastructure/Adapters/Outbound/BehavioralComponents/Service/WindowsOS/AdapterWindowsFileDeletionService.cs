@@ -2,27 +2,23 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
+using eBRestarter.Infrastructure.BehavioralComponents.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.WindowsOS;
 
 public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletion
 {
-    private const string AccessDeniedDirectoryLogMessage = "Access denied to directory: {Dir}";
     private const string AllFilesSearchPattern = "*";
     private const int DefaultReportInterval = 10;
     private const string DeletingFileStatusFormat = "Deleting: {0}";
-    private const string DirectoryCouldNotBeDeletedLogMessage = "Directory could not be deleted (it might not be empty): {Dir}";
-    private const string ErrorDeletingFileLogMessage = "Error while deleting individual file: {FilePath}";
-    private const string ErrorDeletingFilePayloadLogMessage = "Error while deleting file payload: {File}";
-    private const string ErrorGatheringFilesLogMessage = "Error while gathering files from directory: {Dir}";
     private const string FinalizingCleanupStatusMessage = "Finalizing cleanup operations...";
     private const int InitialCounterValue = 0;
     private const string ProtectedFirefoxExtensionFilter = "moz-extension";
+
 
     private readonly ILogger<AdapterWindowsFileDeletionService> _logger;
 
@@ -35,36 +31,11 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
     }
 
 
-    public Task<int> CountFilesAsync(List<string> directories)
-    {
-        ArgumentNullException.ThrowIfNull(directories);
-
-        return Task.Run(() =>
-        {
-            return directories.Where(Directory.Exists).Sum(dir =>
-            {
-                try
-                {
-                    return Directory.EnumerateFiles(dir, AllFilesSearchPattern, SearchOption.AllDirectories).Count();
-                }
-                catch (Exception exception)
-                {
-                    if (_logger.IsEnabled(LogLevel.Debug))
-                    {
-                        _logger.LogDebug(exception, AccessDeniedDirectoryLogMessage, dir);
-                    }
-
-                    return InitialCounterValue;
-                }
-            });
-        });
-    }
-
-    public Task DeleteFilesAsync(List<string> directories, IProgress<string> statusReporter, IProgress<int> valueReporter, CancellationToken token)
+    public Task DeleteFilesAsync(List<string> directories, IProgress<string> statusReporter, IProgress<int> completedDirectoriesReporter, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(directories);
         ArgumentNullException.ThrowIfNull(statusReporter);
-        ArgumentNullException.ThrowIfNull(valueReporter);
+        ArgumentNullException.ThrowIfNull(completedDirectoriesReporter);
 
         return Task.Run(() =>
         {
@@ -74,9 +45,10 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
                 UpdateCounter = InitialCounterValue,
                 ReportInterval = DefaultReportInterval,
                 StatusReporter = statusReporter,
-                ValueReporter = valueReporter,
                 Token = token
             };
+
+            int completedDirectories = InitialCounterValue;
 
             foreach (var dir in directories)
             {
@@ -86,10 +58,13 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
                 }
 
                 ProcessDirectory(dir, context, _logger);
+
+                completedDirectories++;
+                completedDirectoriesReporter.Report(completedDirectories);
             }
 
             statusReporter.Report(FinalizingCleanupStatusMessage);
-            valueReporter.Report(context.DeletedCount);
+            completedDirectoriesReporter.Report(directories.Count);
 
         }, token);
     }
@@ -106,7 +81,7 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
             }
             catch (Exception exception)
             {
-                _logger.LogWarning(exception, ErrorDeletingFileLogMessage, filePath);
+                _logger.LogSingleFileDeletionFailed(exception, filePath);
             }
         }
     }
@@ -118,18 +93,25 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
             return;
         }
 
+        if (IsReparsePoint(dir))
+        {
+            logger.LogReparsePointSkipped(dir);
+
+            return;
+        }
+
+        string cleanupRoot;
         IEnumerable<string> files;
 
         try
         {
+            cleanupRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(dir)) + Path.DirectorySeparatorChar;
+
             files = Directory.EnumerateFiles(dir, AllFilesSearchPattern, SearchOption.AllDirectories);
         }
         catch (Exception exception)
         {
-            if (logger.IsEnabled(LogLevel.Debug))
-            {
-                logger.LogDebug(exception, ErrorGatheringFilesLogMessage, dir);
-            }
+            logger.LogDirectoryEnumerationFailed(exception, dir);
 
             return;
         }
@@ -139,6 +121,11 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
             if (context.Token.IsCancellationRequested)
             {
                 return;
+            }
+
+            if (!IsInsideCleanupRoot(file, cleanupRoot, logger))
+            {
+                continue;
             }
 
             ProcessFile(file, context, logger);
@@ -155,10 +142,40 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
         }
         catch (Exception exception)
         {
-            if (logger.IsEnabled(LogLevel.Debug))
+            logger.LogDirectoryNotRemoved(exception, dir);
+        }
+    }
+
+    private static bool IsInsideCleanupRoot(string file, string cleanupRoot, ILogger logger)
+    {
+        try
+        {
+            var resolvedPath = Path.GetFullPath(file);
+
+            if (resolvedPath.StartsWith(cleanupRoot, StringComparison.OrdinalIgnoreCase))
             {
-                logger.LogDebug(exception, DirectoryCouldNotBeDeletedLogMessage, dir);
+                return true;
             }
+
+            logger.LogPathOutsideCleanupRoot(file, cleanupRoot);
+        }
+        catch (Exception exception)
+        {
+            logger.LogPathResolutionFailed(exception, file, cleanupRoot);
+        }
+
+        return false;
+    }
+
+    private static bool IsReparsePoint(string path)
+    {
+        try
+        {
+            return File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint);
+        }
+        catch (Exception)
+        {
+            return true;
         }
     }
 
@@ -179,16 +196,12 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
             {
                 string statusMessage = string.Format(DeletingFileStatusFormat, Path.GetFileName(file));
                 context.StatusReporter.Report(statusMessage);
-                context.ValueReporter.Report(context.DeletedCount);
                 context.UpdateCounter = InitialCounterValue;
             }
         }
         catch (Exception exception)
         {
-            if (logger.IsEnabled(LogLevel.Debug))
-            {
-                logger.LogDebug(exception, ErrorDeletingFilePayloadLogMessage, file);
-            }
+            logger.LogFileDeletionFailed(exception, file);
         }
     }
 
@@ -199,7 +212,6 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
         public int UpdateCounter { get; set; }
         public int ReportInterval { get; set; }
         public IProgress<string> StatusReporter { get; set; } = null!;
-        public IProgress<int> ValueReporter { get; set; } = null!;
         public CancellationToken Token { get; set; }
     }
 }

@@ -16,7 +16,6 @@ public sealed class SystemInformationProvider(
     private readonly IOutboundPortOsEditionProvider _osEditionProvider = osEditionProvider ?? throw new ArgumentNullException(nameof(osEditionProvider));
     private readonly IOutboundPortSystemInfoProvider _systemInfoProvider = systemInfoProvider ?? throw new ArgumentNullException(nameof(systemInfoProvider));
 
-
     public async Task<SystemInformationResponse> RetrieveAsync()
     {
         var hardwareTask = _hardwareInfoProvider.RetrieveHardwareInfoAsync();

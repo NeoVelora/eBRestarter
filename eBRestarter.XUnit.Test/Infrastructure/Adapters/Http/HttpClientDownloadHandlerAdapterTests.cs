@@ -1,6 +1,3 @@
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using Moq;
-using Moq.Protected;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -14,125 +11,104 @@ using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handler.Http;
+using eBRestarter.Tests.TestDoubles;
 
 namespace eBRestarter.Tests.Infrastructure.Handlers
 {
     public class HttpClientDownloadHandlerAdapterTests : IDisposable
     {
+        private const int RandomSeed = 20260811;
+
         private readonly string _tempFilePath;
-        private readonly Mock<HttpMessageHandler> _handlerMock;
 
         public HttpClientDownloadHandlerAdapterTests()
         {
             _tempFilePath = Path.Combine(Path.GetTempPath(), $"download_test_{Guid.NewGuid()}.exe");
-            _handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
         }
 
         public void Dispose()
         {
-            if (File.Exists(_tempFilePath)) File.Delete(_tempFilePath);
+            if (File.Exists(_tempFilePath))
+            {
+                File.Delete(_tempFilePath);
+            }
+
+            GC.SuppressFinalize(this);
         }
 
-
         [Fact]
-        public async Task DownloadFileAsync_ShouldWriteContentToFileSystem()
+        public async Task DownloadFileAsync_ServerReturnsContent_WritesExactBytesToDisk()
         {
-            var testData = "Dies sind simulierte Binärdaten für den Download-Test.";
-            var contentBytes = Encoding.UTF8.GetBytes(testData);
+            var contentBytes = Encoding.UTF8.GetBytes("Dies sind simulierte Binärdaten für den Download-Test.");
+            var sut = CreateSut(HttpStatusCode.OK, contentBytes);
 
-            SetupMockResponse(HttpStatusCode.OK, contentBytes);
-
-            var sut = CreateUseCaseWithMockHandler();
-
-            await sut.DownloadFileAsync(
-                "https://example.com/setup.exe",
-                _tempFilePath,
-                null!,
-                CancellationToken.None);
+            await sut.DownloadFileAsync("https://example.com/setup.exe", _tempFilePath, null!, TestContext.Current.CancellationToken);
 
             File.Exists(_tempFilePath).ShouldBeTrue();
-            var downloadedData = await File.ReadAllBytesAsync(_tempFilePath);
-            downloadedData.ShouldBe(contentBytes);
+            (await File.ReadAllBytesAsync(_tempFilePath, TestContext.Current.CancellationToken)).ShouldBe(contentBytes);
         }
 
-
         [Fact]
-        public async Task DownloadFileAsync_ShouldReportProgress_AndReach100Percent()
+        public async Task DownloadFileAsync_ContentSpansMultipleChunks_ReportsProgressReaching100Percent()
         {
-            var contentSize = 10000;
+            const int contentSize = 10000;
             var contentBytes = new byte[contentSize];
-            new Random().NextBytes(contentBytes);
-
-            SetupMockResponse(HttpStatusCode.OK, contentBytes);
+            new Random(RandomSeed).NextBytes(contentBytes);
 
             var progressReports = new List<DownloadProgressStatus>();
-            var progressMock = new Progress<DownloadProgressStatus>(p => progressReports.Add(p));
+            var progress = new SynchronousProgress<DownloadProgressStatus>(progressReports.Add);
+            var sut = CreateSut(HttpStatusCode.OK, contentBytes);
 
-            var sut = CreateUseCaseWithMockHandler();
-
-            await sut.DownloadFileAsync("https://test.com", _tempFilePath, progressMock, CancellationToken.None);
-
-            await Task.Delay(100);
+            await sut.DownloadFileAsync("https://test.com", _tempFilePath, progress, TestContext.Current.CancellationToken);
 
             progressReports.ShouldNotBeEmpty();
-            var lastReport = progressReports.Last();
-            lastReport.Percentage.ShouldBe(100.0);
-            lastReport.TotalBytes.ShouldBe(contentSize);
-        }
-
-
-        [Fact]
-        public async Task DownloadFileAsync_ShouldThrowException_OnHttpError()
-        {
-            SetupMockResponse(HttpStatusCode.NotFound, Array.Empty<byte>());
-            var sut = CreateUseCaseWithMockHandler();
-
-            await Should.ThrowAsync<HttpRequestException>(async () =>
-                await sut.DownloadFileAsync("https://test.com/404", _tempFilePath, null!, CancellationToken.None));
+            progressReports.Last().Percentage.ShouldBe(100.0);
+            progressReports.Last().TotalBytes.ShouldBe(contentSize);
         }
 
         [Fact]
-        public async Task DownloadFileAsync_ShouldRespectCancellationToken()
+        public async Task DownloadFileAsync_ServerReturnsNotFound_ThrowsHttpRequestException()
         {
-            SetupMockResponse(HttpStatusCode.OK, new byte[1024]);
-            var sut = CreateUseCaseWithMockHandler();
-            var cts = new CancellationTokenSource();
+            var sut = CreateSut(HttpStatusCode.NotFound, []);
+
+            var act = () => sut.DownloadFileAsync("https://test.com/404", _tempFilePath, null!, CancellationToken.None);
+
+            await Should.ThrowAsync<HttpRequestException>(act);
+        }
+
+        [Fact]
+        public async Task DownloadFileAsync_TokenAlreadyCancelled_ThrowsOperationCanceledException()
+        {
+            var sut = CreateSut(HttpStatusCode.OK, new byte[1024]);
+            using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            await Should.ThrowAsync<OperationCanceledException>(async () =>
-                await sut.DownloadFileAsync("https://test.com", _tempFilePath, null!, cts.Token));
+            var act = () => sut.DownloadFileAsync("https://test.com", _tempFilePath, null!, cts.Token);
+
+            await Should.ThrowAsync<OperationCanceledException>(act);
         }
 
-
-        private void SetupMockResponse(HttpStatusCode statusCode, byte[] content)
+        private static AdapterHttpClientDownloadHandler CreateSut(HttpStatusCode statusCode, byte[] content)
         {
-            _handlerMock
-                .Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(new HttpResponseMessage
+            var handler = new StubHttpMessageHandler(statusCode, content);
+
+            return new AdapterHttpClientDownloadHandler(new HttpClient(handler));
+        }
+
+        private sealed class StubHttpMessageHandler(HttpStatusCode statusCode, byte[] content) : HttpMessageHandler
+        {
+            protected override Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return Task.FromResult(new HttpResponseMessage
                 {
                     StatusCode = statusCode,
                     Content = new ByteArrayContent(content)
                 });
-        }
-
-        private AdapterHttpClientDownloadHandler CreateUseCaseWithMockHandler()
-        {
-            var service = new AdapterHttpClientDownloadHandler();
-            var client = new HttpClient(_handlerMock.Object);
-
-            var field = typeof(AdapterHttpClientDownloadHandler).GetField("_httpClient",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
-            field?.SetValue(service, client);
-
-            return service;
+            }
         }
     }
 }
-
-

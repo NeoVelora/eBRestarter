@@ -1,13 +1,18 @@
+using eBRestarter.Desktop.WinUI3.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 
 
-namespace eBRestarter.Desktop.WinUI3.VisualUIComponents.Views.UserControls
+namespace eBRestarter.Desktop.WinUI3.VisualUIComponents.Views.UserControls;
+
+public sealed partial class UC_RestartAndRuntimeOptions : UserControl
 {
-    public sealed partial class UC_RestartAndRuntimeOptions : UserControl
+    public ViewModelRestarterProperties ViewModelRestarterProperties { get; }
+
+    public UC_RestartAndRuntimeOptions()
     {
-        public UC_RestartAndRuntimeOptions()
-        {
-            InitializeComponent();
-        }
+        ViewModelRestarterProperties = App.AppHost!.Services.GetRequiredService<ViewModelRestarterProperties>();
+
+        InitializeComponent();
     }
 }

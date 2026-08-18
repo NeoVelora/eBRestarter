@@ -20,10 +20,11 @@ public sealed class RunBrowserPhaseHandler(
 
     private const int StartupGracePeriodSeconds = 2;
 
+    private const int BrowserAliveCheckIntervalSeconds = 5;
+
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly IOutboundPortOsProcessControl _processService = processService ?? throw new ArgumentNullException(nameof(processService));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-
 
     public async Task<BrowserPhaseResult> ExecuteAsync(
         ManageRestarterCycleRequest request,
@@ -46,9 +47,12 @@ public sealed class RunBrowserPhaseHandler(
         {
             token.ThrowIfCancellationRequested();
 
-            if (request.CheckBrowserAliveRoutine &&
+            bool isAliveCheckDue =
+                request.CheckBrowserAliveRoutine &&
                 secondsRemaining < request.RuntimeSeconds - StartupGracePeriodSeconds &&
-                !_processService.IsProcessAlive(processName))
+                secondsRemaining % BrowserAliveCheckIntervalSeconds == 0;
+
+            if (isAliveCheckDue && !_processService.IsProcessAlive(processName))
             {
                 return BrowserPhaseResult.BrowserClosed;
             }

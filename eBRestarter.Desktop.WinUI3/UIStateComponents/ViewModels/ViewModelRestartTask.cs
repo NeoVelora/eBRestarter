@@ -7,9 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.BehavioralComponents.Extensions;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
@@ -22,10 +23,13 @@ using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Utilities.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
 public sealed partial class ViewModelRestartTask : ObservableObject,
+                                            IDisposable,
                                             IRecipient<UsernameChangedMessage>,
                                             IRecipient<BrowserChangedMessage>,
                                             IRecipient<DeleteBrowserContentActivateMessage>,
@@ -45,6 +49,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
     private const string TaskUsernameResourceKey = "Task_Username";
 
     private readonly IBrowserDisplayNameResolverUtility _browserDisplayNameResolver;
+    private readonly ILogger<ViewModelRestartTask> _logger;
     private readonly IOutboundPortBrowserDiscoveryProvider _browserService;
     private readonly IOutboundPortEVisitorConfigRepository _configService;
     private readonly IDialogService _dialogService;
@@ -53,8 +58,11 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
     private readonly IInboundPortRestartTaskDisplayStateHandler _restartTaskDisplayStateHandler;
 
     private bool _checkBrowserAliveRoutine;
+    private volatile bool _disposed;
     private int _pauseSeconds = DefaultPauseSeconds;
     private int _runtimeSeconds = DefaultRuntimeSeconds;
+
+    private int _browserCheckInFlight;
 
     private readonly DispatcherTimer _browserCheckTimer;
     private readonly DispatcherQueue _dispatcherQueue;
@@ -76,6 +84,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         IOutboundPortEVisitorConfigRepository configService,
         IDialogService dialogService,
         IInboundPortLocalizationProvider localizationProvider,
+        ILogger<ViewModelRestartTask> logger,
         IInboundPortRestarterCycleService restarterCycleService,
         IInboundPortRestartTaskDisplayStateHandler restartTaskDisplayStateHandler)
     {
@@ -84,6 +93,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         ArgumentNullException.ThrowIfNull(configService);
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(localizationProvider);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(restarterCycleService);
         ArgumentNullException.ThrowIfNull(restartTaskDisplayStateHandler);
 
@@ -92,6 +102,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         _configService = configService;
         _dialogService = dialogService;
         _localizationService = localizationProvider;
+        _logger = logger;
         _restarterCycleService = restarterCycleService;
         _restartTaskDisplayStateHandler = restartTaskDisplayStateHandler;
 
@@ -124,7 +135,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         _browserCheckTimer.Tick += OnBrowserCheckTimerTick;
         _browserCheckTimer.Start();
 
-        CheckInstalledBrowsersAsync().Forget();
+        CheckInstalledBrowsersAsync().Forget(_logger, nameof(CheckInstalledBrowsersAsync));
     }
 
     [RelayCommand]
@@ -156,6 +167,23 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         {
             StopLoop();
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        _browserCheckTimer.Stop();
+        _browserCheckTimer.Tick -= OnBrowserCheckTimerTick;
+
+        _restarterCycleService.ProgressChanged -= OnCycleProgressChanged;
+
+        WeakReferenceMessenger.Default.UnregisterAll(this);
     }
 
     public void Receive(BrowserChangedMessage message) => _dispatcherQueue.TryEnqueue(() => ChosenBrowser = message.BrowserName ?? DefaultFallbackPlaceholder);
@@ -210,13 +238,30 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
 
     private async void OnBrowserCheckTimerTick(object? sender, object eventArgs)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (Interlocked.Exchange(ref _browserCheckInFlight, 1) == 1)
+        {
+            return;
+        }
+
         try
         {
-            await CheckInstalledBrowsersAsync();
+            await CheckInstalledBrowsersAsync().ConfigureAwait(false);
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+                exception,
+                "Refreshing the list of installed browsers failed.");
+        }
+        finally
+        {
+            Volatile.Write(ref _browserCheckInFlight, 0);
         }
     }
 
@@ -257,7 +302,10 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
                 }
                 catch (Exception exception)
                 {
-                    Debug.WriteLine(exception);
+                    _logger.LogError(
+                        LogEventIds.UserInterface.ViewModelOperationFailed,
+                        exception,
+                        "Showing the browser cleanup dialog failed.");
 
                     tcs.TrySetException(exception);
                 }
@@ -269,7 +317,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
 
             await tcs.Task.ConfigureAwait(false);
 
-        }).Forget();
+        }).Forget(_logger, nameof(StartLoop));
     }
 
     private void StopLoop()

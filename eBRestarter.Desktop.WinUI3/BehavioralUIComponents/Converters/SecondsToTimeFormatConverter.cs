@@ -9,7 +9,6 @@ public sealed class SecondsToTimeFormatConverter : IValueConverter
     private const string DefaultTimeFormat = "00:00:00";
     private const string TimeSpanFormatPattern = @"hh\:mm\:ss";
 
-
     public object Convert(object value, Type targetType, object parameter, string language)
     {
         if (value is int seconds)

@@ -10,9 +10,7 @@ namespace eBRestarter.Core.Application.BehavioralComponents.Handlers;
 public sealed class DelayPhaseHandler(TimeProvider timeProvider) : IDelayPhaseHandler
 {
     private static readonly TimeSpan OneSecondInterval = TimeSpan.FromSeconds(1);
-
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-
 
     public async Task ExecuteAsync(
         RestartTaskState state,

@@ -1,8 +1,8 @@
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.WindowsOS;
 using Shouldly;
 using System;
 using System.IO;
 using Xunit;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.WindowsOS;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
 {
@@ -26,8 +26,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             string missingFilePath = Path.Combine(_tempTestDirectory, "missing.txt");
             File.WriteAllText(existingFilePath, "Test");
 
-            _sut.FileExists(existingFilePath).ShouldBeTrue();
-            _sut.FileExists(missingFilePath).ShouldBeFalse();
+            bool exists = _sut.FileExists(existingFilePath);
+            bool missing = _sut.FileExists(missingFilePath);
+
+            exists.ShouldBeTrue();
+            missing.ShouldBeFalse();
         }
 
         [Fact]
@@ -37,8 +40,11 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             string missingDirPath = Path.Combine(_tempTestDirectory, "GhostFolder");
             Directory.CreateDirectory(existingDirPath);
 
-            _sut.DirectoryExists(existingDirPath).ShouldBeTrue();
-            _sut.DirectoryExists(missingDirPath).ShouldBeFalse();
+            bool exists = _sut.DirectoryExists(existingDirPath);
+            bool missing = _sut.DirectoryExists(missingDirPath);
+
+            exists.ShouldBeTrue();
+            missing.ShouldBeFalse();
         }
 
         [Fact]
@@ -58,7 +64,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             string result = _sut.ResolveEnvironmentPath(variable);
 
             result.ShouldNotBeNullOrWhiteSpace();
-            Path.IsPathRooted(result).ShouldBeTrue("Der zurückgegebene Pfad muss ein absoluter Systempfad sein.");
+            Path.IsPathRooted(result).ShouldBeTrue("The resolved path must be an absolute system path.");
         }
 
         [Fact]
@@ -73,9 +79,9 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         [InlineData("")]
         [InlineData("   ")]
         [InlineData(null)]
-        public void DeleteFile_ShouldThrowArgumentException_WhenPathIsNullOrWhiteSpace(string invalidPath)
+        public void DeleteFile_ShouldThrowArgumentException_WhenPathIsNullOrWhiteSpace(string? invalidPath)
         {
-            Action act = () => _sut.DeleteFile(invalidPath);
+            Action act = () => _sut.DeleteFile(invalidPath!);
 
             act.ShouldThrow<ArgumentException>().ParamName.ShouldBe("path");
         }
@@ -85,8 +91,6 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
         {
             string targetFile = Path.Combine(_tempTestDirectory, "delete_me.txt");
             File.WriteAllText(targetFile, "Trash");
-
-            File.Exists(targetFile).ShouldBeTrue();
 
             _sut.DeleteFile(targetFile);
 
@@ -118,6 +122,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
             actualLines[0].ShouldBe("Zeile 1");
             actualLines[2].ShouldBe("Zeile 3");
         }
+
         public void Dispose()
         {
             if (Directory.Exists(_tempTestDirectory))
@@ -130,8 +135,8 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                 {
                 }
             }
+
+            GC.SuppressFinalize(this);
         }
     }
 }
-
-

@@ -19,6 +19,8 @@ using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.UIOptionDTO;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
 using eBRestarter.Infrastructure.Common.Statics;
 using eBRestarter.Infrastructure.ObjectArchetypes.DTOs;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.ViewModels;
 
@@ -42,6 +44,7 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
     };
 
     private readonly IOutboundPortBrowserExtensionDeployment _browserExtensionDeploymentService;
+    private readonly ILogger<ViewModelOptionsExtension> _logger;
     private readonly IOutboundPortBrowserExtensionPathProvider _browserExtensionPathProvider;
     private readonly IDialogService _dialogService;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
@@ -66,6 +69,7 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
         IDialogService dialogService,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository,
         IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelOptionsExtension> logger,
         IOutboundPortOsProcessControl osProcessControlPort,
         IUIOptionsProvider uiOptionsService)
     {
@@ -74,6 +78,7 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(evRestarterConfigRepository);
         ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(osProcessControlPort);
         ArgumentNullException.ThrowIfNull(uiOptionsService);
 
@@ -82,6 +87,7 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
         _dialogService = dialogService;
         _evRestarterConfigRepository = evRestarterConfigRepository;
         _localizationService = localizationService;
+        _logger = logger;
         _osProcessControlPort = osProcessControlPort;
         _uiOptionsService = uiOptionsService;
 
@@ -116,7 +122,11 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.UserInterface.ViewModelOperationFailed,
+                exception,
+                "Opening the browser extension folder failed.");
+
             string messageFormat = _localizationService.RetrieveString(ExtensionFolderOpenErrorMessageResourceKey);
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(ExtensionFolderOpenErrorTitleResourceKey),
@@ -133,10 +143,12 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
             string extensionPath = _browserExtensionPathProvider.RetrieveExtensionFolderPath();
             string configPath = Path.Combine(extensionPath, ExtensionConfigFileName);
 
+            var targetUsername = Uri.EscapeDataString(_currentConfig?.Username ?? string.Empty);
+
             var extensionConfigDto = new ExtensionConfig
             {
                 LANGUAGE = SelectedExtensionLanguage?.Index == 0 ? ExtensionLanguageCodeGerman : ExtensionLanguageCodeEnglish,
-                ZIEL_URL = $"{WebLinks.EVisitorSurflink}{_currentConfig?.Username ?? string.Empty}",
+                ZIEL_URL = $"{WebLinks.EVisitorSurflink}{targetUsername}",
                 WARTEZEIT_MS = (int)(ExtensionWaitTimeMinutes * MillisecondsPerMinute)
             };
 
@@ -155,7 +167,11 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
         }
         catch (Exception exception)
         {
-            Debug.WriteLine(exception);
+            _logger.LogError(
+                LogEventIds.UserInterface.ExtensionConfigWriteFailed,
+                exception,
+                "Writing the browser extension configuration failed.");
+
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(GeneralErrorKey),
                 _localizationService.RetrieveString(ExtensionConfigErrorMessageResourceKey) + " " + exception.Message,
@@ -196,7 +212,10 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
         }
         catch (Exception exception)
         {
-            Debug.WriteLine($"Could not read existing tab_restarter_config.json: {exception}");
+            _logger.LogWarning(
+                LogEventIds.UserInterface.ExtensionConfigReadFailed,
+                exception,
+                "The existing browser extension configuration could not be read; defaults are used.");
         }
     }
 }

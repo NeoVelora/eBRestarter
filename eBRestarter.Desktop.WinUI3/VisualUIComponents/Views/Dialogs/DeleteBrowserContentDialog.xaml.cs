@@ -13,9 +13,10 @@ public sealed partial class DeleteBrowserContentDialog : ContentDialog
 
     public DeleteBrowserContentDialog()
     {
+        ViewModelDeleteBrowserContent = App.AppHost!.Services.GetRequiredService<ViewModelDeleteBrowserContent>();
+
         InitializeComponent();
 
-        ViewModelDeleteBrowserContent = App.AppHost!.Services.GetRequiredService<ViewModelDeleteBrowserContent>();
         DataContext = ViewModelDeleteBrowserContent;
         Loaded += DeleteBrowserContentDialog_Loaded;
         Unloaded += DeleteBrowserContentDialog_Unloaded;

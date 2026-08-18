@@ -19,7 +19,6 @@ public sealed class ScheduleBrowserCleanupUseCase(
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
-
     public ScheduleBrowserCleanupResponse UpdateSchedule(ScheduleBrowserCleanupRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

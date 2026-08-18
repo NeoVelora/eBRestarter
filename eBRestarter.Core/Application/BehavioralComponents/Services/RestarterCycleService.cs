@@ -1,8 +1,11 @@
 using System;
+using System.Globalization;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.BehavioralComponents.Handlers.Interfaces;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
@@ -10,6 +13,7 @@ using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
 using eBRestarter.Core.Domain.Handlers;
 
 namespace eBRestarter.Core.Application.BehavioralComponents.Services;
@@ -20,39 +24,45 @@ public sealed class RestarterCycleService(
     IOutboundPortEVisitorConfigRepository configService,
     IDelayPhaseHandler delayPhaseHandler,
     IInboundPortLocalizationProvider localizationService,
+    IOutboundPortApplicationLogger<RestarterCycleService> logger,
     IRunBrowserPhaseHandler runBrowserPhaseHandler,
     TimeProvider timeProvider,
     IInboundPortApplicationValidator<ManageRestarterCycleRequest> validator) : IInboundPortRestarterCycleService
 {
     private const string BaseUrl = "https://www.ebesucher.de/surfbar/";
-
     private const int CleanupDelayMilliseconds = 1000;
+    private const string BrowserStartFailedMessage = "Der Browser konnte nicht gestartet werden.";
+    private const string BrowserStartRetryFormat = "Browser nicht startbar. Neuer Versuch in {0}...";
+
+    private const string CycleScopePropertyName = "RestarterCycleId";
     private const int EmergencyCooldownSeconds = 5;
     private const int InitialDelaySeconds = 5;
-    private const int SecondsPerHour = 3600;
-
     private const string LocalizationKeyErrorPrefix = "General_ErrorPrefix";
     private const string LocalizationKeyStatusRestartIn = "Task_StatusRestartIn";
     private const string LocalizationKeyStatusRunning = "Task_StatusRunning";
     private const string LocalizationKeyStatusStartIn = "Task_StatusStartIn";
     private const string LocalizationKeyStatusStopped = "Task_StatusStopped";
+    private const int SecondsPerHour = 3600;
 
     private readonly IBrowserCleanupScheduleHandler _browserCleanupScheduleHandler = browserCleanupScheduleHandler ?? throw new ArgumentNullException(nameof(browserCleanupScheduleHandler));
     private readonly IOutboundPortBrowserFactory _browserFactory = browserFactory ?? throw new ArgumentNullException(nameof(browserFactory));
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly IDelayPhaseHandler _delayPhaseHandler = delayPhaseHandler ?? throw new ArgumentNullException(nameof(delayPhaseHandler));
     private readonly IInboundPortLocalizationProvider _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
+    private readonly IOutboundPortApplicationLogger<RestarterCycleService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IRunBrowserPhaseHandler _runBrowserPhaseHandler = runBrowserPhaseHandler ?? throw new ArgumentNullException(nameof(runBrowserPhaseHandler));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly IInboundPortApplicationValidator<ManageRestarterCycleRequest> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
     private CancellationTokenSource? _cts;
     private IOutboundPortBrowser? _currentBrowser;
-    private readonly System.Threading.Lock _syncLock = new();
 
+    private CompositeFormat? _statusRestartInFormat;
+    private CompositeFormat? _statusStartInFormat;
+
+    private readonly Lock _syncLock = new();
 
     public event EventHandler<RestarterCycleProgress>? ProgressChanged;
-
 
     public async Task StartAsync(
         ManageRestarterCycleRequest request,
@@ -79,16 +89,24 @@ public sealed class RestarterCycleService(
 
         var cancellationToken = cts.Token;
 
+        using var cycleScope = _logger.BeginScope(CycleScopePropertyName, Guid.NewGuid().ToString("N"));
+
         try
         {
             await RunCycleAsync(request, performCleanupCallback, cancellationToken);
         }
         catch (OperationCanceledException)
         {
+            _logger.LogDebug(
+                LogEventIds.RestarterCycle.RestartSchedulerStopped,
+                "Restarter cycle was cancelled by an explicit stop request.");
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
+            _logger.LogError(
+                LogEventIds.RestarterCycle.CycleFaulted,
+                ex,
+                "The restarter cycle aborted with an unhandled fault.");
             ReportProgress(RestartTaskState.Idle, 0, $"Fehler: {ex.Message}");
         }
         finally
@@ -109,8 +127,11 @@ public sealed class RestarterCycleService(
 
         if (cts is not null)
         {
-            _ = cts.CancelAsync();
-            cts.Dispose();
+            _ = cts.CancelAsync().ContinueWith(
+                _ => cts.Dispose(),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
         }
     }
 
@@ -127,14 +148,33 @@ public sealed class RestarterCycleService(
 
             request = request with
             {
-                BrowserType = appConfig.Browser != null && !string.IsNullOrWhiteSpace(appConfig.Browser.Selected) && Enum.TryParse<BrowserType>(appConfig.Browser.Selected, true, out var parsedType) ? parsedType : request.BrowserType,
+                BrowserType = appConfig.Browser != null
+                    && !string.IsNullOrWhiteSpace(appConfig.Browser.Selected)
+                    && Enum.TryParse<BrowserType>(appConfig.Browser.Selected, true, out var parsedType)
+                        ? parsedType
+                        : request.BrowserType,
                 Username = string.IsNullOrWhiteSpace(appConfig.Username) ? request.Username : appConfig.Username,
                 RuntimeSeconds = appConfig.Browser is not null ? appConfig.Browser.RuntimeHours * SecondsPerHour : request.RuntimeSeconds,
                 PauseSeconds = appConfig.Browser?.RuntimePauseSeconds ?? request.PauseSeconds,
                 CheckBrowserAliveRoutine = appConfig.Browser?.CheckBrowserAliveRoutine ?? request.CheckBrowserAliveRoutine
             };
 
-            LaunchBrowser(request);
+            if (!LaunchBrowser(request))
+            {
+                await _delayPhaseHandler.ExecuteAsync(
+                    RestartTaskState.Cooldown,
+                    EmergencyCooldownSeconds,
+                    (state, secondsRemaining, _) => ReportProgress(
+                        state,
+                        secondsRemaining,
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            BrowserStartRetryFormat,
+                            secondsRemaining)),
+                    cancellationToken);
+
+                continue;
+            }
 
             var runPhaseResult = await _runBrowserPhaseHandler.ExecuteAsync(request, _currentBrowser, ReportProgress, cancellationToken);
 
@@ -161,26 +201,27 @@ public sealed class RestarterCycleService(
         }
     }
 
-    private void LaunchBrowser(ManageRestarterCycleRequest request)
+    private bool LaunchBrowser(ManageRestarterCycleRequest request)
     {
-        try
+        var browserType = request.BrowserType;
+
+        _currentBrowser = _browserFactory.Create(browserType);
+        string url = $"{BaseUrl}{Uri.EscapeDataString(request.Username)}";
+
+        if (_currentBrowser.Start(url))
         {
-            var browserType = request.BrowserType;
-
-            _currentBrowser = _browserFactory.Create(browserType);
-            string url = $"{BaseUrl}{request.Username}";
-
-            _currentBrowser.Start(url);
+            return true;
         }
-        catch (Exception ex)
-        {
-            var errorFormat = _localizationService.RetrieveString(LocalizationKeyErrorPrefix);
-            var errorMsg = string.Format(errorFormat, ex.Message);
 
-            ReportProgress(RestartTaskState.Idle, 0, errorMsg);
 
-            throw;
-        }
+        var errorFormat = _localizationService.RetrieveString(LocalizationKeyErrorPrefix);
+        var errorMsg = string.Format(CultureInfo.CurrentCulture, errorFormat, BrowserStartFailedMessage);
+
+        ReportProgress(RestartTaskState.Idle, 0, errorMsg);
+
+        CloseCurrentBrowser();
+
+        return false;
     }
 
     private void CloseCurrentBrowser()
@@ -197,9 +238,7 @@ public sealed class RestarterCycleService(
         var browser = appConfig.Browser;
 
         if (browser is null || !_browserCleanupScheduleHandler.ShouldRunCleanupNow(browser.DeleteBrowserCacheIntervalDays, browser.NextBrowserDeleteCacheDate))
-        {
             return;
-        }
 
         CloseCurrentBrowser();
 
@@ -226,9 +265,15 @@ public sealed class RestarterCycleService(
         return state switch
         {
             RestartTaskState.Idle => _localizationService.RetrieveString(LocalizationKeyStatusStopped),
-            RestartTaskState.InitialDelay => string.Format(_localizationService.RetrieveString(LocalizationKeyStatusStartIn), secondsRemaining),
+            RestartTaskState.InitialDelay => string.Format(
+                CultureInfo.CurrentCulture,
+                _statusStartInFormat ??= CompositeFormat.Parse(_localizationService.RetrieveString(LocalizationKeyStatusStartIn)),
+                secondsRemaining),
             RestartTaskState.Running => _localizationService.RetrieveString(LocalizationKeyStatusRunning),
-            RestartTaskState.Cooldown => string.Format(_localizationService.RetrieveString(LocalizationKeyStatusRestartIn), secondsRemaining),
+            RestartTaskState.Cooldown => string.Format(
+                CultureInfo.CurrentCulture,
+                _statusRestartInFormat ??= CompositeFormat.Parse(_localizationService.RetrieveString(LocalizationKeyStatusRestartIn)),
+                secondsRemaining),
             _ => string.Empty
         };
     }

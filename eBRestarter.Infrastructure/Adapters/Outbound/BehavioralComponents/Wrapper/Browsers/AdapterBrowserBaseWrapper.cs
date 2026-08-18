@@ -1,10 +1,13 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
+using eBRestarter.Core.Application.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
@@ -62,29 +65,46 @@ public abstract partial class AdapterBrowserBaseWrapper(
 
     public abstract BrowserPaths ResolvePaths();
 
-    public virtual void Start(string url, string arguments = "")
+    public virtual bool Start(string url, string arguments = "")
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(url);
+
+        if (!TryRetrieveExecutablePath(out string? exePath))
+        {
+            _logger.LogWarning(
+                LogEventIds.Browser.BrowserStartFailed,
+                "{BrowserType} was not started because no installed executable could be located.",
+                Type);
+
+            return false;
+        }
+
         try
         {
-            var exePath = RetrieveExecutablePath();
-
-            if (_logger.IsEnabled(LogLevel.Information))
+            if (_logger.IsEnabled(LogLevel.Debug))
             {
-                _logger.LogInformation("Starting {BrowserType} with URL {Url}...", Type, url);
+                _logger.LogDebug(
+                    LogEventIds.Browser.BrowserStarting,
+                    "Starting {BrowserType} with URL {Url}...",
+                    Type,
+                    LogRedaction.MaskUrlUserSegment(url));
             }
 
+            var quotedUrl = $"\"{url.Trim()}\"";
+
             var finalArguments = string.IsNullOrWhiteSpace(arguments)
-                ? url.Trim()
-                : $"{url} {arguments}".Trim();
+                ? quotedUrl
+                : $"{quotedUrl} {arguments}".Trim();
 
             _processControlPort.OpenUrlInBrowser(exePath, finalArguments);
+
+            return true;
         }
         catch (Exception exception)
         {
-            if (_logger.IsEnabled(LogLevel.Error))
-            {
-                _logger.LogError(exception, "Error while starting {BrowserType}", Type);
-            }
+            _logger.LogError(LogEventIds.Browser.BrowserStartFailed, exception, "Error while starting {BrowserType}", Type);
+
+            return false;
         }
     }
 
@@ -135,10 +155,11 @@ public abstract partial class AdapterBrowserBaseWrapper(
         return raw;
     }
 
-    protected string RetrieveExecutablePath()
+    protected bool TryRetrieveExecutablePath([NotNullWhen(true)] out string? executablePath)
     {
-        return ExecutablePaths.FirstOrDefault(path => _fileSystemPort.FileExists(path))
-               ?? throw new FileNotFoundException($"{Type} executable not found.");
+        executablePath = ExecutablePaths.FirstOrDefault(path => _fileSystemPort.FileExists(path));
+
+        return executablePath is not null;
     }
 
     [GeneratedRegex(@"^[\d\.]+", RegexOptions.NonBacktracking, matchTimeoutMilliseconds: 100)]
