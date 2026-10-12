@@ -8,14 +8,14 @@ public static class ApiWebLinks
 
     public const string EarningsThisMonth = "https://www.ebesucher.de/api/visitor_exchange.json/account/earnings/";
 
-    public static string HourlyEarnings
+    public static string GetHourlyEarnings(TimeProvider? timeProvider = null)
     {
-        get
-        {
-            var dateStr = DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var localNow = (timeProvider ?? TimeProvider.System).GetLocalNow();
+        var dateStr = localNow.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-            return $"https://www.ebesucher.de/api/visitor_exchange.json/account/earnings_hourly/{dateStr}?timezone=Europe%2FBerlin";
-        }
+        return $"https://www.ebesucher.de/api/visitor_exchange.json/account/earnings_hourly/{dateStr}?timezone=Europe%2FBerlin";
     }
+
+    public static string HourlyEarnings => GetHourlyEarnings(TimeProvider.System);
 }
 

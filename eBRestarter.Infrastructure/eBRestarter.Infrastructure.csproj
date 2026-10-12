@@ -32,12 +32,6 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- Guide Kap. 16.1: IHttpClientFactory statt HttpClient/RestClient pro Request. -->
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.9" />
-    <!--
-      Logging-Guideline Kap. 8: Die Provider-Wahl gehört in den Composition Root der Anwendung,
-      nicht in eine Klassenbibliothek. Die Provider-Pakete (Serilog, Debug-Sink) sind deshalb
-      ins Desktop-Projekt gewandert; hier bleibt ausschließlich die Abstraktion.
-    -->
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
     <PackageReference Include="RestSharp" Version="114.0.0" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.28.0.143324">

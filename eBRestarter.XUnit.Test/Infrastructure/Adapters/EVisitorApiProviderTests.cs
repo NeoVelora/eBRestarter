@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -147,6 +148,42 @@ namespace eBRestarter.Tests.Infrastructure.Adapters
             result.HourlyEarnings[0].ShouldBe(15.0);
             result.HourlyEarnings[1].ShouldBe(5.0);
             result.TodaySum.ShouldBe(20.0);
+        }
+
+        [Fact]
+        public async Task GetEarningsAsync_ShouldUseInjectedTimeProvider_WhenProvided()
+        {
+            var fixedDate = new DateTimeOffset(2026, 7, 15, 14, 30, 0, TimeSpan.Zero);
+            var fakeTime = new FakeTimeProvider(fixedDate);
+
+            var sut = new AdapterEVisitorApiProvider(
+                _mockConfigService,
+                _mockLogger,
+                _mockRestClient,
+                fakeTime);
+
+            var validConfig = new AppConfig();
+            validConfig.Settings.ApiUsername = "testuser";
+            validConfig.Settings.ApiKey = "testkey";
+            _mockConfigService.LoadConfig().Returns(validConfig);
+
+            string expectedHourlyUrl = ApiWebLinks.GetHourlyEarnings(fakeTime);
+
+            _mockRestClient
+                .ExecuteGetAsync(Arg.Any<ApiRequest>())
+                .Returns(ci => {
+                    if (ci.Arg<ApiRequest>().Url == expectedHourlyUrl)
+                    {
+                        return new ApiResponse { IsSuccess = true, Content = @"[25.0]" };
+                    }
+                    return new ApiResponse { IsSuccess = true, Content = "[]" };
+                });
+
+            var result = await sut.RetrieveEarningsAsync();
+
+            result.ShouldNotBeNull();
+            result.HourlyEarnings[0].ShouldBe(25.0);
+            await _mockRestClient.Received().ExecuteGetAsync(Arg.Is<ApiRequest>(req => req.Url == expectedHourlyUrl));
         }
     }
 }

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Core.Application.Common.TypedError;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
@@ -16,6 +15,7 @@ using eBRestarter.Core.Application.UseCases;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
 using NSubstitute.ExceptionExtensions;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
+using eBRestarter.Tests.TestDoubles;
 
 namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 {
@@ -49,6 +49,39 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
         }
 
         [Fact]
+        public async Task ExecuteAsync_ShouldThrowArgumentNullException_WhenRequestIsNull()
+        {
+            var progress = new Progress<DeleteBrowserContentProgress>();
+            await Should.ThrowAsync<ArgumentNullException>(() => _sut.ExecuteAsync(null!, progress, CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldThrowArgumentNullException_WhenProgressIsNull()
+        {
+            var request = new DeleteBrowserContentRequest(BrowserType.Chrome, true, true, ForceCloseProcess: false);
+            await Should.ThrowAsync<ArgumentNullException>(() => _sut.ExecuteAsync(request, null!, CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task ExecuteAsync_ShouldReturnNoPathsFailure_WhenBrowserPathsAreEmpty()
+        {
+            var request = new DeleteBrowserContentRequest(BrowserType.Chrome, DeleteCookies: true, DeleteCache: true, ForceCloseProcess: false);
+            var progress = new Progress<DeleteBrowserContentProgress>();
+
+            var mockBrowser = Substitute.For<IOutboundPortBrowser>();
+            mockBrowser.ProcessName.Returns("chrome");
+            mockBrowser.ResolvePaths().Returns(new BrowserPaths([], [], []));
+            _mockBrowserFactory.Create(BrowserType.Chrome).Returns(mockBrowser);
+
+            _mockProcessService.IsProcessAlive("chrome").Returns(false);
+
+            var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
+
+            (result is DeleteBrowserContentFailure failure && failure.Message == "Cleanup_NoPaths").ShouldBeTrue();
+            await _mockFileDeletionService.DidNotReceive().DeleteFilesAsync(Arg.Any<List<string>>(), Arg.Any<IProgress<string>>(), Arg.Any<IProgress<int>>(), Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
         public async Task ExecuteAsync_ShouldReturnProcessConflict_WhenBrowserIsStillRunning()
         {
             var request = new DeleteBrowserContentRequest(BrowserType.Chrome, true, true, ForceCloseProcess: false);
@@ -62,8 +95,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.IsSuccess.ShouldBeFalse();
-            result.HasError<ProcessConflictError>().ShouldBeTrue();
+            (result is DeleteBrowserContentProcessConflict).ShouldBeTrue();
 
             await _mockFileDeletionService.DidNotReceive().DeleteFilesAsync(Arg.Any<List<string>>(), Arg.Any<IProgress<string>>(), Arg.Any<IProgress<int>>(), Arg.Any<CancellationToken>());
         }
@@ -114,8 +146,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.IsSuccess.ShouldBeFalse();
-            result.Errors[0].Message.ShouldBe("At least one deletion option (Cache or Cookies) must be selected.");
+            (result is DeleteBrowserContentFailure failure && failure.Message == "At least one deletion option (Cache or Cookies) must be selected.").ShouldBeTrue();
         }
 
         [Fact]
@@ -123,7 +154,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
         {
             var request = new DeleteBrowserContentRequest(BrowserType.Brave, DeleteCookies: true, DeleteCache: true, ForceCloseProcess: false);
             var progressUpdates = new List<DeleteBrowserContentProgress>();
-            var progress = new Progress<DeleteBrowserContentProgress>(p => progressUpdates.Add(p));
+            var progress = new SynchronousProgress<DeleteBrowserContentProgress>(progressUpdates.Add);
 
             var mockBrowser = Substitute.For<IOutboundPortBrowser>();
             mockBrowser.ProcessName.Returns("brave");
@@ -139,7 +170,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.IsSuccess.ShouldBeTrue();
+            (result is DeleteBrowserContentSuccess).ShouldBeTrue();
 
             await _mockFileDeletionService.Received(1).DeleteFilesAsync(
                 Arg.Is<List<string>>(list => list.Contains("C:\\Brave\\Cache") && list.Contains("C:\\Brave\\Cookies") && list.Count == 2),
@@ -160,8 +191,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            result.IsSuccess.ShouldBeFalse();
-            result.Errors[0].Message.ShouldBe("Zugriff verweigert");
+            (result is DeleteBrowserContentFailure failure && failure.Message == "Zugriff verweigert").ShouldBeTrue();
         }
     }
 }

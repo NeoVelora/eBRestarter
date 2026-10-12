@@ -15,7 +15,11 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API;
 
-public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvider
+public sealed class AdapterEVisitorApiProvider(
+    IOutboundPortEVisitorConfigRepository configPort,
+    ILogger<AdapterEVisitorApiProvider> logger,
+    IRestClient restClientPort,
+    TimeProvider? timeProvider = null) : IOutboundPortEVisitorApiProvider
 {
     private const string ErrorParsingDailyEarningsLogMessage = "Error parsing daily earnings.";
     private const string ErrorParsingHourlyEarningsLogMessage = "Error parsing hourly earnings.";
@@ -25,24 +29,10 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
     private const int HoursInDayCount = 24;
     private const int MonthsInYearCount = 12;
 
-    private readonly IOutboundPortEVisitorConfigRepository _configPort;
-    private readonly ILogger<AdapterEVisitorApiProvider> _logger;
-    private readonly IRestClient _restClientPort;
-
-
-    public AdapterEVisitorApiProvider(
-        IOutboundPortEVisitorConfigRepository configPort,
-        ILogger<AdapterEVisitorApiProvider> logger,
-        IRestClient restClientPort)
-    {
-        ArgumentNullException.ThrowIfNull(configPort);
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(restClientPort);
-
-        _configPort = configPort;
-        _logger = logger;
-        _restClientPort = restClientPort;
-    }
+    private readonly IOutboundPortEVisitorConfigRepository _configPort = configPort ?? throw new ArgumentNullException(nameof(configPort));
+    private readonly ILogger<AdapterEVisitorApiProvider> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IRestClient _restClientPort = restClientPort ?? throw new ArgumentNullException(nameof(restClientPort));
+    private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
 
     public async Task<EarningsData?> RetrieveEarningsAsync()
@@ -57,7 +47,7 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
 
         var username = config.Settings.ApiUsername;
         var apiKey = config.Settings.ApiKey;
-        var now = DateTime.Now;
+        var now = _timeProvider.GetLocalNow().DateTime;
 
         var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Local);
 
@@ -158,7 +148,7 @@ public sealed class AdapterEVisitorApiProvider : IOutboundPortEVisitorApiProvide
     {
         var request = new ApiRequest
         {
-            Url = ApiWebLinks.HourlyEarnings,
+            Url = ApiWebLinks.GetHourlyEarnings(_timeProvider),
             Method = ObjectArchetypes.Enums.HttpMethod.GET,
             Username = username,
             Password = apiKey

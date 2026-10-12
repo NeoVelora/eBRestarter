@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-
-using eBRestarter.Core.Application.Common.TypedError;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
@@ -174,23 +172,28 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                 }
             });
 
-            var result = await _deleteBrowserContentUseCase.ExecuteAsync(
+            var outcome = await _deleteBrowserContentUseCase.ExecuteAsync(
                 request,
                 progress,
                 _deleteBrowserContentCancellationTokenSource.Token);
 
-            if (result.HasError<ProcessConflictError>())
+            switch (outcome)
             {
-                IsProcessConflict = true;
-            }
-            else if (result.IsFailed)
-            {
-                StatusText = result.Errors[0].Message;
-            }
-            else if (_isAutoMode)
-            {
-                await Task.Delay(AutoCloseAfterSuccessDelayMilliseconds);
-                RequestCloseDialog?.Invoke();
+                case DeleteBrowserContentProcessConflict:
+                    IsProcessConflict = true;
+                    break;
+
+                case DeleteBrowserContentFailure failure:
+                    StatusText = failure.Message;
+                    break;
+
+                case DeleteBrowserContentSuccess:
+                    if (_isAutoMode)
+                    {
+                        await Task.Delay(AutoCloseAfterSuccessDelayMilliseconds);
+                        RequestCloseDialog?.Invoke();
+                    }
+                    break;
             }
         }
         catch (OperationCanceledException)

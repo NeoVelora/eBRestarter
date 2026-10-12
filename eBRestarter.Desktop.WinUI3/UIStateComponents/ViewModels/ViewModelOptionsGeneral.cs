@@ -372,58 +372,52 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
 
         var result = _configureAutoLogonUseCase.Execute(configureAutoLogonRequest);
 
-        if (result.IsSuccess)
+        switch (result)
         {
-            if (result.Value == AutoLogonResultStatus.Deactivated)
-            {
+            case AutoLogonDeactivated:
                 await _dialogService.ShowMessageAsync(
                     _localizationService.RetrieveString(GeneralInfoResourceKey),
                     _localizationService.RetrieveString(OptionsAutoLogonDeactivatedResourceKey));
-            }
-            else if (result.Value == AutoLogonResultStatus.Activated)
-            {
+                break;
+
+            case AutoLogonActivated:
                 await _dialogService.ShowMessageAsync(
                     _localizationService.RetrieveString(GeneralSuccessResourceKey),
                     _localizationService.RetrieveString(OptionsAutoLogonActivatedResourceKey));
-            }
-            return;
-        }
+                break;
 
-        var error = result.Errors[0];
-        var status = error.Metadata.TryGetValue("Status", out var statusValue) ? (AutoLogonResultStatus)statusValue : AutoLogonResultStatus.UnexpectedError;
+            case AutoLogonWindowsHelloBlockActive:
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.RetrieveString(OptionsAutoLogonWindowsHelloErrorTitleResourceKey),
+                    _localizationService.RetrieveString(OptionsAutoLogonWindowsHelloErrorMessageResourceKey),
+                    DialogIcon.Error);
+                break;
 
-        if (status == AutoLogonResultStatus.WindowsHelloBlockActive)
-        {
-            await _dialogService.ShowMessageAsync(
-                _localizationService.RetrieveString(OptionsAutoLogonWindowsHelloErrorTitleResourceKey),
-                _localizationService.RetrieveString(OptionsAutoLogonWindowsHelloErrorMessageResourceKey),
-                DialogIcon.Error);
-        }
-        else if (status == AutoLogonResultStatus.AdminRequired)
-        {
-            await _dialogService.ShowMessageAsync(
-                _localizationService.RetrieveString(GeneralErrorKey),
-                AdminRequiredMessage,
-                DialogIcon.Error);
-        }
-        else if (status == AutoLogonResultStatus.ValidationError)
-        {
-            await _dialogService.ShowMessageAsync(
-                _localizationService.RetrieveString(GeneralErrorKey),
-                _localizationService.RetrieveString(OptionsAutoLogonValidationErrorResourceKey));
-        }
-        else if (status == AutoLogonResultStatus.DomainError)
-        {
-            await _dialogService.ShowMessageAsync(
-                _localizationService.RetrieveString(GeneralErrorKey),
-                _localizationService.RetrieveString(OptionsAutoLogonDomainErrorResourceKey));
-        }
-        else
-        {
-            string errorFormat = _localizationService.RetrieveString(GeneralUnexpectedErrorResourceKey);
-            await _dialogService.ShowMessageAsync(
-                _localizationService.RetrieveString(GeneralErrorKey),
-                string.Format(errorFormat, error.Message));
+            case AutoLogonAdminRequired:
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.RetrieveString(GeneralErrorKey),
+                    AdminRequiredMessage,
+                    DialogIcon.Error);
+                break;
+
+            case AutoLogonValidationError:
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.RetrieveString(GeneralErrorKey),
+                    _localizationService.RetrieveString(OptionsAutoLogonValidationErrorResourceKey));
+                break;
+
+            case AutoLogonDomainError:
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.RetrieveString(GeneralErrorKey),
+                    _localizationService.RetrieveString(OptionsAutoLogonDomainErrorResourceKey));
+                break;
+
+            case AutoLogonUnexpectedError unexpected:
+                string errorFormat = _localizationService.RetrieveString(GeneralUnexpectedErrorResourceKey);
+                await _dialogService.ShowMessageAsync(
+                    _localizationService.RetrieveString(GeneralErrorKey),
+                    string.Format(errorFormat, unexpected.Message));
+                break;
         }
     }
 

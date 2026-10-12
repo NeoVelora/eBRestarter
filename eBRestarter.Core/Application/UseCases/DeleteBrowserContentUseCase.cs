@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.Common.Results;
-using eBRestarter.Core.Application.Common.TypedError;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
@@ -42,7 +40,7 @@ public sealed class DeleteBrowserContentUseCase(
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly IInboundPortApplicationValidator<DeleteBrowserContentRequest> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
-    public Task<Result> ExecuteAsync(
+    public Task<DeleteBrowserContentResult> ExecuteAsync(
         DeleteBrowserContentRequest request,
         IProgress<DeleteBrowserContentProgress> progress,
         CancellationToken cancellationToken)
@@ -53,14 +51,14 @@ public sealed class DeleteBrowserContentUseCase(
         return ExecuteCoreAsync(request, progress, cancellationToken);
     }
 
-    private async Task<Result> ExecuteCoreAsync(
+    private async Task<DeleteBrowserContentResult> ExecuteCoreAsync(
         DeleteBrowserContentRequest request,
         IProgress<DeleteBrowserContentProgress> progress,
         CancellationToken cancellationToken)
     {
         var validationResult = _validator.Validate(request);
         if (!validationResult.IsValid)
-            return Result.Fail(validationResult.Errors[0].ErrorMessage);
+            return new DeleteBrowserContentFailure(validationResult.Errors[0].ErrorMessage);
 
         try
         {
@@ -76,7 +74,7 @@ public sealed class DeleteBrowserContentUseCase(
             }
 
             if (_processService.IsProcessAlive(processName))
-                return Result.Fail(new ProcessConflictError(_localizationService.RetrieveString(LocalizationKeyBrowserRunning) ?? DefaultBrowserRunningMessage));
+                return new DeleteBrowserContentProcessConflict(_localizationService.RetrieveString(LocalizationKeyBrowserRunning) ?? DefaultBrowserRunningMessage);
 
             var browserPaths = browser.ResolvePaths();
 
@@ -93,7 +91,7 @@ public sealed class DeleteBrowserContentUseCase(
             }
 
             if (directoriesToDelete.Count == 0)
-                return Result.Fail(_localizationService.RetrieveString(LocalizationKeyNoPaths) ?? DefaultNoPathsMessage);
+                return new DeleteBrowserContentFailure(_localizationService.RetrieveString(LocalizationKeyNoPaths) ?? DefaultNoPathsMessage);
 
             progress.Report(new DeleteBrowserContentProgress(_localizationService.RetrieveString(LocalizationKeyAnalyzing), 0, 0));
 
@@ -117,11 +115,11 @@ public sealed class DeleteBrowserContentUseCase(
 
             progress.Report(new DeleteBrowserContentProgress(_localizationService.RetrieveString(LocalizationKeyFinished), totalSteps, totalSteps));
 
-            return Result.Ok();
+            return new DeleteBrowserContentSuccess();
         }
         catch (Exception exception)
         {
-            return Result.Fail(new ExceptionalError(exception));
+            return new DeleteBrowserContentFailure(exception.Message);
         }
     }
 }

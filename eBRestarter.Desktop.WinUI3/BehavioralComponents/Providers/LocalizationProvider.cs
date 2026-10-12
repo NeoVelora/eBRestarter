@@ -119,10 +119,11 @@ public sealed class LocalizationProvider : IInboundPortLocalizationProvider, IUI
             englishName = FallbackEnglish;
         }
 
-        return [new(germanName, 0), new(englishName, 1)];
+        return (LanguageOption[])[new(germanName, 0), new(englishName, 1)];
     }
 
     public IEnumerable<ComputerRestartOption> GetComputerRestartOptions() =>
+    (ComputerRestartOption[])
     [
         new(RetrieveString(KeyRestartOption0), 0),
         new(RetrieveString(KeyRestartOption1), 1),
@@ -132,6 +133,7 @@ public sealed class LocalizationProvider : IInboundPortLocalizationProvider, IUI
     ];
 
     public IEnumerable<BrowserCacheDeleteOption> GetBrowserCacheOptions() =>
+    (BrowserCacheDeleteOption[])
     [
         new(RetrieveString(KeyBrowserCacheOption0), 0),
         new(RetrieveString(KeyBrowserCacheOption1), 1),

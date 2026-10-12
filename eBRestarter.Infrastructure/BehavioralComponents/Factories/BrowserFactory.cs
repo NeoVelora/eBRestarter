@@ -10,9 +10,7 @@ using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Factories;
 
-public sealed class BrowserFactory(
-    IServiceProvider serviceProvider)
-    : IOutboundPortBrowserFactory
+public sealed class BrowserFactory : IOutboundPortBrowserFactory
 {
 
     private const string UnsupportedBrowserErrorMessagePattern = "Browser '{0}' is not supported by {1}.";
@@ -25,7 +23,14 @@ public sealed class BrowserFactory(
                 EqualityComparer<BrowserType>.Default);
 
 
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly IServiceProvider _serviceProvider;
+
+
+    public BrowserFactory(IServiceProvider serviceProvider)
+    {
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+        _serviceProvider = serviceProvider;
+    }
 
 
     public IOutboundPortBrowser Create(BrowserType type)

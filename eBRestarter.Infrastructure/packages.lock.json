@@ -27,12 +27,6 @@
           "Microsoft.Extensions.Logging": "10.0.9"
         }
       },
-      "Microsoft.Extensions.Logging.Abstractions": {
-        "type": "Direct",
-        "requested": "[10.0.9, )",
-        "resolved": "10.0.9",
-        "contentHash": "9S/DFt4cohlMPpzIxjG6kk0L8MuN2vDm9pbMCulxtJzzk82oJHVLBd8vuQxaPskaYQwKqmFmbannf5eoChgjYg=="
-      },
       "Microsoft.WindowsAppSDK": {
         "type": "Direct",
         "requested": "[2.2.0, )",

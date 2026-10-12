@@ -1,9 +1,7 @@
 using System;
 
-using eBRestarter.Core.Application.Common.Results;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
@@ -24,8 +22,6 @@ public sealed class ConfigureAutoLogonUseCase(
     private const string ErrorMessageDomainError = "Domain error.";
     private const string ErrorMessageInvalidCredentials = "Invalid credentials.";
     private const string ErrorMessageValidationFailed = "Validation failed.";
-    private const string ErrorMessageWindowsHelloBlockActive = "Windows Hello Passwordless Mode ist aktiv. AutoLogon nicht möglich.";
-    private const string StatusKey = "Status";
 
     private readonly IOutboundPortOsAutoLogonRepository _autoLogonPort = autoLogonPort ?? throw new ArgumentNullException(nameof(autoLogonPort));
     private readonly IOutboundPortCredentialValidationProvider _credentialValidationPort = credentialValidationPort ?? throw new ArgumentNullException(nameof(credentialValidationPort));
@@ -33,15 +29,14 @@ public sealed class ConfigureAutoLogonUseCase(
     private readonly IOutboundPortSystemInfoProvider _systemInfoPort = systemInfoPort ?? throw new ArgumentNullException(nameof(systemInfoPort));
     private readonly IInboundPortApplicationValidator<ConfigureAutoLogonRequest> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
-    public Result<AutoLogonResultStatus> Execute(ConfigureAutoLogonRequest request)
+    public ConfigureAutoLogonResult Execute(ConfigureAutoLogonRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var validationResult = _validator.Validate(request);
         if (!validationResult.IsValid)
         {
-            return Result.Fail(new Error(ErrorMessageValidationFailed)
-                .WithMetadata(StatusKey, AutoLogonResultStatus.ValidationError));
+            return new AutoLogonValidationError(ErrorMessageValidationFailed);
         }
 
         try
@@ -57,8 +52,7 @@ public sealed class ConfigureAutoLogonUseCase(
                 exception,
                 "AutoLogon configuration failed while reaching the domain controller.");
 
-            return Result.Fail(new Error(ErrorMessageDomainError)
-                .WithMetadata(StatusKey, AutoLogonResultStatus.DomainError));
+            return new AutoLogonDomainError(ErrorMessageDomainError);
         }
         catch (Exception ex)
         {
@@ -67,50 +61,44 @@ public sealed class ConfigureAutoLogonUseCase(
                 ex,
                 "AutoLogon configuration failed with an unexpected error.");
 
-            return Result.Fail(new ExceptionalError(ex)
-                .WithMetadata(StatusKey, AutoLogonResultStatus.UnexpectedError));
+            return new AutoLogonUnexpectedError(ex.Message);
         }
     }
 
-    private Result<AutoLogonResultStatus> HandleDeactivation(ConfigureAutoLogonRequest request)
+    private ConfigureAutoLogonResult HandleDeactivation(ConfigureAutoLogonRequest request)
     {
         if (request.RestorePasswordlessMode)
         {
             if (!_systemInfoPort.IsUserAdministrator())
-                return Result.Fail(new Error(ErrorMessageAdminRequiredDeactivation)
-                    .WithMetadata(StatusKey, AutoLogonResultStatus.AdminRequired));
+                return new AutoLogonAdminRequired(ErrorMessageAdminRequiredDeactivation);
 
             _autoLogonPort.SetPasswordlessAuth(true);
         }
 
         _autoLogonPort.DisableAutoLogon();
-        return Result.Ok(AutoLogonResultStatus.Deactivated);
+        return new AutoLogonDeactivated();
     }
 
-    private Result<AutoLogonResultStatus> HandleActivation(ConfigureAutoLogonRequest request)
+    private ConfigureAutoLogonResult HandleActivation(ConfigureAutoLogonRequest request)
     {
         if (request.DisablePasswordlessMode && !_systemInfoPort.IsUserAdministrator())
-            return Result.Fail(new Error(ErrorMessageAdminRequiredActivation)
-                .WithMetadata(StatusKey, AutoLogonResultStatus.AdminRequired));
+            return new AutoLogonAdminRequired(ErrorMessageAdminRequiredActivation);
 
         if (!request.DisablePasswordlessMode && _autoLogonPort.IsPasswordlessAuthEnabled())
-            return Result.Fail(new Error(ErrorMessageWindowsHelloBlockActive)
-                .WithMetadata(StatusKey, AutoLogonResultStatus.WindowsHelloBlockActive));
+            return new AutoLogonWindowsHelloBlockActive();
 
         if (string.IsNullOrWhiteSpace(request.Username) || request.Password is null)
-            return Result.Fail(new Error(ErrorMessageCredentialsMissing)
-                .WithMetadata(StatusKey, AutoLogonResultStatus.ValidationError));
+            return new AutoLogonValidationError(ErrorMessageCredentialsMissing);
 
         string domain = request.Domain ?? string.Empty;
 
         if (!_credentialValidationPort.ValidateCredentials(request.Username, domain, request.Password))
-            return Result.Fail(new Error(ErrorMessageInvalidCredentials)
-                .WithMetadata(StatusKey, AutoLogonResultStatus.ValidationError));
+            return new AutoLogonValidationError(ErrorMessageInvalidCredentials);
 
         return ApplyAutoLogonActivation(request, domain);
     }
 
-    private Result<AutoLogonResultStatus> ApplyAutoLogonActivation(ConfigureAutoLogonRequest request, string domain)
+    private ConfigureAutoLogonResult ApplyAutoLogonActivation(ConfigureAutoLogonRequest request, string domain)
     {
         bool passwordlessWasDisabledByUs = false;
 
@@ -126,13 +114,12 @@ public sealed class ConfigureAutoLogonUseCase(
             {
                 RestorePasswordlessMode(passwordlessWasDisabledByUs);
 
-                return Result.Fail(new Error(ErrorMessageWindowsHelloBlockActive)
-                    .WithMetadata(StatusKey, AutoLogonResultStatus.WindowsHelloBlockActive));
+                return new AutoLogonWindowsHelloBlockActive();
             }
 
             _autoLogonPort.EnableAutoLogon(request.Username!, domain, request.Password!);
 
-            return Result.Ok(AutoLogonResultStatus.Activated);
+            return new AutoLogonActivated();
         }
         catch
         {

@@ -113,7 +113,7 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject,
 
         CurrentDay = _localizationService.RetrieveString(KeyGeneralToday);
 
-        YAxes =
+        YAxes = (ICartesianAxis[])
         [
             new Axis
             {

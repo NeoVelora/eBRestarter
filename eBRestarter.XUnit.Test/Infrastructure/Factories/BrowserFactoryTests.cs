@@ -80,5 +80,14 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
 
             result.ShouldBeSameAs(fakeChrome);
         }
+
+        [Fact]
+        public void Constructor_ShouldThrowArgumentNullException_WhenServiceProviderIsNull()
+        {
+            Action act = () => new BrowserFactory(null!);
+
+            act.ShouldThrow<ArgumentNullException>()
+                .ParamName.ShouldBe("serviceProvider");
+        }
     }
 }
