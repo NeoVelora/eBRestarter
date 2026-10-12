@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -130,7 +131,7 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
             string messageFormat = _localizationService.RetrieveString(ExtensionFolderOpenErrorMessageResourceKey);
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(ExtensionFolderOpenErrorTitleResourceKey),
-                string.Format(messageFormat, exception.Message),
+                string.Format(CultureInfo.CurrentCulture, messageFormat, exception.Message),
                 DialogIcon.Error);
         }
     }

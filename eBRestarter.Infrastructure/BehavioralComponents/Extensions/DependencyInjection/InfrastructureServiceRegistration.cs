@@ -82,10 +82,27 @@ public static class InfrastructureServiceRegistration
         services.AddKeyedTransient<IOutboundPortBrowser, AdapterBraveBrowserWrapper>(BrowserType.Brave);
         services.AddKeyedTransient<IOutboundPortBrowser, AdapterVivaldiBrowserWrapper>(BrowserType.Vivaldi);
 
-        services.AddSingleton<IOutboundPortHttpDownload, AdapterHttpClientDownloadHandler>();
+        services.AddHttpClient(RestSharpClient.HttpClientName, client =>
+                {
+                    client.MaxResponseContentBufferSize = RestSharpClient.MaxAllowedResponseSizeBytes;
+                })
+                .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+                .AddStandardResilienceHandler();
 
-        services.AddHttpClient(RestSharpClient.HttpClientName)
+        services.AddHttpClient(AdapterHttpClientDownloadHandler.HttpClientName)
                 .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+
+        services.AddSingleton<System.Threading.RateLimiting.RateLimiter>(_ => new System.Threading.RateLimiting.TokenBucketRateLimiter(new System.Threading.RateLimiting.TokenBucketRateLimiterOptions
+        {
+            TokenLimit = 30,
+            TokensPerPeriod = 30,
+            ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+            QueueLimit = 100,
+            QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
+            AutoReplenishment = true
+        }));
+
+        services.AddSingleton<IOutboundPortHttpDownload, AdapterHttpClientDownloadHandler>();
 
         services.AddSingleton<IRestClient, RestSharpClient>();
         services.AddSingleton<IOutboundPortApiAuthenticationProvider, AdapterEVisitorApiAuthenticationProvider>();

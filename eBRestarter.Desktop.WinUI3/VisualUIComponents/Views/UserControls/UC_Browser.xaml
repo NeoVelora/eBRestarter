@@ -36,10 +36,10 @@
                 Width="80"
                 Height="83"
                 HorizontalAlignment="Left"
-                Style="{Binding DownloadButtonStyleKey, Converter={StaticResource StringKeyToStyleConverter}}"
-                Command="{Binding ToggleDownloadCommand}"
-                Content="{Binding DownloadButtonContent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                Visibility="{Binding IsDownloadButtonVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                Style="{x:Bind ViewModel.DownloadButtonStyleKey, Converter={StaticResource StringKeyToStyleConverter}, Mode=OneWay}"
+                Command="{x:Bind ViewModel.ToggleDownloadCommand, Mode=OneWay}"
+                Content="{x:Bind ViewModel.DownloadButtonContent, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsDownloadButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
 
             <Button
                 x:Uid="Select"
@@ -49,17 +49,17 @@
                 Height="83"
                 FontSize="11"
                 Style="{StaticResource ButtonChooseBrowser}"
-                Command="{Binding ChooseBrowserCommand}"
-                Visibility="{Binding IsChooseButtonVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                Command="{x:Bind ViewModel.ChooseBrowserCommand, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsChooseButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
 
             <Image
                 Canvas.Left="85"
                 Canvas.Top="5"
-                Width="{Binding ImageSizeWidthBrowser}"
-                Height="{Binding ImageSizeHeightBrowser}"
+                Width="{x:Bind ViewModel.ImageSizeWidthBrowser, Mode=OneWay}"
+                Height="{x:Bind ViewModel.ImageSizeHeightBrowser, Mode=OneWay}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Source="{Binding HeaderImageBrowser}" />
+                Source="{x:Bind ViewModel.HeaderImageBrowser, Mode=OneWay}" />
 
             <TextBlock
                 Canvas.Left="122"
@@ -68,7 +68,7 @@
                 VerticalAlignment="Center"
                 FontSize="16"
                 Foreground="{ThemeResource FontColor_1}"
-                Text="{Binding HeaderTitleBrowser}"
+                Text="{x:Bind ViewModel.HeaderTitleBrowser, Mode=OneWay}"
                 TextWrapping="Wrap" />
 
             <TextBlock
@@ -76,7 +76,7 @@
                 Canvas.Top="57"
                 FontSize="14"
                 Foreground="{ThemeResource FontColor_1}"
-                Text="{Binding BrowserVersionText}"
+                Text="{x:Bind ViewModel.BrowserVersionText, Mode=OneWay}"
                 TextWrapping="Wrap" />
 
             <TextBlock
@@ -84,8 +84,8 @@
                 Canvas.Top="1"
                 FontFamily="Segoe Fluent Icons"
                 FontSize="25"
-                Foreground="{Binding InstallStateGlyphForeground}"
-                Text="{Binding InstallStateGlyph}"
+                Foreground="{x:Bind ViewModel.InstallStateGlyphForeground, Mode=OneWay}"
+                Text="{x:Bind ViewModel.InstallStateGlyph, Mode=OneWay}"
                 TextWrapping="Wrap" />
 
             <ProgressBar
@@ -94,16 +94,16 @@
                 Width="168"
                 Height="14"
                 Background="{ThemeResource LayerFillColorDefaultBrush}"
-                Value="{Binding DownloadProgressValue, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                Visibility="{Binding IsDownloadButtonVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                Value="{x:Bind ViewModel.DownloadProgressValue, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsDownloadButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
 
             <TextBlock
                 Canvas.Left="86"
                 Canvas.Top="57"
                 FontSize="14"
                 Foreground="{ThemeResource FontColor_1}"
-                Text="{Binding DownloadSizeText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                Visibility="{Binding IsDownloadSizeTextVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+                Text="{x:Bind ViewModel.DownloadSizeText, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsDownloadSizeTextVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
 
         </Canvas>
 

@@ -25,10 +25,18 @@ public sealed class AdapterWindowsBrowserDiscoveryProvider : IOutboundPortBrowse
     private readonly ILogger<AdapterWindowsBrowserDiscoveryProvider> _logger;
     private readonly TimeProvider _timeProvider;
 
-    private readonly SemaphoreSlim _discoveryGate = new(1, 1);
-    private IReadOnlyList<BrowserInfo>? _cachedBrowsers;
+    private long _cacheHits;
+    private long _cacheMisses;
     private long _cacheTimestampTicks;
     private bool _disposed;
+
+    private readonly SemaphoreSlim _discoveryGate = new(1, 1);
+    private IReadOnlyList<BrowserInfo>? _cachedBrowsers;
+
+
+    public long CacheHits => Volatile.Read(ref _cacheHits);
+
+    public long CacheMisses => Volatile.Read(ref _cacheMisses);
 
 
     public AdapterWindowsBrowserDiscoveryProvider(
@@ -60,6 +68,7 @@ public sealed class AdapterWindowsBrowserDiscoveryProvider : IOutboundPortBrowse
     {
         if (TryReadFreshCache(out IReadOnlyList<BrowserInfo>? cached))
         {
+            Interlocked.Increment(ref _cacheHits);
             return cached;
         }
 
@@ -69,8 +78,11 @@ public sealed class AdapterWindowsBrowserDiscoveryProvider : IOutboundPortBrowse
         {
             if (TryReadFreshCache(out cached))
             {
+                Interlocked.Increment(ref _cacheHits);
                 return cached;
             }
+
+            Interlocked.Increment(ref _cacheMisses);
 
             IReadOnlyList<BrowserInfo> discovered = DiscoverInstalledBrowsers();
 

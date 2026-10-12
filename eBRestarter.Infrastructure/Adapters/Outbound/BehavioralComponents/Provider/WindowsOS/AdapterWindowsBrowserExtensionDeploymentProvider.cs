@@ -11,9 +11,11 @@ public sealed class AdapterWindowsBrowserExtensionDeploymentProvider : IOutbound
     private const string AllDirectoriesSearchPattern = "*";
     private const string AllFilesSearchPattern = "*.*";
 #endif
+#if DEBUG
     private const string DebugSolutionRelativePath = @"..\..\..\..\..\..\";
-    private const string ExtensionFolderName = "TabRestarterExtension";
     private const string ExtensionProjectFolderName = "eBRestarter.TabRestarterExtension";
+#endif
+    private const string ExtensionFolderName = "TabRestarterExtension";
 
 
     public void EnsureExtensionIsDeployed()

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
@@ -40,8 +41,8 @@ public sealed class AdapterVivaldiBrowserWrapper(
     {
         get
         {
-            var uninstallPath = string.Format(MachineUninstallRegistryKeyPattern, UninstallSubKey);
-            var uninstallPathWow = string.Format(Wow64UninstallRegistryKeyPattern, UninstallSubKey);
+            var uninstallPath = string.Format(CultureInfo.InvariantCulture, MachineUninstallRegistryKeyPattern, UninstallSubKey);
+            var uninstallPathWow = string.Format(CultureInfo.InvariantCulture, Wow64UninstallRegistryKeyPattern, UninstallSubKey);
 
             var versionObj = _settingsPort.GetUserValue(uninstallPath, DisplayVersionValueName)
                 ?? _settingsPort.GetSystemValue(uninstallPath, DisplayVersionValueName)

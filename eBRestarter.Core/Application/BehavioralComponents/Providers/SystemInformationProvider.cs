@@ -21,10 +21,10 @@ public sealed class SystemInformationProvider(
         var hardwareTask = _hardwareInfoProvider.RetrieveHardwareInfoAsync();
         var editionTask = _osEditionProvider.RetrieveOsEditionAsync();
 
-        await Task.WhenAll(hardwareTask, editionTask);
+        await Task.WhenAll(hardwareTask, editionTask).ConfigureAwait(false);
 
-        var hardware = await hardwareTask;
-        var edition = await editionTask;
+        var hardware = await hardwareTask.ConfigureAwait(false);
+        var edition = await editionTask.ConfigureAwait(false);
 
         var osDisplayVersion = _systemInfoProvider.RetrieveCurrentOsDisplayVersion();
         var osBuildVersion = _systemInfoProvider.RetrieveCurrentOsBuildVersion();

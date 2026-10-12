@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,6 +23,8 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
 
 
     private readonly ILogger<AdapterWindowsFileDeletionService> _logger;
+
+    private static readonly CompositeFormat DeletingFileStatusCompositeFormat = CompositeFormat.Parse(DeletingFileStatusFormat);
 
 
     public AdapterWindowsFileDeletionService(ILogger<AdapterWindowsFileDeletionService> logger)
@@ -194,7 +198,7 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
 
             if (context.UpdateCounter >= context.ReportInterval)
             {
-                string statusMessage = string.Format(DeletingFileStatusFormat, Path.GetFileName(file));
+                string statusMessage = string.Format(CultureInfo.CurrentCulture, DeletingFileStatusCompositeFormat, Path.GetFileName(file));
                 context.StatusReporter.Report(statusMessage);
                 context.UpdateCounter = InitialCounterValue;
             }

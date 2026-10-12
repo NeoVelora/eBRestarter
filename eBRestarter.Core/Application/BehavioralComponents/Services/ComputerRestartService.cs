@@ -80,7 +80,7 @@ public sealed class ComputerRestartService(
 
         if (cts is not null)
         {
-            await cts.CancelAsync();
+            await cts.CancelAsync().ConfigureAwait(false);
             cts.Dispose();
         }
 
@@ -90,7 +90,7 @@ public sealed class ComputerRestartService(
         {
             try
             {
-                await backgroundTask;
+                await backgroundTask.ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -127,9 +127,9 @@ public sealed class ComputerRestartService(
     {
         try
         {
-            while (await timer.WaitForNextTickAsync(cancellationToken))
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
-                await CheckAndExecuteRestartAsync();
+                await CheckAndExecuteRestartAsync().ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
@@ -186,7 +186,7 @@ public sealed class ComputerRestartService(
 
         if (isCorrectDay && isCorrectTime)
         {
-            await ExecuteRestartSequenceAsync();
+            await ExecuteRestartSequenceAsync().ConfigureAwait(false);
         }
     }
 
@@ -201,7 +201,7 @@ public sealed class ComputerRestartService(
             _logger.LogInformation(
                 LogEventIds.RestarterCycle.RestartClosingApplications,
                 "Requesting graceful closure across all active desktop applications windows...");
-            await _processService.CloseAllOpenProgramsAsync(ProcessCloseTimeoutMilliseconds);
+            await _processService.CloseAllOpenProgramsAsync(ProcessCloseTimeoutMilliseconds).ConfigureAwait(false);
 
             _logger.LogInformation(
                 LogEventIds.RestarterCycle.RestartDispatchingReboot,

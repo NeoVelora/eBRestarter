@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
@@ -80,7 +81,7 @@ public sealed class AdapterFirefoxBrowserWrapper(
             paths.Add(_fileSystemPort.CombinePaths(_fileSystemPort.ResolveEnvironmentPath(ProgramFilesX86EnvVar), FirefoxExeSubPath));
             paths.Add(_fileSystemPort.CombinePaths(_fileSystemPort.ResolveEnvironmentPath(LocalAppDataEnvVar), FirefoxExeSubPath));
 
-            return [.. paths.Distinct()];
+            return [.. paths.Distinct(StringComparer.OrdinalIgnoreCase)];
         }
     }
 
@@ -179,7 +180,7 @@ public sealed class AdapterFirefoxBrowserWrapper(
         }
 
         var currentVersion = currentVersionObj.ToString()!;
-        var mainKeyPath = string.Format(FirefoxRegistryMainSubKeyPattern, FirefoxRegistryRootKey, currentVersion);
+        var mainKeyPath = string.Format(CultureInfo.InvariantCulture, FirefoxRegistryMainSubKeyPattern, FirefoxRegistryRootKey, currentVersion);
 
         var pathToExeObj = isHklm
             ? _settingsPort.GetSystemValue(mainKeyPath, FirefoxRegistryPathToExeValueName)
@@ -226,7 +227,7 @@ public sealed class AdapterFirefoxBrowserWrapper(
                 }
                 else if (trimmed.StartsWith(IniIsRelativeKeyPrefix, StringComparison.OrdinalIgnoreCase))
                 {
-                    currentIsRelative = trimmed.EndsWith("1");
+                    currentIsRelative = trimmed.EndsWith("1", StringComparison.Ordinal);
                 }
             }
 

@@ -4,6 +4,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.Windows.AppLifecycle;
 using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -300,10 +301,10 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
             {
                 IsUpdateAvailable = true;
                 string messageFormat = _localizationService.RetrieveString(OptionsUpdateAvailableResourceKey);
-                UpdateMessage = string.Format(messageFormat, response.LatestVersion);
+                UpdateMessage = string.Format(CultureInfo.CurrentCulture, messageFormat, response.LatestVersion);
 
                 string promptFormat = _localizationService.RetrieveString(OptionsUpdateAvailablePromptMessageResourceKey);
-                string dialogMessage = string.Format(promptFormat, UpdateMessage);
+                string dialogMessage = string.Format(CultureInfo.CurrentCulture, promptFormat, UpdateMessage);
 
                 bool userWantsUpdate = await _dialogService.ShowConfirmationAsync(
                     _localizationService.RetrieveString(OptionsUpdateAvailableTitleResourceKey),
@@ -337,7 +338,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
             string errorFormat = _localizationService.RetrieveString(OptionsUpdateCheckErrorMessageResourceKey);
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(OptionsUpdateErrorTitleResourceKey),
-                string.Format(errorFormat, exception.Message),
+                string.Format(CultureInfo.CurrentCulture, errorFormat, exception.Message),
                 DialogIcon.Error);
         }
         finally
@@ -416,7 +417,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
                 string errorFormat = _localizationService.RetrieveString(GeneralUnexpectedErrorResourceKey);
                 await _dialogService.ShowMessageAsync(
                     _localizationService.RetrieveString(GeneralErrorKey),
-                    string.Format(errorFormat, unexpected.Message));
+                    string.Format(CultureInfo.CurrentCulture, errorFormat, unexpected.Message));
                 break;
         }
     }
@@ -505,7 +506,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
 
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(OptionsUpdateFailedTitleResourceKey),
-                string.Format(errorFormat, exception.Message),
+                string.Format(CultureInfo.CurrentCulture, errorFormat, exception.Message),
                 DialogIcon.Error);
         }
         finally
@@ -557,7 +558,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
             }
 
             string messageFormat = _localizationService.RetrieveString(OptionsRestartStatusScheduledResourceKey);
-            RestartStatusText = string.Format(messageFormat, targetDate.ToString("dd.MM.yyyy"), targetDate.ToString("HH"));
+            RestartStatusText = string.Format(CultureInfo.CurrentCulture, messageFormat, targetDate.ToString("dd.MM.yyyy", CultureInfo.CurrentCulture), targetDate.ToString("HH", CultureInfo.InvariantCulture));
         }
     }
 }

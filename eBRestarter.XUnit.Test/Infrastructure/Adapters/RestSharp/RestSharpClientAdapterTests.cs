@@ -15,6 +15,7 @@ using System.Net.Http;
 using System.Linq;
 using Shouldly;
 using System;
+using System.Threading.RateLimiting;
 
 namespace eBRestarter.Tests.Infrastructure.Services
 {
@@ -129,6 +130,42 @@ namespace eBRestarter.Tests.Infrastructure.Services
         }
 
         [Fact]
+        public async Task ExecuteGetAsync_WithCancelledToken_ThrowsOperationCanceledException()
+        {
+            using var cts = new CancellationTokenSource();
+            await cts.CancelAsync();
+
+            var requestModel = new ApiRequest
+            {
+                Url = $"{_server.Urls[0]}/cancelled-test",
+                TimeoutSeconds = 5
+            };
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.ExecuteGetAsync(requestModel, cts.Token));
+        }
+
+        [Fact]
+        public async Task ExecuteGetAsync_WhenTokenCancelledDuringDelay_ThrowsOperationCanceledException()
+        {
+            _server.Given(Request.Create().WithPath("/slow-cancel").UsingGet())
+                   .RespondWith(Response.Create()
+                       .WithStatusCode(200)
+                       .WithBody("Slow Content")
+                       .WithDelay(TimeSpan.FromSeconds(5)));
+
+            using var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromMilliseconds(200));
+
+            var requestModel = new ApiRequest
+            {
+                Url = $"{_server.Urls[0]}/slow-cancel",
+                TimeoutSeconds = 10
+            };
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => _sut.ExecuteGetAsync(requestModel, cts.Token));
+        }
+
+        [Fact]
         public void ExecuteGet_SyncCall_Success_ReturnsSuccessAndContent()
         {
             _server.Given(Request.Create().WithPath("/sync-test").UsingGet())
@@ -141,6 +178,102 @@ namespace eBRestarter.Tests.Infrastructure.Services
             Assert.True(result.IsSuccess);
             Assert.Equal(ResponseCode.Success, result.StatusCode);
             Assert.Equal("Sync Content", result.Content);
+        }
+
+        [Fact]
+        public async Task ExecuteGetAsync_BurstExceedingRateLimit_ReturnsRequestLimitCodeAndRecovers()
+        {
+            _server.Given(Request.Create().WithPath("/rate-test").UsingGet())
+                   .RespondWith(Response.Create().WithStatusCode(200).WithBody("Rate Content"));
+
+            var httpClientFactory = Substitute.For<IHttpClientFactory>();
+            httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+
+            using var strictLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 2,
+                TokensPerPeriod = 2,
+                ReplenishmentPeriod = TimeSpan.FromMilliseconds(400),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+
+            using var clientWithLimiter = new RestSharpClient(_loggerMock, httpClientFactory, strictLimiter);
+            var request = new ApiRequest { Url = $"{_server.Urls[0]}/rate-test", TimeoutSeconds = 5 };
+
+            var firstResult = await clientWithLimiter.ExecuteGetAsync(request, TestContext.Current.CancellationToken);
+            var secondResult = await clientWithLimiter.ExecuteGetAsync(request, TestContext.Current.CancellationToken);
+
+            var rateLimitedResult = await clientWithLimiter.ExecuteGetAsync(request, TestContext.Current.CancellationToken);
+
+            firstResult.IsSuccess.ShouldBeTrue();
+            secondResult.IsSuccess.ShouldBeTrue();
+            rateLimitedResult.IsSuccess.ShouldBeFalse();
+            rateLimitedResult.StatusCode.ShouldBe(ResponseCode.RequestLimit);
+
+            await Task.Delay(450, TestContext.Current.CancellationToken);
+            var recoveredResult = await clientWithLimiter.ExecuteGetAsync(request, TestContext.Current.CancellationToken);
+
+            recoveredResult.IsSuccess.ShouldBeTrue();
+        }
+
+        [Fact]
+        public void ExecuteGet_SyncCall_BurstExceedingRateLimit_ReturnsRequestLimitCode()
+        {
+            _server.Given(Request.Create().WithPath("/sync-rate-test").UsingGet())
+                   .RespondWith(Response.Create().WithStatusCode(200).WithBody("Sync Content"));
+
+            var httpClientFactory = Substitute.For<IHttpClientFactory>();
+            httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+
+            using var strictLimiter = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 1,
+                TokensPerPeriod = 1,
+                ReplenishmentPeriod = TimeSpan.FromMilliseconds(500),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+
+            using var clientWithLimiter = new RestSharpClient(_loggerMock, httpClientFactory, strictLimiter);
+            var request = new ApiRequest { Url = $"{_server.Urls[0]}/sync-rate-test", TimeoutSeconds = 5 };
+
+            var firstResult = clientWithLimiter.ExecuteGet(request);
+
+            var secondResult = clientWithLimiter.ExecuteGet(request);
+
+            firstResult.IsSuccess.ShouldBeTrue();
+            secondResult.IsSuccess.ShouldBeFalse();
+            secondResult.StatusCode.ShouldBe(ResponseCode.RequestLimit);
+        }
+
+        [Fact]
+        public async Task ExecuteGetAsync_ResponseExceedingMaxAllowedSize_ReturnsError()
+        {
+            _server.Given(Request.Create().WithPath("/huge-payload").UsingGet())
+                   .RespondWith(Response.Create()
+                       .WithStatusCode(200)
+                       .WithBody(new string('X', 100)));
+
+            var httpClientFactory = Substitute.For<IHttpClientFactory>();
+            httpClientFactory.CreateClient(Arg.Any<string>()).Returns(_ => new HttpClient());
+
+            using var clientWithStrictSize = new RestSharpClient(
+                _loggerMock,
+                httpClientFactory,
+                rateLimiter: null,
+                maxResponseSizeBytes: 50);
+
+            var requestModel = new ApiRequest
+            {
+                Url = $"{_server.Urls[0]}/huge-payload",
+                TimeoutSeconds = 5
+            };
+
+            var result = await clientWithStrictSize.ExecuteGetAsync(requestModel, TestContext.Current.CancellationToken);
+
+            result.IsSuccess.ShouldBeFalse();
+            result.StatusCode.ShouldBe(ResponseCode.Error);
         }
 
         private void VerifyLoggerWarningWasCalled()

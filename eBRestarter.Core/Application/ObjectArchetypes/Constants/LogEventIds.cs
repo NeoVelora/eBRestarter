@@ -30,6 +30,8 @@ public static class LogEventIds
         public const int BrowserCacheDirectoryNotRemoved = 2022;
         public const int BrowserCacheReparsePointSkipped = 2023;
         public const int BrowserCachePathOutsideRoot = 2024;
+        public const int BrowserCacheSingleFileDeletionFailed = 2025;
+        public const int BrowserCachePathResolutionFailed = 2026;
     }
 
     public static class RestarterCycle
@@ -88,8 +90,11 @@ public static class LogEventIds
         public const int ApiRequestFailed = 6000;
         public const int ApiRequestTimedOut = 6001;
         public const int ApiErrorResponse = 6002;
+        public const int ApiAsyncRequestFailed = 6003;
         public const int ApiResponseParsingFailed = 6010;
         public const int EarningsRetrievalFailed = 6011;
+        public const int ApiRateLimited = 6012;
+        public const int ApiResponsePayloadTooLarge = 6013;
     }
 
     public static class UserInterface

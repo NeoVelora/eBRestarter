@@ -102,15 +102,21 @@ graph LR
   - `Serilog` (Structured enterprise logging)
   - `LiveChartsCore` (Data visualization & dashboards)
   - `RestSharp` (API communication)
-  - `Moq` & `Shouldly` (Testing)
-- **Testing:** xUnit (45+ test files covering Use Cases, Domain logic, and Infrastructure adapters)
+  - `NSubstitute` & `Shouldly` (Testing)
+- **Testing:** xUnit v3 (45+ test files covering Use Cases, Domain logic, and Infrastructure adapters)
 
 ## Getting Started (Developers)
 
 ### Prerequisites
-- Windows 11 (64-bit)
-- Visual Studio 2026 (for .NET 11)
-- Windows App SDK workload installed
+- Windows 11 (64-bit) / Windows 10 Version 1809+ (Build 17763+)
+- .NET 11 SDK (11.0.100+)
+- Visual Studio 2026 / Visual Studio 2022 (v17.13+) with Windows App SDK workload
+
+### Hardware Baseline (.NET 11 & ReadyToRun)
+In accordance with the .NET 11 execution baseline (`PERF-AOT-002`), all deployment targets, CI/CD build agents, and developer machines must satisfy the following architectural processor baselines:
+- **x64 (Intel 64 / AMD64):** Minimum baseline **x86-64-v2** (mandatory support for `CMPXCHG16B`, `LAHF-SAHF`, `POPCNT`, `SSE3`, `SSSE3`, `SSE4.1`, `SSE4.2`). Legacy CPUs lacking these instruction sets cannot boot the application (*"The current CPU is missing one or more of the baseline instruction sets"*).
+  - *ReadyToRun (R2R) Acceleration:* Precompiled Windows desktop binaries target **x86-64-v3** (`AVX`, `AVX2`, `BMI1`, `BMI2`, `FMA3`) for near-instant cold starts. On supported x86-64-v2 CPUs lacking AVX2, the runtime gracefully falls back to JIT compilation during startup.
+- **ARM64 (Windows on ARM):** Mandatory support for **LSE** (Large System Extensions / `armv8.1-a+`). Precompiled R2R images target `armv8.2-a + RCPC`. Older ARM64 hardware without LSE is unsupported by .NET 11.
 
 ### Building the Project
 1. Clone the repository.

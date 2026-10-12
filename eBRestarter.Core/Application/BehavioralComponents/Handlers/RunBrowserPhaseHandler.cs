@@ -66,7 +66,7 @@ public sealed class RunBrowserPhaseHandler(
 
             if (secondsRemaining > 0)
             {
-                await timer.WaitForNextTickAsync(token);
+                await timer.WaitForNextTickAsync(token).ConfigureAwait(false);
             }
         }
 

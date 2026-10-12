@@ -184,7 +184,57 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 
             result.ShouldBeNull();
         }
-    
+
+        [Fact]
+        public void LoadCredentials_ShouldReturnNull_WhenJsonContainsDuplicateProperties()
+        {
+            var mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
+            var mockPathProvider = Substitute.For<IOutboundPortAppPathProvider>();
+
+            mockPathProvider.RetrieveLocalAppDataDirectory().Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .CombinePaths(Arg.Any<string[]>())
+                .Returns(ci => Path.Combine(ci.Arg<string[]>()));
+
+            mockFileSystem.FileExists(_expectedStoragePath).Returns(true);
+            mockFileSystem.ReadAllText(_expectedStoragePath).Returns(@"{""Username"":""User1"",""Username"":""User2"",""ApiKey"":""Key""}");
+
+            var store = new JsonCredentialStoreRepository(
+                CreateRoundTripEncryption(),
+                mockFileSystem,
+                new FakeLogger<JsonCredentialStoreRepository>(),
+                mockPathProvider);
+
+            var result = store.LoadCredentials();
+
+            result.ShouldBeNull();
+        }
+
+        [Fact]
+        public void LoadCredentials_ShouldReturnNull_WhenPayloadExceedsMaximumSize()
+        {
+            var mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
+            var mockPathProvider = Substitute.For<IOutboundPortAppPathProvider>();
+
+            mockPathProvider.RetrieveLocalAppDataDirectory().Returns(@"C:\FakeAppData");
+            mockFileSystem
+                .CombinePaths(Arg.Any<string[]>())
+                .Returns(ci => Path.Combine(ci.Arg<string[]>()));
+
+            mockFileSystem.FileExists(_expectedStoragePath).Returns(true);
+            mockFileSystem.ReadAllText(_expectedStoragePath).Returns(new string('a', 65 * 1024));
+
+            var store = new JsonCredentialStoreRepository(
+                CreateRoundTripEncryption(),
+                mockFileSystem,
+                new FakeLogger<JsonCredentialStoreRepository>(),
+                mockPathProvider);
+
+            var result = store.LoadCredentials();
+
+            result.ShouldBeNull();
+        }
+
         private static IOutboundPortEncryption CreateRoundTripEncryption()
         {
             var encryption = Substitute.For<IOutboundPortEncryption>();

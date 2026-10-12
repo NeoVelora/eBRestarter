@@ -132,14 +132,17 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
         }
         catch (Exception exception)
         {
-            _logger.LogError(
-                LogEventIds.Browser.BrowserProfileDiscoveryFailed,
-                exception,
-                "Loading the installed browser list failed.");
+            LogLoadBrowsersFailed(exception);
         }
         finally
         {
             Volatile.Write(ref _refreshInFlight, 0);
         }
     }
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+        Level = LogLevel.Error,
+        Message = "Loading the installed browser list failed.")]
+    private partial void LogLoadBrowsersFailed(Exception exception);
 }

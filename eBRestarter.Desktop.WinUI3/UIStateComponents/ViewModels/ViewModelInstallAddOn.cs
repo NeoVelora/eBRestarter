@@ -103,10 +103,7 @@ public sealed partial class ViewModelInstallAddOn : ObservableObject, IDisposabl
                          .Where(task => task.IsFaulted)
                          .SelectMany(task => task.Exception!.Flatten().InnerExceptions))
             {
-                _logger.LogError(
-                    LogEventIds.Browser.BrowserProfileDiscoveryFailed,
-                    failure,
-                    "Refreshing the add-on status of one browser failed.");
+                LogAddonStatusRefreshFailed(failure);
             }
         }
         finally
@@ -114,4 +111,10 @@ public sealed partial class ViewModelInstallAddOn : ObservableObject, IDisposabl
             Volatile.Write(ref _refreshInFlight, 0);
         }
     }
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+        Level = LogLevel.Error,
+        Message = "Refreshing the add-on status of one browser failed.")]
+    private partial void LogAddonStatusRefreshFailed(Exception exception);
 }

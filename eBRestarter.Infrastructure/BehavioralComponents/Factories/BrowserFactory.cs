@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -48,7 +49,7 @@ public sealed class BrowserFactory : IOutboundPortBrowserFactory
             BrowserType.Edge => _serviceProvider.GetRequiredService<AdapterEdgeBrowserWrapper>(),
             BrowserType.Brave => _serviceProvider.GetRequiredService<AdapterBraveBrowserWrapper>(),
             BrowserType.Vivaldi => _serviceProvider.GetRequiredService<AdapterVivaldiBrowserWrapper>(),
-            _ => throw new NotSupportedException(string.Format(UnsupportedBrowserErrorMessagePattern, type, nameof(BrowserFactory)))
+            _ => throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, UnsupportedBrowserErrorMessagePattern, type, nameof(BrowserFactory)))
         };
     }
 }

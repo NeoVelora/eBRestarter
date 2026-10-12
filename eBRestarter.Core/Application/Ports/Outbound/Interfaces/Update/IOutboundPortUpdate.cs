@@ -4,7 +4,7 @@ namespace eBRestarter.Core.Application.Ports.Outbound.Interfaces.Update;
 
 public interface IOutboundPortUpdate
 {
-    Task<UpdateInfo> CheckForUpdateAsync();
+    Task<UpdateInfo> CheckForUpdateAsync(CancellationToken cancellationToken = default);
 
-    Task DownloadAndInstallAsync(UpdateInfo updateInfo);
+    Task DownloadAndInstallAsync(UpdateInfo updateInfo, CancellationToken cancellationToken = default);
 }

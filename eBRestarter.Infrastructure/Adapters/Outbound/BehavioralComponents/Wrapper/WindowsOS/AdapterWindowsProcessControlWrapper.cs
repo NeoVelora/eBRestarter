@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -37,6 +39,8 @@ public sealed partial class AdapterWindowsProcessControlWrapper(
 
     private readonly ILogger<AdapterWindowsProcessControlWrapper> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IProcessWrapper _processWrapper = processWrapper ?? throw new ArgumentNullException(nameof(processWrapper));
+
+    private static readonly CompositeFormat MsiInstallArgumentsCompositeFormat = CompositeFormat.Parse(MsiInstallArgumentsPattern);
 
 
     public async Task CloseAllOpenProgramsAsync(int timeoutMilliseconds)
@@ -158,7 +162,7 @@ public sealed partial class AdapterWindowsProcessControlWrapper(
         var startInfo = new ProcessStartInfo
         {
             FileName = msiExecPath,
-            Arguments = string.Format(MsiInstallArgumentsPattern, installerPath),
+            Arguments = string.Format(CultureInfo.InvariantCulture, MsiInstallArgumentsCompositeFormat, installerPath),
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,

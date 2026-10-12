@@ -114,7 +114,7 @@ namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS
                 using var baseKey = Registry.CurrentUser.OpenSubKey("Software", true);
                 if (baseKey != null)
                 {
-                    string keyToDelete = _tempTestKey.Replace(@"Software\", "");
+                    string keyToDelete = _tempTestKey.Replace(@"Software\", "", StringComparison.OrdinalIgnoreCase);
                     baseKey.DeleteSubKeyTree(keyToDelete, false);
                 }
             }

@@ -114,6 +114,64 @@ namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS
 
             result.ShouldBeEmpty();
         }
+
+        [Fact]
+        public async Task FindInstalledBrowsersAsync_ShouldTrackCacheHitsAndMissesAccurately_WhenInvokedAcrossTtlWindow()
+        {
+            var fakeTimeProvider = new Microsoft.Extensions.Time.Testing.FakeTimeProvider();
+            using var service = new AdapterWindowsBrowserDiscoveryProvider(
+                _mockBrowserFactory,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<AdapterWindowsBrowserDiscoveryProvider>.Instance,
+                fakeTimeProvider);
+
+            var mockBrowser = Substitute.For<IOutboundPortBrowser>();
+            mockBrowser.IsInstalled.Returns(true);
+            mockBrowser.BrowserVersion.Returns("130.0");
+            mockBrowser.DisplayName.Returns("Chrome");
+            mockBrowser.IconPath.Returns(@"C:\chrome.exe");
+            mockBrowser.DownloadUrl.Returns("https://google.com");
+
+            _mockBrowserFactory
+                .Create(Arg.Any<BrowserType>())
+                .Returns(mockBrowser);
+
+            service.CacheHits.ShouldBe(0);
+            service.CacheMisses.ShouldBe(0);
+
+            var result1 = await service.FindInstalledBrowsersAsync();
+            result1.ShouldNotBeEmpty();
+
+            service.CacheMisses.ShouldBe(1);
+            service.CacheHits.ShouldBe(0);
+
+            fakeTimeProvider.Advance(TimeSpan.FromSeconds(10));
+            var result2 = await service.FindInstalledBrowsersAsync();
+            result2.ShouldNotBeEmpty();
+
+            service.CacheMisses.ShouldBe(1);
+            service.CacheHits.ShouldBe(1);
+
+            fakeTimeProvider.Advance(TimeSpan.FromSeconds(10));
+            var result3 = await service.FindInstalledBrowsersAsync();
+            result3.ShouldNotBeEmpty();
+
+            service.CacheMisses.ShouldBe(1);
+            service.CacheHits.ShouldBe(2);
+
+            fakeTimeProvider.Advance(TimeSpan.FromSeconds(15));
+            var result4 = await service.FindInstalledBrowsersAsync();
+            result4.ShouldNotBeEmpty();
+
+            service.CacheMisses.ShouldBe(2);
+            service.CacheHits.ShouldBe(2);
+
+            fakeTimeProvider.Advance(TimeSpan.FromSeconds(5));
+            var result5 = await service.FindInstalledBrowsersAsync();
+            result5.ShouldNotBeEmpty();
+
+            service.CacheMisses.ShouldBe(2);
+            service.CacheHits.ShouldBe(3);
+        }
     }
 }
 

@@ -30,8 +30,8 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 {
     private const string DownloadBrowserToggleButtonRedStyleKey = "DownloadBrowserToggleButtonRed";
     private const string DownloadBrowserToggleButtonStyleKey = "DownloadBrowserToggleButton";
-    private const string ImageSizeHeightBrowserValue = "32";
-    private const string ImageSizeWidthBrowserValue = "32";
+    private const double ImageSizeHeightBrowserValue = 32.0;
+    private const double ImageSizeWidthBrowserValue = 32.0;
     private const string InstalledIndicatorForegroundColorHex = "#7ED422";
     private const string InstallStateGlyphInstalledCharacter = "\uE73E";
     private const string InstallStateGlyphNotInstalledCharacter = "\uE711";
@@ -109,9 +109,9 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
     public string HeaderTitleBrowser => _browserInfo.Name;
 
-    public static string ImageSizeHeightBrowser => ImageSizeHeightBrowserValue;
+    public double ImageSizeHeightBrowser => ImageSizeHeightBrowserValue;
 
-    public static string ImageSizeWidthBrowser => ImageSizeWidthBrowserValue;
+    public double ImageSizeWidthBrowser => ImageSizeWidthBrowserValue;
 
     public string InstallStateGlyph => _browserInfo.IsInstalled
         ? InstallStateGlyphInstalledCharacter

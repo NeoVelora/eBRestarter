@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
@@ -52,7 +53,7 @@ public abstract class AdapterChromiumBrowserBaseWrapper(
         {
             var paths = new List<string>();
 
-            var appPathKey = string.Format(AppPathsRegistryKeyPattern, ExeFileName);
+            var appPathKey = string.Format(CultureInfo.InvariantCulture, AppPathsRegistryKeyPattern, ExeFileName);
             var appPath = _settingsPort.GetSystemValue(appPathKey, string.Empty)?.ToString();
 
             if (!string.IsNullOrEmpty(appPath))
@@ -60,17 +61,17 @@ public abstract class AdapterChromiumBrowserBaseWrapper(
                 paths.Add(appPath);
             }
 
-            var clientKey = string.Format(StartMenuInternetRegistryKeyPattern, BrowserRegistryName);
+            var clientKey = string.Format(CultureInfo.InvariantCulture, StartMenuInternetRegistryKeyPattern, BrowserRegistryName);
             var clientPath = _settingsPort.GetSystemValue(clientKey, string.Empty)?.ToString();
 
             if (!string.IsNullOrEmpty(clientPath))
             {
-                paths.Add(clientPath.Replace("\"", string.Empty).Trim());
+                paths.Add(clientPath.Replace("\"", string.Empty, StringComparison.Ordinal).Trim());
             }
 
-            AddPathFromUninstallKey(paths, string.Format(MachineUninstallRegistryKeyPattern, UninstallSubKey), ExeFileName, true);
-            AddPathFromUninstallKey(paths, string.Format(Wow64UninstallRegistryKeyPattern, UninstallSubKey), ExeFileName, true);
-            AddPathFromUninstallKey(paths, string.Format(UserUninstallRegistryKeyPattern, UninstallSubKey), ExeFileName, false);
+            AddPathFromUninstallKey(paths, string.Format(CultureInfo.InvariantCulture, MachineUninstallRegistryKeyPattern, UninstallSubKey), ExeFileName, true);
+            AddPathFromUninstallKey(paths, string.Format(CultureInfo.InvariantCulture, Wow64UninstallRegistryKeyPattern, UninstallSubKey), ExeFileName, true);
+            AddPathFromUninstallKey(paths, string.Format(CultureInfo.InvariantCulture, UserUninstallRegistryKeyPattern, UninstallSubKey), ExeFileName, false);
 
             var pathPart = _fileSystemPort.CombinePaths(ProgramFilesSubPath, ExeFileName);
 
@@ -78,7 +79,7 @@ public abstract class AdapterChromiumBrowserBaseWrapper(
             paths.Add(_fileSystemPort.CombinePaths(_fileSystemPort.ResolveEnvironmentPath(ProgramFilesX86EnvVar), pathPart));
             paths.Add(_fileSystemPort.CombinePaths(_fileSystemPort.ResolveEnvironmentPath(LocalAppDataEnvVar), pathPart));
 
-            return [.. paths.Distinct()];
+            return [.. paths.Distinct(StringComparer.OrdinalIgnoreCase)];
         }
     }
 

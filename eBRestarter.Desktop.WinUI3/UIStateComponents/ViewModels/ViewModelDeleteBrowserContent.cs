@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -83,7 +84,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
         else
         {
             string errorFormat = _localizationService.RetrieveString(KeyCleanupConfigError);
-            StatusText = string.Format(errorFormat, selectedBrowserString);
+            StatusText = string.Format(CultureInfo.CurrentCulture, errorFormat, selectedBrowserString);
         }
     }
 
@@ -208,7 +209,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                 "Browser cleanup failed with a file system error.");
 
             string errorFormat = _localizationService.RetrieveString(KeyGeneralErrorPrefix);
-            StatusText = string.Format(errorFormat, ex.Message);
+            StatusText = string.Format(CultureInfo.CurrentCulture, errorFormat, ex.Message);
         }
         catch (Exception ex)
         {
@@ -218,7 +219,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                 "Browser cleanup failed unexpectedly.");
 
             string errorFormat = _localizationService.RetrieveString(KeyGeneralErrorPrefix);
-            StatusText = string.Format(errorFormat, ex.Message);
+            StatusText = string.Format(CultureInfo.CurrentCulture, errorFormat, ex.Message);
         }
         finally
         {
@@ -252,7 +253,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                 "Loading the browser cleanup dialog state failed.");
 
             string errorFormat = _localizationService.RetrieveString(KeyGeneralLoadErrorPrefix);
-            StatusText = string.Format(errorFormat, ex.Message);
+            StatusText = string.Format(CultureInfo.CurrentCulture, errorFormat, ex.Message);
         }
     }
 

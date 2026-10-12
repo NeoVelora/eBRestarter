@@ -1,7 +1,9 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.Versioning;
+using System.Text;
 
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 
@@ -13,6 +15,11 @@ public sealed class AdapterWindowsRegistryRepository : IOutboundPortSystemConfig
     private const string FailedToCreateOrOpenSubKeyExceptionMessage = "Failed to create or open registry subkey '{0}'.";
     private const string FailedToCreateOrOpenSystemSubKeyExceptionMessage = "Failed to create or open system registry subkey '{0}'.";
     private const string InsufficientPermissionsSystemSubKeyExceptionMessage = "Insufficient permissions to write to system registry subkey '{0}'. The application must be run as Administrator.";
+
+
+    private static readonly CompositeFormat FailedToCreateOrOpenSubKeyCompositeFormat = CompositeFormat.Parse(FailedToCreateOrOpenSubKeyExceptionMessage);
+    private static readonly CompositeFormat FailedToCreateOrOpenSystemSubKeyCompositeFormat = CompositeFormat.Parse(FailedToCreateOrOpenSystemSubKeyExceptionMessage);
+    private static readonly CompositeFormat InsufficientPermissionsSystemSubKeyCompositeFormat = CompositeFormat.Parse(InsufficientPermissionsSystemSubKeyExceptionMessage);
 
 
     public void DeleteUserValue(string subKey, string name)
@@ -52,7 +59,7 @@ public sealed class AdapterWindowsRegistryRepository : IOutboundPortSystemConfig
             return [];
         }
 
-        Dictionary<string, object> result = [];
+        Dictionary<string, object> result = new(key.ValueCount, StringComparer.OrdinalIgnoreCase);
         foreach (string name in key.GetValueNames())
         {
             if (key.GetValue(name) is { } val)
@@ -73,13 +80,13 @@ public sealed class AdapterWindowsRegistryRepository : IOutboundPortSystemConfig
         try
         {
             using var key = Registry.LocalMachine.CreateSubKey(subKey)
-                ?? throw new InvalidOperationException(string.Format(FailedToCreateOrOpenSystemSubKeyExceptionMessage, subKey));
+                ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FailedToCreateOrOpenSystemSubKeyCompositeFormat, subKey));
 
             key.SetValue(name, value);
         }
         catch (UnauthorizedAccessException ex)
         {
-            throw new UnauthorizedAccessException(string.Format(InsufficientPermissionsSystemSubKeyExceptionMessage, subKey), ex);
+            throw new UnauthorizedAccessException(string.Format(CultureInfo.InvariantCulture, InsufficientPermissionsSystemSubKeyCompositeFormat, subKey), ex);
         }
     }
 
@@ -90,7 +97,7 @@ public sealed class AdapterWindowsRegistryRepository : IOutboundPortSystemConfig
         ArgumentNullException.ThrowIfNull(value);
 
         using var key = Registry.CurrentUser.CreateSubKey(subKey)
-            ?? throw new InvalidOperationException(string.Format(FailedToCreateOrOpenSubKeyExceptionMessage, subKey));
+            ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FailedToCreateOrOpenSubKeyCompositeFormat, subKey));
 
         key.SetValue(name, value);
     }

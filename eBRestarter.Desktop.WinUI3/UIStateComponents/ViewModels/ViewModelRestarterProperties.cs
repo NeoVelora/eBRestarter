@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -151,7 +152,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject, IDi
         if (scheduleUpdateResponse.IsActive && scheduleUpdateResponse.NextDate.HasValue)
         {
             string formatPattern = _localizationService.RetrieveString(BrowserNextDeleteDateFormatResourceKey);
-            string formattedDateString = string.Format(formatPattern, scheduleUpdateResponse.NextDate.Value);
+            string formattedDateString = string.Format(CultureInfo.CurrentCulture, formatPattern, scheduleUpdateResponse.NextDate.Value);
 
             WeakReferenceMessenger.Default.Send(new NextDeletionProcessMessage(_localizationService.RetrieveString(NextDeletionProcessResourceKey)));
             WeakReferenceMessenger.Default.Send(new NextDeletionProcessDate(formattedDateString));
@@ -331,14 +332,17 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject, IDi
         }
         catch (Exception exception)
         {
-            _logger.LogError(
-                LogEventIds.Browser.BrowserProfileDiscoveryFailed,
-                exception,
-                "Checking for installed browsers failed.");
+            LogBrowserDiscoveryFailed(exception);
         }
         finally
         {
             Volatile.Write(ref _browserCheckInFlight, 0);
         }
     }
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+        Level = LogLevel.Error,
+        Message = "Checking for installed browsers failed.")]
+    private partial void LogBrowserDiscoveryFailed(Exception exception);
 }

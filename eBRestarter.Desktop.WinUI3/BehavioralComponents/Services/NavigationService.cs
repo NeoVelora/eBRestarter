@@ -13,7 +13,7 @@ public sealed class NavigationService : INavigationService
 {
     private INavigationFrame? _frameAdapter;
 
-    private readonly Dictionary<string, Type> _pages = [];
+    private readonly Dictionary<string, Type> _pages = new(StringComparer.Ordinal);
 
     public void AttachFrame(Frame frame)
     {

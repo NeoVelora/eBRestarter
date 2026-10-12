@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading.Tasks;
 
 using Microsoft.UI.Dispatching;
@@ -146,7 +147,7 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
         {
             string notInstalledFormat = _localizationService.RetrieveString(KeyAddonBrowserNotInstalled);
 
-            InstallStatusText = string.Format(notInstalledFormat, BrowserName);
+            InstallStatusText = string.Format(CultureInfo.CurrentCulture, notInstalledFormat, BrowserName);
             InstallStatusColor = InstallStatusColorBrowserNotInstalledHex;
             AddonStatusText = AddonPlaceholderDash;
             AddonStatusIcon = AddonStatusIconEmpty;
@@ -158,7 +159,7 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
 
         string installedFormat = _localizationService.RetrieveString(KeyAddonBrowserInstalled);
 
-        InstallStatusText = string.Format(installedFormat, BrowserName);
+        InstallStatusText = string.Format(CultureInfo.CurrentCulture, installedFormat, BrowserName);
         InstallStatusColor = InstallStatusColorBrowserInstalledHex;
         IsButtonEnabled = true;
 

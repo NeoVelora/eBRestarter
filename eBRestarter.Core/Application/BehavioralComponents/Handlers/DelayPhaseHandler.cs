@@ -37,7 +37,7 @@ public sealed class DelayPhaseHandler(TimeProvider timeProvider) : IDelayPhaseHa
 
             if (secondsRemaining > 0)
             {
-                await timer.WaitForNextTickAsync(token);
+                await timer.WaitForNextTickAsync(token).ConfigureAwait(false);
             }
         }
     }

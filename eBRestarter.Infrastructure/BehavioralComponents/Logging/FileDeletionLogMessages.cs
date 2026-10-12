@@ -36,7 +36,7 @@ public static partial class FileDeletionLogMessages
         string file);
 
     [LoggerMessage(
-        EventId = LogEventIds.Browser.BrowserCacheFileDeletionFailed,
+        EventId = LogEventIds.Browser.BrowserCacheSingleFileDeletionFailed,
         Level = LogLevel.Warning,
         Message = "Error while deleting individual file: {File}")]
     public static partial void LogSingleFileDeletionFailed(
@@ -62,7 +62,7 @@ public static partial class FileDeletionLogMessages
         string cleanupRoot);
 
     [LoggerMessage(
-        EventId = LogEventIds.Browser.BrowserCachePathOutsideRoot,
+        EventId = LogEventIds.Browser.BrowserCachePathResolutionFailed,
         Level = LogLevel.Debug,
         Message = "Could not resolve {File} against the cleanup root {CleanupRoot}; the file was skipped.")]
     public static partial void LogPathResolutionFailed(

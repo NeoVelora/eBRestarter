@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:userControls="using:eBRestarter.Desktop.WinUI3.VisualUIComponents.Views.UserControls"
+    xmlns:VM="using:eBRestarter.Desktop.WinUI3.ViewModels"
     mc:Ignorable="d">
 
     <Grid
@@ -51,8 +52,8 @@
 
             <ItemsControl ItemsSource="{x:Bind ViewModelInstalledBrowsers.Browsers, Mode=OneWay}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <userControls:UC_Browser DataContext="{Binding}" />
+                    <DataTemplate x:DataType="VM:ViewModelBrowserItem">
+                        <userControls:UC_Browser ViewModel="{x:Bind}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
 

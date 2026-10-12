@@ -26,12 +26,22 @@ public sealed class AdapterHttpClientDownloadHandler : IOutboundPortHttpDownload
 
     private const string SizeLimitExceededExceptionMessage = "The download exceeds the permitted maximum size of 512 MB and was aborted.";
 
-    private readonly HttpClient _httpClient;
+    public const string HttpClientName = "eBRestarter.DownloadHandler";
+
+    private readonly HttpClient? _httpClient;
+    private readonly IHttpClientFactory? _httpClientFactory;
 
 
-    public AdapterHttpClientDownloadHandler(HttpClient? httpClient = null)
+    public AdapterHttpClientDownloadHandler(IHttpClientFactory httpClientFactory)
     {
-        _httpClient = httpClient ?? new HttpClient();
+        ArgumentNullException.ThrowIfNull(httpClientFactory);
+        _httpClientFactory = httpClientFactory;
+    }
+
+    public AdapterHttpClientDownloadHandler(HttpClient httpClient)
+    {
+        ArgumentNullException.ThrowIfNull(httpClient);
+        _httpClient = httpClient;
 
         if (!_httpClient.DefaultRequestHeaders.Contains(UserAgentHeaderName))
         {
@@ -58,13 +68,31 @@ public sealed class AdapterHttpClientDownloadHandler : IOutboundPortHttpDownload
         return DownloadFileCoreAsync(url, destinationPath, progress, cancel);
     }
 
+    private HttpClient CreateHttpClient()
+    {
+        if (_httpClient is not null)
+        {
+            return _httpClient;
+        }
+
+        HttpClient client = _httpClientFactory!.CreateClient(HttpClientName);
+        if (!client.DefaultRequestHeaders.Contains(UserAgentHeaderName))
+        {
+            client.DefaultRequestHeaders.Add(UserAgentHeaderName, DefaultUserAgentHeaderValue);
+        }
+
+        return client;
+    }
+
     private async Task DownloadFileCoreAsync(
         string url,
         string destinationPath,
         IProgress<DownloadProgressStatus> progress,
         CancellationToken cancel)
     {
-        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel).ConfigureAwait(false);
+        HttpClient httpClient = CreateHttpClient();
+
+        using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancel).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
         var totalBytes = response.Content.Headers.ContentLength ?? UnknownContentLength;

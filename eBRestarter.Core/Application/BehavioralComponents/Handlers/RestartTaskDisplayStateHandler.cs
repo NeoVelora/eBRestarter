@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.ImmutableSnapshot;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Handlers;
@@ -70,7 +71,7 @@ public sealed class RestartTaskDisplayStateHandler(
                 nextDate = today.AddDays(intervalDays);
             }
 
-            nextDeletionProcessDateMessage = string.Format(formatPattern, nextDate);
+            nextDeletionProcessDateMessage = string.Format(CultureInfo.CurrentCulture, formatPattern, nextDate);
         }
         else
         {

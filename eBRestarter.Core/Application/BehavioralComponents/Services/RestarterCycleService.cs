@@ -54,6 +54,8 @@ public sealed class RestarterCycleService(
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly IInboundPortApplicationValidator<ManageRestarterCycleRequest> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
+    private static readonly CompositeFormat BrowserStartRetryCompositeFormat = CompositeFormat.Parse(BrowserStartRetryFormat);
+
     private CancellationTokenSource? _cts;
     private IOutboundPortBrowser? _currentBrowser;
 
@@ -93,7 +95,7 @@ public sealed class RestarterCycleService(
 
         try
         {
-            await RunCycleAsync(request, performCleanupCallback, cancellationToken);
+            await RunCycleAsync(request, performCleanupCallback, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -140,7 +142,7 @@ public sealed class RestarterCycleService(
         Func<Task> performCleanupCallback,
         CancellationToken cancellationToken)
     {
-        await _delayPhaseHandler.ExecuteAsync(RestartTaskState.InitialDelay, InitialDelaySeconds, ReportProgress, cancellationToken);
+        await _delayPhaseHandler.ExecuteAsync(RestartTaskState.InitialDelay, InitialDelaySeconds, ReportProgress, cancellationToken).ConfigureAwait(false);
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -169,14 +171,14 @@ public sealed class RestarterCycleService(
                         secondsRemaining,
                         string.Format(
                             CultureInfo.CurrentCulture,
-                            BrowserStartRetryFormat,
+                            BrowserStartRetryCompositeFormat,
                             secondsRemaining)),
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 continue;
             }
 
-            var runPhaseResult = await _runBrowserPhaseHandler.ExecuteAsync(request, _currentBrowser, ReportProgress, cancellationToken);
+            var runPhaseResult = await _runBrowserPhaseHandler.ExecuteAsync(request, _currentBrowser, ReportProgress, cancellationToken).ConfigureAwait(false);
 
             if (runPhaseResult == BrowserPhaseResult.BrowserClosed)
             {
@@ -190,14 +192,14 @@ public sealed class RestarterCycleService(
                         string msg = $"Der Browser wurde geschlossen, Starte Restarter in {secondsRemaining}...";
                         ReportProgress(state, secondsRemaining, msg);
                     },
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
 
                 continue;
             }
 
-            await CheckAndExecuteBrowserCleanupAsync(performCleanupCallback, cancellationToken);
+            await CheckAndExecuteBrowserCleanupAsync(performCleanupCallback, cancellationToken).ConfigureAwait(false);
             CloseCurrentBrowser();
-            await _delayPhaseHandler.ExecuteAsync(RestartTaskState.Cooldown, request.PauseSeconds, ReportProgress, cancellationToken);
+            await _delayPhaseHandler.ExecuteAsync(RestartTaskState.Cooldown, request.PauseSeconds, ReportProgress, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -242,9 +244,9 @@ public sealed class RestarterCycleService(
 
         CloseCurrentBrowser();
 
-        await Task.Delay(TimeSpan.FromMilliseconds(CleanupDelayMilliseconds), _timeProvider, cancellationToken);
+        await Task.Delay(TimeSpan.FromMilliseconds(CleanupDelayMilliseconds), _timeProvider, cancellationToken).ConfigureAwait(false);
 
-        await performCleanupCallback();
+        await performCleanupCallback().ConfigureAwait(false);
 
         var today = _timeProvider.GetLocalNow().Date;
         var newDate = _browserCleanupScheduleHandler.CalculateNextCleanupDateAfterRun(today, appConfig.Browser.DeleteBrowserCacheIntervalDays);

@@ -169,9 +169,9 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject,
 
             string title = SelectedPivotIndex switch
             {
-                0 => string.Format(_localizationService.RetrieveString(KeyChartTitleHourly), DateTime.Now.ToString(DateFormatDayMonthYear)),
-                1 => string.Format(_localizationService.RetrieveString(KeyChartTitleDaily), DateTime.Now.ToString(DateFormatMonthFull)),
-                2 => string.Format(_localizationService.RetrieveString(KeyChartTitleYearly), DateTime.Now.ToString(DateFormatYearFull)),
+                0 => string.Format(CultureInfo.CurrentCulture, _localizationService.RetrieveString(KeyChartTitleHourly), DateTime.Now.ToString(DateFormatDayMonthYear, CultureInfo.CurrentCulture)),
+                1 => string.Format(CultureInfo.CurrentCulture, _localizationService.RetrieveString(KeyChartTitleDaily), DateTime.Now.ToString(DateFormatMonthFull, CultureInfo.CurrentCulture)),
+                2 => string.Format(CultureInfo.CurrentCulture, _localizationService.RetrieveString(KeyChartTitleYearly), DateTime.Now.ToString(DateFormatYearFull, CultureInfo.CurrentCulture)),
                 _ => _localizationService.RetrieveString(KeyChartTitleOverview)
             };
 
@@ -197,10 +197,10 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject,
     public partial string CurrentDay { get; set; } = DefaultPlaceholderDash;
 
     [ObservableProperty]
-    public partial string CurrentMonth { get; set; } = DateTime.Now.ToString(DateFormatMonthFull);
+    public partial string CurrentMonth { get; set; } = DateTime.Now.ToString(DateFormatMonthFull, CultureInfo.CurrentCulture);
 
     [ObservableProperty]
-    public partial string CurrentYear { get; set; } = DateTime.Now.ToString(DateFormatYearFull);
+    public partial string CurrentYear { get; set; } = DateTime.Now.ToString(DateFormatYearFull, CultureInfo.CurrentCulture);
 
     [ObservableProperty]
     public partial string EarningsThisDaySum { get; set; } = DefaultPlaceholderDash;
@@ -389,37 +389,34 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject,
 
                 if (UseScreenshotFakeData)
                 {
-                    EarningsThisDaySum = string.Format(BtpDisplayFormat, 16450);
-                    EarningsThisMonthSum = string.Format(BtpDisplayFormat, 425800);
-                    EarningsThisYearSum = string.Format(BtpDisplayFormat, 5120000);
+                    EarningsThisDaySum = string.Format(CultureInfo.CurrentCulture, BtpDisplayFormat, 16450);
+                    EarningsThisMonthSum = string.Format(CultureInfo.CurrentCulture, BtpDisplayFormat, 425800);
+                    EarningsThisYearSum = string.Format(CultureInfo.CurrentCulture, BtpDisplayFormat, 5120000);
                     UpdateChartData();
                 }
                 else if (_cachedEarnings != null)
                 {
-                    EarningsThisDaySum = string.Format(BtpDisplayFormat, _cachedEarnings.TodaySum);
-                    EarningsThisMonthSum = string.Format(BtpDisplayFormat, _cachedEarnings.MonthlySum);
-                    EarningsThisYearSum = string.Format(BtpDisplayFormat, _cachedEarnings.YearlySum);
+                    EarningsThisDaySum = string.Format(CultureInfo.CurrentCulture, BtpDisplayFormat, _cachedEarnings.TodaySum);
+                    EarningsThisMonthSum = string.Format(CultureInfo.CurrentCulture, BtpDisplayFormat, _cachedEarnings.MonthlySum);
+                    EarningsThisYearSum = string.Format(CultureInfo.CurrentCulture, BtpDisplayFormat, _cachedEarnings.YearlySum);
                     UpdateChartData();
                 }
 
                 var now = DateTime.Now;
 
-                CurrentMonth = now.ToString(DateFormatMonthFull);
-                CurrentYear = now.ToString(DateFormatYearFull);
+                CurrentMonth = now.ToString(DateFormatMonthFull, CultureInfo.CurrentCulture);
+                CurrentYear = now.ToString(DateFormatYearFull, CultureInfo.CurrentCulture);
 
                 var nextRefresh = now.AddMinutes(60 - now.Minute + EarningsRefreshTriggerMinute);
                 var nextRefreshTimeFormat = _localizationService.RetrieveString(KeyGeneralNextRefresh);
                 ClockNextEarningsRefresh = _isApiConfigured
-                    ? string.Format(nextRefreshTimeFormat, nextRefresh.ToString(DateFormatTimeHourMinute))
+                    ? string.Format(CultureInfo.CurrentCulture, nextRefreshTimeFormat, nextRefresh.ToString(DateFormatTimeHourMinute, CultureInfo.CurrentCulture))
                     : DefaultPlaceholderDash;
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                LogEventIds.Api.EarningsRetrievalFailed,
-                ex,
-                "Refreshing the earnings overview failed.");
+            LogEarningsRefreshFailed(ex);
         }
     }
 
@@ -490,4 +487,10 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject,
 
         SyncChartValues(earningsValuesForPivot);
     }
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.EarningsRetrievalFailed,
+        Level = LogLevel.Error,
+        Message = "Refreshing the earnings overview failed.")]
+    private partial void LogEarningsRefreshFailed(Exception exception);
 }

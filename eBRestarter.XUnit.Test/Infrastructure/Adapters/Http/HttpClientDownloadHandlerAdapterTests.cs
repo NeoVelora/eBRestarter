@@ -1,3 +1,4 @@
+using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -86,6 +87,39 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
             var act = () => sut.DownloadFileAsync("https://test.com", _tempFilePath, null!, cts.Token);
 
             await Should.ThrowAsync<OperationCanceledException>(act);
+        }
+
+        [Fact]
+        public async Task DownloadFileAsync_WithHttpClientFactory_DownloadsSuccessfully()
+        {
+            var contentBytes = Encoding.UTF8.GetBytes("Download via IHttpClientFactory integration test payload.");
+            var handler = new StubHttpMessageHandler(HttpStatusCode.OK, contentBytes);
+            using var httpClient = new HttpClient(handler);
+            var factoryMock = Substitute.For<IHttpClientFactory>();
+            factoryMock.CreateClient(AdapterHttpClientDownloadHandler.HttpClientName).Returns(httpClient);
+
+            var sut = new AdapterHttpClientDownloadHandler(factoryMock);
+
+            await sut.DownloadFileAsync("https://example.com/payload.bin", _tempFilePath, null!, TestContext.Current.CancellationToken);
+
+            File.Exists(_tempFilePath).ShouldBeTrue();
+            (await File.ReadAllBytesAsync(_tempFilePath, TestContext.Current.CancellationToken)).ShouldBe(contentBytes);
+        }
+
+        [Fact]
+        public void Constructor_NullHttpClientFactory_ThrowsArgumentNullException()
+        {
+            var act = () => new AdapterHttpClientDownloadHandler((IHttpClientFactory)null!);
+
+            Should.Throw<ArgumentNullException>(act);
+        }
+
+        [Fact]
+        public void Constructor_NullHttpClient_ThrowsArgumentNullException()
+        {
+            var act = () => new AdapterHttpClientDownloadHandler((HttpClient)null!);
+
+            Should.Throw<ArgumentNullException>(act);
         }
 
         private static AdapterHttpClientDownloadHandler CreateSut(HttpStatusCode statusCode, byte[] content)

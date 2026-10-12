@@ -1,4 +1,10 @@
-﻿[*.cs]
+[*.cs]
 
 # IDE0058: Der Ausdruckswert wird niemals verwendet.
 dotnet_diagnostic.IDE0058.severity = none
+
+# xUnit1051: Method calls that accept CancellationToken should pass TestContext.Current.CancellationToken
+dotnet_diagnostic.xUnit1051.severity = none
+
+# S1075: Refactor your code not to use hardcoded absolute paths or URIs (needed for Windows default paths)
+dotnet_diagnostic.S1075.severity = none

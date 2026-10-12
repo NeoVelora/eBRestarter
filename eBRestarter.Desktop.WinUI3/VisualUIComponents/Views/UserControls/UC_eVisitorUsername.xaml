@@ -73,7 +73,7 @@
 
                     <interactivity:Interaction.Behaviors>
                         <behaviors:KeyDownTriggerBehavior Key="Enter">
-                            <interactivity:InvokeCommandAction Command="{Binding AddEVisitorUsernameCommand}" />
+                            <interactivity:InvokeCommandAction Command="{x:Bind ViewModelRestarterProperties.AddEVisitorUsernameCommand}" />
                         </behaviors:KeyDownTriggerBehavior>
                     </interactivity:Interaction.Behaviors>
 

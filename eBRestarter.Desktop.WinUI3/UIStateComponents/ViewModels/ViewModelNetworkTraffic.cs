@@ -106,7 +106,7 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
         _timer.Stop();
     }
 
-    private void ApplyDataToUi(bool isNetworkAvailable, IEnumerable<NetworkStats>? stats)
+    private void ApplyDataToUi(bool isNetworkAvailable, IReadOnlyList<NetworkStats>? stats)
     {
         if (!isNetworkAvailable || stats is null)
         {
@@ -118,7 +118,7 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
         string receivedPrefix = _localizationService.RetrieveString(NetworkReceivedResourceKey);
         string sentPrefix = _localizationService.RetrieveString(NetworkSentResourceKey);
 
-        var activeIds = stats.Select(networkStat => $"{adapterNamePrefix}: {networkStat.Name}").ToHashSet();
+        var activeIds = stats.Select(networkStat => $"{adapterNamePrefix}: {networkStat.Name}").ToHashSet(StringComparer.Ordinal);
 
         var cardsToRemove = NetworkCards.Where(card => !activeIds.Contains(card.AdapterName)).ToList();
 
@@ -130,7 +130,7 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
         foreach (var stat in stats)
         {
             string name = $"{adapterNamePrefix}: {stat.Name}";
-            var existingCard = NetworkCards.FirstOrDefault(card => card.AdapterName == name);
+            var existingCard = NetworkCards.FirstOrDefault(card => string.Equals(card.AdapterName, name, StringComparison.Ordinal));
 
             string received = $"{receivedPrefix}: {stat.BytesReceived.ToSizeSuffix()}";
             string sent = $"{sentPrefix}: {stat.BytesSent.ToSizeSuffix()}";

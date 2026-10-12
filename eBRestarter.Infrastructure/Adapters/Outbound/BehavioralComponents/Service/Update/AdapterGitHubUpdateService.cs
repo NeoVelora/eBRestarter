@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
@@ -42,6 +43,16 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
     private const string UpdateDownloadedLogMessage = "Update downloaded to: {Path}";
     private const string UpdateFileNameFormat = "eBRestarter_Update_{0}.exe";
     private const char VersionTagPrefix = 'v';
+
+    private const int MaximumUpdateJsonCharacterCount = 1024 * 1024;
+    private const string UpdatePayloadTooLargeLogMessage = "GitHub release payload exceeds maximum allowed size of 1 MB.";
+
+    private static readonly JsonDocumentOptions StrictDocumentOptions = new()
+    {
+        MaxDepth = 32,
+        CommentHandling = JsonCommentHandling.Disallow,
+        AllowTrailingCommas = false
+    };
 
     private const string RejectedDownloadHostLogMessage = "Refusing update download: {Url} does not point to an approved GitHub release host.";
     private const string RejectedDownloadSchemeLogMessage = "Refusing update download: {Url} does not use HTTPS.";
@@ -92,7 +103,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
     }
 
 
-    public async Task<UpdateInfo> CheckForUpdateAsync()
+    public async Task<UpdateInfo> CheckForUpdateAsync(CancellationToken cancellationToken = default)
     {
         var currentVersion = Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(DefaultVersionMajor, DefaultVersionMinor, DefaultVersionBuild);
 
@@ -102,7 +113,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
             Method = ObjectArchetypes.Enums.HttpMethod.GET
         };
 
-        var response = await _restClientUseCase.ExecuteGetAsync(request).ConfigureAwait(false);
+        var response = await _restClientUseCase.ExecuteGetAsync(request, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccess || string.IsNullOrEmpty(response.Content))
         {
@@ -111,9 +122,16 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
             return new UpdateInfo { IsUpdateAvailable = false, CurrentVersion = currentVersion.ToString() };
         }
 
+        if (response.Content.Length > MaximumUpdateJsonCharacterCount)
+        {
+            _logger.LogWarning(LogEventIds.Update.UpdateResponseParsingFailed, UpdatePayloadTooLargeLogMessage);
+
+            return new UpdateInfo { IsUpdateAvailable = false, CurrentVersion = currentVersion.ToString() };
+        }
+
         try
         {
-            using var doc = JsonDocument.Parse(response.Content);
+            using var doc = JsonDocument.Parse(response.Content, StrictDocumentOptions);
             var root = doc.RootElement;
 
             string tagName = root.GetProperty(JsonPropertyTagName).GetString() ?? DefaultZeroVersionString;
@@ -161,14 +179,14 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         }
     }
 
-    public Task DownloadAndInstallAsync(UpdateInfo updateInfo)
+    public Task DownloadAndInstallAsync(UpdateInfo updateInfo, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(updateInfo);
 
-        return DownloadAndInstallCoreAsync(updateInfo);
+        return DownloadAndInstallCoreAsync(updateInfo, cancellationToken);
     }
 
-    private async Task DownloadAndInstallCoreAsync(UpdateInfo updateInfo)
+    private async Task DownloadAndInstallCoreAsync(UpdateInfo updateInfo, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(updateInfo.DownloadUrl))
         {
@@ -184,19 +202,19 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         try
         {
             var tempDir = _fileSystemPort.ResolveEnvironmentPath(TempEnvironmentVariable);
-            var stagingFolderName = string.Format(UpdateStagingFolderFormat, Guid.NewGuid().ToString("N"));
+            var stagingFolderName = string.Format(CultureInfo.InvariantCulture, UpdateStagingFolderFormat, Guid.NewGuid().ToString("N"));
             var stagingDirectory = _fileSystemPort.CombinePaths(tempDir, stagingFolderName);
 
             _fileSystemPort.CreateDirectory(stagingDirectory);
 
-            var updateFileName = string.Format(UpdateFileNameFormat, updateInfo.LatestVersion);
+            var updateFileName = string.Format(CultureInfo.InvariantCulture, UpdateFileNameFormat, updateInfo.LatestVersion);
             var tempFile = _fileSystemPort.CombinePaths(stagingDirectory, updateFileName);
 
             await _httpDownloadPort.DownloadFileAsync(
                 updateInfo.DownloadUrl,
                 tempFile,
                 new Progress<DownloadProgressStatus>(),
-                CancellationToken.None).ConfigureAwait(false);
+                cancellationToken).ConfigureAwait(false);
 
             if (_logger.IsEnabled(LogLevel.Information))
             {
