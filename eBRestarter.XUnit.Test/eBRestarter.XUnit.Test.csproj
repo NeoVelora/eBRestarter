@@ -1,12 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!--
-      Vorher standen hier ZWEI TargetFramework-Zeilen untereinander (net10.0 und
-      net10.0-windows10.0.26100.0); die zweite gewann, die erste war toter Text.
-      Das windows-Moniker ist notwendig, weil die Infrastructure Windows-APIs nutzt.
-    -->
-    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <!-- Das windows-Moniker ist notwendig, weil die Infrastructure Windows-APIs nutzt. -->
+    <TargetFramework>net11.0-windows10.0.26100.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>

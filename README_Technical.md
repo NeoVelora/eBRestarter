@@ -91,7 +91,7 @@ graph LR
 
 ## Tech Stack
 
-- **Framework:** .NET 10.0
+- **Framework:** .NET 11.0
 - **UI:** WinUI 3 (Windows App SDK)
 - **Architecture:** Clean Architecture, DDD
 - **Libraries:**
@@ -109,7 +109,7 @@ graph LR
 
 ### Prerequisites
 - Windows 11 (64-bit)
-- Visual Studio 2026 (for .NET 10)
+- Visual Studio 2026 (for .NET 11)
 - Windows App SDK workload installed
 
 ### Building the Project

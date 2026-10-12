@@ -83,7 +83,7 @@ Enthält die Möglichkeite zur Einrichtung der automatischen Windows-Anmeldung. 
 * **Betriebssystem:** Windows 11 (Home/Pro, **nur 64-Bit**)
   * *Getestet auf: Windows 11 (Version 25H2)*
 
-* **Framework:** .NET 10.0 Runtime
+* **Framework:** .NET 11.0 Runtime
 
 **Hardware:**
 
@@ -104,7 +104,7 @@ Enthält die Möglichkeite zur Einrichtung der automatischen Windows-Anmeldung. 
 Laden Sie die aktuelle Version von eBRestarter herunter.
 <br>
 2. **Voraussetzungen prüfen:**
-Stellen Sie sicher, dass die .NET 10 Runtime auf Ihrem System installiert ist.
+Stellen Sie sicher, dass die .NET 11 Runtime auf Ihrem System installiert ist.
 <br>
 3. **Einrichtung:**
 Starten Sie die Anwendung. Nutzen Sie die integrierten Werkzeuge, um den gewünschten Browser herunterzuladen und das Add-on zu installieren. Hinterlegen Sie optional Ihre API-Zugangsdaten für die Statistikfunktionen.
