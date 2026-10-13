@@ -378,3 +378,6 @@ eBRestarter.TabRestarterExtension/TabRestarterExtension/tab_restarter_config.loc
 .agents/
 .claude/
 
+# Local tooling (CommentStripper etc.)
+tools/
+
