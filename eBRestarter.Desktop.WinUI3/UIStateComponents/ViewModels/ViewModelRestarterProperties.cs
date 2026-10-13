@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
@@ -314,6 +315,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject, IDi
         });
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "Async void timer tick boundary for periodic browser check.")]
     private async void OnBrowserCheckTimerTick(object? sender, object eventArgs)
     {
         if (_disposed)

@@ -48,19 +48,18 @@ public sealed class EVRestarterConfigRepository(
         try
         {
             var jsonString = ReadConfigJsonCached(filePath);
-            return JsonSerializer.Deserialize<AppConfig>(jsonString, _jsonOptions) ?? new AppConfig();
+            return JsonSerializer.Deserialize<AppConfig>(jsonString, _jsonOptions)
+                ?? throw new InvalidOperationException($"Configuration file at '{filePath}' deserialized to null.");
         }
         catch (JsonException exception)
         {
-            _logger.LogError(LogEventIds.Configuration.ConfigurationInvalidJson, exception, "Configuration file at {Path} is not valid JSON.", filePath);
             InvalidateCache();
-            return new AppConfig();
+            throw new InvalidOperationException($"Configuration file at '{filePath}' is corrupted and contains invalid JSON.", exception);
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            _logger.LogError(LogEventIds.Configuration.ConfigurationLoadFailed, exception, "Critical error occurred while loading configuration from {Path}.", filePath);
             InvalidateCache();
-            return new AppConfig();
+            throw;
         }
     }
 
@@ -103,7 +102,7 @@ public sealed class EVRestarterConfigRepository(
         catch (Exception exception)
         {
             InvalidateCache();
-            _logger.LogError(LogEventIds.Configuration.ConfigurationSaveFailed, exception, "Error while saving configuration to {Path}.", filePath);
+            throw new InvalidOperationException($"Failed to save configuration to '{filePath}'.", exception);
         }
     }
 

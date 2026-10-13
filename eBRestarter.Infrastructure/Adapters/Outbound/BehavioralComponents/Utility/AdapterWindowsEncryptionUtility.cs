@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Buffers.Text;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -26,10 +27,28 @@ public sealed class AdapterWindowsEncryptionUtility(
             return string.Empty;
         }
 
+        ReadOnlySpan<char> cipherSpan = cipherText.AsSpan().Trim();
+        if (!Base64.IsValid(cipherSpan, out int decodedLength))
+        {
+            _logger.LogWarning(
+                LogEventIds.Configuration.ApiKeyDecryptionFailed,
+                "The stored cipher text is not valid Base64 and could not be decrypted.");
+
+            return string.Empty;
+        }
+
+        byte[] encryptedBytes = new byte[decodedLength];
+        if (!Convert.TryFromBase64Chars(cipherSpan, encryptedBytes, out int bytesWritten) || bytesWritten != decodedLength)
+        {
+            _logger.LogWarning(
+                LogEventIds.Configuration.ApiKeyDecryptionFailed,
+                "The stored cipher text is not valid Base64 and could not be decrypted.");
+
+            return string.Empty;
+        }
+
         try
         {
-            var encryptedBytes = Convert.FromBase64String(cipherText);
-
             var plainBytes = ProtectedData.Unprotect(encryptedBytes, Entropy, DataProtectionScope.CurrentUser);
 
             return Encoding.UTF8.GetString(plainBytes);
@@ -40,15 +59,6 @@ public sealed class AdapterWindowsEncryptionUtility(
                 LogEventIds.Configuration.ApiKeyDecryptionFailed,
                 exception,
                 "DPAPI could not unprotect the stored value; the profile was most likely copied from another machine or user.");
-
-            return string.Empty;
-        }
-        catch (FormatException exception)
-        {
-            _logger.LogWarning(
-                LogEventIds.Configuration.ApiKeyDecryptionFailed,
-                exception,
-                "The stored cipher text is not valid Base64 and could not be decrypted.");
 
             return string.Empty;
         }

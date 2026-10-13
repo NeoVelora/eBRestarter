@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
@@ -108,6 +109,7 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
     }
 
     [RelayCommand]
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI command boundary for opening extension folder in file browser.")]
     private async Task OpenExtensionFolderAsync()
     {
         try
@@ -128,15 +130,15 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
                 exception,
                 "Opening the browser extension folder failed.");
 
-            string messageFormat = _localizationService.RetrieveString(ExtensionFolderOpenErrorMessageResourceKey);
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(ExtensionFolderOpenErrorTitleResourceKey),
-                string.Format(CultureInfo.CurrentCulture, messageFormat, exception.Message),
+                _localizationService.RetrieveString(ExtensionFolderOpenErrorMessageResourceKey),
                 DialogIcon.Error);
         }
     }
 
     [RelayCommand]
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI command boundary for saving browser extension configuration.")]
     private async Task SaveExtensionConfigAsync()
     {
         try
@@ -175,11 +177,12 @@ public sealed partial class ViewModelOptionsExtension : ObservableObject
 
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(GeneralErrorKey),
-                _localizationService.RetrieveString(ExtensionConfigErrorMessageResourceKey) + " " + exception.Message,
+                _localizationService.RetrieveString(ExtensionConfigErrorMessageResourceKey),
                 DialogIcon.Error);
         }
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.DegradationBoundary, Justification = "Degradation fallback to default configuration when reading existing extension config fails.")]
     private void LoadExtensionConfig()
     {
         try

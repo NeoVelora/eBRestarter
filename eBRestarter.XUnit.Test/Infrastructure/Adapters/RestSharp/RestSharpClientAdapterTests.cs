@@ -11,6 +11,8 @@ using eBRestarter.Infrastructure.API;
 using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
 using eBRestarter.Infrastructure.ObjectArchetypes.Model;
 using Microsoft.Extensions.Logging.Testing;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using System.Net.Http;
 using System.Linq;
 using Shouldly;
@@ -276,6 +278,29 @@ namespace eBRestarter.Tests.Infrastructure.Services
             result.StatusCode.ShouldBe(ResponseCode.Error);
         }
 
+        [Fact]
+        public async Task ExecuteGetAsync_WhenExceptionOccurs_ReturnsSanitizedErrorMessageWithoutLeakingExceptionDetails()
+        {
+            var requestModel = new ApiRequest
+            {
+                Url = "http://invalid uri with spaces:unreachable",
+                TimeoutSeconds = 1
+            };
+
+            var result = await _sut.ExecuteGetAsync(requestModel, TestContext.Current.CancellationToken);
+
+            result.IsSuccess.ShouldBeFalse();
+            result.ErrorMessage.ShouldNotBeNull();
+            result.ErrorMessage.ShouldNotContain("invalid uri with spaces");
+            result.ErrorMessage.ShouldBe("An error occurred while executing the HTTP request.");
+
+            var loggedErrors = _loggerMock.Collector.GetSnapshot()
+                .Where(e => e.Level == LogLevel.Error)
+                .ToList();
+            loggedErrors.ShouldNotBeEmpty();
+            loggedErrors[0].Exception.ShouldNotBeNull();
+        }
+
         private void VerifyLoggerWarningWasCalled()
         {
             var matchingWarnings = _loggerMock.Collector.GetSnapshot()
@@ -290,6 +315,56 @@ namespace eBRestarter.Tests.Infrastructure.Services
         {
             _server.Stop();
             _server.Dispose();
+        }
+
+        [Fact]
+        public async Task ExecuteGetAsync_WhenPollyTimeoutRejectedExceptionOccurs_ReturnsHttpTimeoutStatus()
+        {
+            var customHttpClientFactory = Substitute.For<IHttpClientFactory>();
+            var throwingClient = new HttpClient(new ThrowingHttpMessageHandler(new TimeoutRejectedException("Polly timeout triggered")));
+            customHttpClientFactory.CreateClient(Arg.Any<string>()).Returns(throwingClient);
+
+            var sut = new RestSharpClient(_loggerMock, customHttpClientFactory);
+            var request = new ApiRequest
+            {
+                Url = "http://localhost:5000/api/test",
+                TimeoutSeconds = 5
+            };
+
+            var result = await sut.ExecuteGetAsync(request, TestContext.Current.CancellationToken);
+
+            result.IsSuccess.ShouldBeFalse();
+            result.StatusCode.ShouldBe(ResponseCode.HTTPTimeout);
+            result.ErrorMessage.ShouldBe("The request has exceeded the time limit");
+        }
+
+        [Fact]
+        public async Task ExecuteGetAsync_WhenPollyBrokenCircuitExceptionOccurs_ReturnsNoConnectionToServer()
+        {
+            var customHttpClientFactory = Substitute.For<IHttpClientFactory>();
+            var throwingClient = new HttpClient(new ThrowingHttpMessageHandler(new BrokenCircuitException("Circuit is open")));
+            customHttpClientFactory.CreateClient(Arg.Any<string>()).Returns(throwingClient);
+
+            var sut = new RestSharpClient(_loggerMock, customHttpClientFactory);
+            var request = new ApiRequest
+            {
+                Url = "http://localhost:5000/api/test",
+                TimeoutSeconds = 5
+            };
+
+            var result = await sut.ExecuteGetAsync(request, TestContext.Current.CancellationToken);
+
+            result.IsSuccess.ShouldBeFalse();
+            result.StatusCode.ShouldBe(ResponseCode.NoConnectionToServer);
+            result.ErrorMessage.ShouldBe("An error occurred while executing the HTTP request.");
+        }
+
+        private sealed class ThrowingHttpMessageHandler(Exception exceptionToThrow) : HttpMessageHandler
+        {
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                return Task.FromException<HttpResponseMessage>(exceptionToThrow);
+            }
         }
     }
 }

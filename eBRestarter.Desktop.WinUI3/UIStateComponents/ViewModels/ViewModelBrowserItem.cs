@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
@@ -220,6 +221,7 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
         _downloadCancellationTokenSource = null;
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI background download boundary for downloading and installing browser packages.")]
     private async Task StartDownloadAsync()
     {
         _downloadCancellationTokenSource?.Dispose();
@@ -257,7 +259,7 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
             await AskToInstallAsync(downloadPath);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (_downloadCancellationTokenSource?.IsCancellationRequested == true)
         {
             _logger.LogDebug(
                 LogEventIds.Update.BrowserInstallerCleanupFailed,
@@ -266,7 +268,7 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
             _downloadBrowserUseCase.CleanupPartialDownload(_browserInfo.Name);
         }
-        catch (Exception ex) when (ex is HttpRequestException or IOException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
             _logger.LogError(
                 LogEventIds.Update.BrowserInstallerCleanupFailed,

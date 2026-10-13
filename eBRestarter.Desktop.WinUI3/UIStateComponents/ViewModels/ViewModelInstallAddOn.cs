@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
@@ -73,6 +74,7 @@ public sealed partial class ViewModelInstallAddOn : ObservableObject, IDisposabl
         _timer.Tick -= OnBrowserAddonRefreshTimerTick;
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.AggregationPoint, Justification = "Aggregation point for Task.WhenAll browser add-on probes.")]
     private async void OnBrowserAddonRefreshTimerTick(object? sender, object eventArgs)
     {
         if (_disposed)

@@ -17,6 +17,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
         private readonly IOutboundPortBrowserConfigRepository _mockStartupService;
         private readonly IOutboundPortBrowserFactory _mockBrowserFactory;
         private readonly IOutboundPortBrowser _mockEdgeBrowser;
+        private readonly IOutboundPortApplicationLogger<ToggleEdgeStartupBoostUseCase> _mockLogger;
         private readonly ToggleEdgeStartupBoostUseCase _sut;
 
         public ToggleEdgeStartupBoostUseCaseTests()
@@ -24,15 +25,15 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
             _mockStartupService = Substitute.For<IOutboundPortBrowserConfigRepository>();
             _mockBrowserFactory = Substitute.For<IOutboundPortBrowserFactory>();
             _mockEdgeBrowser = Substitute.For<IOutboundPortBrowser>();
+            _mockLogger = Substitute.For<IOutboundPortApplicationLogger<ToggleEdgeStartupBoostUseCase>>();
 
             _mockBrowserFactory
                 .Create(BrowserType.Edge)
                 .Returns(_mockEdgeBrowser);
 
-            _sut =
-            new ToggleEdgeStartupBoostUseCase(
+            _sut = new ToggleEdgeStartupBoostUseCase(
                 _mockBrowserFactory,
-                Substitute.For<IOutboundPortApplicationLogger<ToggleEdgeStartupBoostUseCase>>(),
+                _mockLogger,
                 _mockStartupService);
         }
 
@@ -90,7 +91,13 @@ namespace eBRestarter.Tests.Core.Application.UseCases.ToggleEdgeStartupBoost
 
             result.NewState.ShouldBeFalse();
 
-            result.ErrorMessage.ShouldBe("Zugriff auf Registry verweigert.");
+            result.ErrorMessage.ShouldBe("Edge startup boost configuration could not be changed.");
+
+            _mockLogger.Received(1).LogError(
+                LogEventIds.OperatingSystem.EdgeStartupBoostChanged,
+                Arg.Any<UnauthorizedAccessException>(),
+                Arg.Any<string>(),
+                Arg.Any<object[]>());
         }
     }
 }

@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using Microsoft.Extensions.Logging;
@@ -119,6 +120,7 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
         }
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "Background probe boundary for refreshing individual browser add-on installation status.")]
     public async Task RefreshStatusAsync()
     {
         BrowserAddonProbeResult probeResult;
@@ -131,9 +133,9 @@ public sealed partial class ViewModelBrowserAddonStatus : ObservableObject
         {
             _logger.LogDebug(
                 LogEventIds.Browser.BrowserProfileDiscoveryFailed,
-                "Probing add-on status for {BrowserType} failed: {Reason}",
-                _browser.Type,
-                exception.Message);
+                exception,
+                "Probing add-on status for {BrowserType} failed.",
+                _browser.Type);
 
             return;
         }

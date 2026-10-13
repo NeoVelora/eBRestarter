@@ -21,6 +21,7 @@ public sealed class ConfigureAutoLogonUseCase(
     private const string ErrorMessageCredentialsMissing = "Credentials missing.";
     private const string ErrorMessageDomainError = "Domain error.";
     private const string ErrorMessageInvalidCredentials = "Invalid credentials.";
+    private const string ErrorMessageUnexpected = "An unexpected error occurred during AutoLogon configuration.";
     private const string ErrorMessageValidationFailed = "Validation failed.";
 
     private readonly IOutboundPortOsAutoLogonRepository _autoLogonPort = autoLogonPort ?? throw new ArgumentNullException(nameof(autoLogonPort));
@@ -61,7 +62,7 @@ public sealed class ConfigureAutoLogonUseCase(
                 ex,
                 "AutoLogon configuration failed with an unexpected error.");
 
-            return new AutoLogonUnexpectedError(ex.Message);
+            return new AutoLogonUnexpectedError(ErrorMessageUnexpected);
         }
     }
 

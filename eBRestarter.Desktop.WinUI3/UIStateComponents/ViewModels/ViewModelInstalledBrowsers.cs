@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
@@ -114,6 +115,7 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
         }
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "Async void timer tick boundary for refreshing installed browsers.")]
     private async void OnRefreshTimerTick(object? sender, object eventArgs)
     {
         if (_disposed)

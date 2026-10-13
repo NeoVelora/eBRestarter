@@ -489,6 +489,15 @@
   <data name="Cleanup_Finished" xml:space="preserve">
     <value>Bereinigung abgeschlossen.</value>
   </data>
+  <data name="Cleanup_Failed" xml:space="preserve">
+    <value>Bereinigung fehlgeschlagen. Überprüfen Sie das Anwendungsprotokoll für Details.</value>
+  </data>
+  <data name="Cleanup_FileError" xml:space="preserve">
+    <value>Browser-Bereinigung aufgrund eines Dateizugriffsfehlers fehlgeschlagen.</value>
+  </data>
+  <data name="General_LoadError" xml:space="preserve">
+    <value>Fehler beim Laden der Browser-Konfiguration.</value>
+  </data>
   <data name="General_ErrorPrefix" xml:space="preserve">
     <value>Fehler: {0}</value>
   </data>
@@ -884,13 +893,13 @@ Nutze anschließend für den AutoLogon dein echtes Microsoft-Passwort (nicht dei
     <value>Fehler</value>
   </data>
   <data name="Options_UpdateCheckError_Message" xml:space="preserve">
-    <value>Bei der Suche nach Updates ist ein Fehler aufgetreten:\n{0}</value>
+    <value>Bei der Suche nach Updates ist ein Fehler aufgetreten.</value>
   </data>
   <data name="Options_UpdateFailed_Title" xml:space="preserve">
     <value>Update fehlgeschlagen</value>
   </data>
   <data name="Options_UpdateFailed_Message" xml:space="preserve">
-    <value>Das Update konnte nicht heruntergeladen oder installiert werden:\n{0}</value>
+    <value>Das Update konnte nicht heruntergeladen oder installiert werden.</value>
   </data>
   <data name="General_Yes" xml:space="preserve">
     <value>Ja</value>
@@ -950,7 +959,7 @@ Nutze anschließend für den AutoLogon dein echtes Microsoft-Passwort (nicht dei
     <value>Erfolgreich gespeichert!</value>
   </data>
   <data name="BrowserExtension_Config_Error_Message" xml:space="preserve">
-    <value>Konnte tab_restarter_config.json nicht speichern:</value>
+    <value>Die Konfigurationsdatei der Browser-Erweiterung konnte nicht gespeichert werden.</value>
   </data>
   <data name="General_Error" xml:space="preserve">
     <value>Fehler</value>
@@ -973,7 +982,7 @@ Möchten Sie die Anwendung jetzt neu starten?</value>
     <value>Ordner konnte nicht geöffnet werden</value>
   </data>
   <data name="Options_ExtensionFolderOpenError_Message" xml:space="preserve">
-    <value>Der Erweiterungsordner konnte nicht geöffnet oder erstellt werden: {0}</value>
+    <value>Der Erweiterungsordner konnte nicht geöffnet oder erstellt werden.</value>
   </data>
   <data name="HTTPS_Timeout_Message" xml:space="preserve">
     <value>Die Anfrage hat das Zeitlimit Überschritten</value>

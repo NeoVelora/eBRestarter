@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
@@ -78,10 +79,11 @@ public sealed class ComputerRestartService(
             _timer = null;
         }
 
+        var cancellationToken = cts?.Token ?? CancellationToken.None;
+
         if (cts is not null)
         {
             await cts.CancelAsync().ConfigureAwait(false);
-            cts.Dispose();
         }
 
         timer?.Dispose();
@@ -92,12 +94,20 @@ public sealed class ComputerRestartService(
             {
                 await backgroundTask.ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 _logger.LogDebug(
                     LogEventIds.RestarterCycle.RestartSchedulerStopped,
                     "Restart scheduler background task was cancelled during shutdown.");
             }
+            finally
+            {
+                cts?.Dispose();
+            }
+        }
+        else
+        {
+            cts?.Dispose();
         }
 
         _logger.LogInformation(LogEventIds.RestarterCycle.RestartSchedulerStopped, "Computer Restart Scheduler stopped.");
@@ -123,6 +133,7 @@ public sealed class ComputerRestartService(
         NextRestartDateChanged?.Invoke(this, nextRestartDate);
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.BackgroundLoop, Justification = "Top-level boundary for the periodic computer restart scheduler loop.")]
     private async Task LoopAsync(PeriodicTimer timer, CancellationToken cancellationToken)
     {
         try
@@ -132,7 +143,7 @@ public sealed class ComputerRestartService(
                 await CheckAndExecuteRestartAsync().ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             _logger.LogDebug(
                 LogEventIds.RestarterCycle.RestartSchedulerStopped,
@@ -190,6 +201,7 @@ public sealed class ComputerRestartService(
         }
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.BackgroundLoop, Justification = "Terminal boundary for the computer shutdown and hardware reboot sequence.")]
     private async Task ExecuteRestartSequenceAsync()
     {
         _logger.LogWarning(

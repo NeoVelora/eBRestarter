@@ -84,6 +84,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             });
 
             exception.Message.ShouldBe("PrincipalServerDown");
+            exception.InnerException.ShouldBeOfType<PrincipalServerDownException>();
         }
 
         [Fact]

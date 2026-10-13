@@ -97,7 +97,7 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
             return;
         }
 
-        if (IsReparsePoint(dir))
+        if (IsReparsePoint(dir, logger))
         {
             logger.LogReparsePointSkipped(dir);
 
@@ -171,14 +171,15 @@ public sealed class AdapterWindowsFileDeletionService : IOutboundPortFileDeletio
         return false;
     }
 
-    private static bool IsReparsePoint(string path)
+    private static bool IsReparsePoint(string path, ILogger logger)
     {
         try
         {
             return File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            logger.LogReparsePointCheckFailed(exception, path);
             return true;
         }
     }

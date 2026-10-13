@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
@@ -28,10 +29,11 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
     private const string KeyCleanupCanceledByUser = "Cleanup_CanceledByUser";
     private const string KeyCleanupCanceling = "Cleanup_Canceling";
     private const string KeyCleanupConfigError = "Cleanup_ConfigError";
+    private const string KeyCleanupFailed = "Cleanup_Failed";
+    private const string KeyCleanupFileError = "Cleanup_FileError";
     private const string KeyCleanupLoading = "Cleanup_Loading";
     private const string KeyCleanupReady = "Cleanup_Ready";
-    private const string KeyGeneralErrorPrefix = "General_ErrorPrefix";
-    private const string KeyGeneralLoadErrorPrefix = "General_LoadErrorPrefix";
+    private const string KeyGeneralLoadError = "General_LoadError";
 
     private readonly IOutboundPortBrowserFactory _browserFactory;
     private readonly ILogger<ViewModelDeleteBrowserContent> _logger;
@@ -145,6 +147,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
 
     private bool CanClean() => !IsBusy && (IsDeleteCookiesChecked || IsDeleteInternetCacheChecked);
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI command boundary for browser cache cleanup execution.")]
     private async Task ExecuteCleaningLogicAsync(bool forceClose)
     {
         IsBusy = true;
@@ -185,7 +188,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                     break;
 
                 case DeleteBrowserContentFailure failure:
-                    StatusText = failure.Message;
+                    StatusText = _localizationService.RetrieveString(failure.Message);
                     break;
 
                 case DeleteBrowserContentSuccess:
@@ -197,7 +200,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                     break;
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (_deleteBrowserContentCancellationTokenSource?.IsCancellationRequested == true)
         {
             StatusText = _localizationService.RetrieveString(KeyCleanupCanceledByUser);
         }
@@ -208,8 +211,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                 ex,
                 "Browser cleanup failed with a file system error.");
 
-            string errorFormat = _localizationService.RetrieveString(KeyGeneralErrorPrefix);
-            StatusText = string.Format(CultureInfo.CurrentCulture, errorFormat, ex.Message);
+            StatusText = _localizationService.RetrieveString(KeyCleanupFileError);
         }
         catch (Exception ex)
         {
@@ -218,8 +220,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                 ex,
                 "Browser cleanup failed unexpectedly.");
 
-            string errorFormat = _localizationService.RetrieveString(KeyGeneralErrorPrefix);
-            StatusText = string.Format(CultureInfo.CurrentCulture, errorFormat, ex.Message);
+            StatusText = _localizationService.RetrieveString(KeyCleanupFailed);
         }
         finally
         {
@@ -236,6 +237,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
         await ExecuteCleaningLogicAsync(true);
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI initialization boundary for browser cleanup dialog state.")]
     public void Initialize(BrowserType selectedBrowserType)
     {
         try
@@ -252,8 +254,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
                 ex,
                 "Loading the browser cleanup dialog state failed.");
 
-            string errorFormat = _localizationService.RetrieveString(KeyGeneralLoadErrorPrefix);
-            StatusText = string.Format(CultureInfo.CurrentCulture, errorFormat, ex.Message);
+            StatusText = _localizationService.RetrieveString(KeyGeneralLoadError);
         }
     }
 

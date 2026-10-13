@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
@@ -236,6 +237,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         NextDeletionProcessDateMessage = currentConfigState.NextDeletionProcessDateMessage;
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "Async void timer tick boundary for periodic browser check.")]
     private async void OnBrowserCheckTimerTick(object? sender, object eventArgs)
     {
         if (_disposed)
@@ -279,6 +281,7 @@ public sealed partial class ViewModelRestartTask : ObservableObject,
         });
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "Dispatcher queue callback boundary for browser cleanup dialog.")]
     private void StartLoop()
     {
         var manageRestarterCycleRequest = new ManageRestarterCycleRequest(

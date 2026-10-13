@@ -70,4 +70,13 @@ public static partial class FileDeletionLogMessages
         Exception exception,
         string file,
         string cleanupRoot);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserCacheReparsePointEvaluationFailed,
+        Level = LogLevel.Warning,
+        Message = "Error while evaluating reparse point attributes for {Path}. Treating path as reparse point to prevent traversal outside cleanup root.")]
+    public static partial void LogReparsePointCheckFailed(
+        this ILogger logger,
+        Exception exception,
+        string path);
 }

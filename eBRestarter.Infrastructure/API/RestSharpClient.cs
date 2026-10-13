@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Threading.RateLimiting;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using RestSharp;
 using RestSharp.Authenticators;
 
@@ -30,6 +32,7 @@ public sealed partial class RestSharpClient(
     private const string RateLimitQueueFullErrorMessage = "Client-side outbound rate limit queue is full or rate limit exceeded.";
     private const string RateLimitRemainingHeaderName = "X-Ratelimit-Remaining";
     private const int RemainingRateLimitThreshold = 10;
+    private const string RequestExecutionErrorMessage = "An error occurred while executing the HTTP request.";
     private const string RequestTimeoutErrorMessage = "The request has exceeded the time limit";
     private const string ResponsePayloadTooLargeErrorMessage = "Response payload exceeds maximum allowed size limit of 10 MB.";
 
@@ -58,12 +61,10 @@ public sealed partial class RestSharpClient(
             };
         }
 
-        using var client = CreateClient(request);
-
-        var restRequest = new RestRequest();
-
         try
         {
+            using var client = CreateClient(request);
+            var restRequest = new RestRequest();
             var response = client.ExecuteGet(restRequest);
             return MapResponse(response);
         }
@@ -92,12 +93,10 @@ public sealed partial class RestSharpClient(
             };
         }
 
-        using var client = CreateClient(request);
-
-        var restRequest = new RestRequest();
-
         try
         {
+            using var client = CreateClient(request);
+            var restRequest = new RestRequest();
             var response = await client.ExecuteGetAsync(restRequest, cancellationToken).ConfigureAwait(false);
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -147,19 +146,24 @@ public sealed partial class RestSharpClient(
 
     private static ApiResponse MapExceptionToResponse(Exception exception)
     {
-        var code = exception switch
+        Exception effectiveException = exception is AggregateException agg && agg.InnerExceptions.Count == 1
+            ? agg.InnerExceptions[0]
+            : exception;
+
+        var (code, errorMessage) = effectiveException switch
         {
-            TimeoutException or TaskCanceledException => ResponseCode.HTTPTimeout,
-            HttpRequestException httpException when httpException.StatusCode == HttpStatusCode.TooManyRequests || httpException.Message.Contains(((int)HttpStatusCode.TooManyRequests).ToString(), StringComparison.OrdinalIgnoreCase) => ResponseCode.HttpRE429,
-            HttpRequestException httpException when httpException.StatusCode == HttpStatusCode.Unauthorized || httpException.Message.Contains(((int)HttpStatusCode.Unauthorized).ToString(), StringComparison.OrdinalIgnoreCase) => ResponseCode.HttpRE401,
-            _ => ResponseCode.GeneralExceptionError
+            TimeoutException or TaskCanceledException or TimeoutRejectedException => (ResponseCode.HTTPTimeout, RequestTimeoutErrorMessage),
+            BrokenCircuitException => (ResponseCode.NoConnectionToServer, RequestExecutionErrorMessage),
+            HttpRequestException httpException when httpException.StatusCode == HttpStatusCode.TooManyRequests || httpException.Message.Contains(((int)HttpStatusCode.TooManyRequests).ToString(), StringComparison.OrdinalIgnoreCase) => (ResponseCode.HttpRE429, RequestExecutionErrorMessage),
+            HttpRequestException httpException when httpException.StatusCode == HttpStatusCode.Unauthorized || httpException.Message.Contains(((int)HttpStatusCode.Unauthorized).ToString(), StringComparison.OrdinalIgnoreCase) => (ResponseCode.HttpRE401, RequestExecutionErrorMessage),
+            _ => (ResponseCode.GeneralExceptionError, RequestExecutionErrorMessage)
         };
 
         return new ApiResponse
         {
             IsSuccess = false,
             StatusCode = code,
-            ErrorMessage = exception.Message
+            ErrorMessage = errorMessage
         };
     }
 
@@ -188,7 +192,8 @@ public sealed partial class RestSharpClient(
             };
         }
 
-        if (response.ResponseStatus == ResponseStatus.TimedOut)
+        if (response.ResponseStatus == ResponseStatus.TimedOut
+            || response.ErrorException is TimeoutException or TimeoutRejectedException)
         {
             LogRequestTimedOut(response.Request.Resource);
 
@@ -197,6 +202,18 @@ public sealed partial class RestSharpClient(
                 IsSuccess = false,
                 StatusCode = ResponseCode.HTTPTimeout,
                 ErrorMessage = RequestTimeoutErrorMessage
+            };
+        }
+
+        if (response.ErrorException is BrokenCircuitException)
+        {
+            LogApiErrorResponse(response.StatusCode, response.ErrorMessage);
+
+            return new ApiResponse
+            {
+                IsSuccess = false,
+                StatusCode = ResponseCode.NoConnectionToServer,
+                ErrorMessage = RequestExecutionErrorMessage
             };
         }
 

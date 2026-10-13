@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
@@ -19,11 +20,13 @@ using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Utilities;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Utilities.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralUIComponents.Helpers;
 using eBRestarter.Desktop.WinUI3.BehavioralUIComponents.Helpers.Interfaces;
 using eBRestarter.Desktop.WinUI3.Extensions.DependencyInjections;
+using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
 using eBRestarter.Infrastructure.BehavioralComponents.Extensions.DependencyInjection;
 
 namespace eBRestarter.Desktop.WinUI3;
@@ -35,6 +38,8 @@ public sealed partial class App : Application
     private const string DefaultThemeName = "Light";
 
     public static IHost? AppHost { get; private set; }
+
+    public static string? StartupErrorMessage { get; private set; }
 
     public static Microsoft.UI.Dispatching.DispatcherQueue? AppDispatcherQueue { get; private set; }
 
@@ -51,6 +56,7 @@ public sealed partial class App : Application
     }
 
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ProcessEntry, Justification = "Process entry point / launch lifecycle boundary")]
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var logger = AppHost!.Services.GetRequiredService<ILogger<App>>();
@@ -81,6 +87,8 @@ public sealed partial class App : Application
             ApplicationLanguages.PrimaryLanguageOverride = DefaultLanguageCode;
         }
 
+        string? schedulerStartError = null;
+
         try
         {
             var restartScheduler = AppHost!.Services.GetRequiredService<IInboundPortComputerRestartService>();
@@ -92,6 +100,9 @@ public sealed partial class App : Application
                 LogEventIds.UserInterface.SchedulerStartFailed,
                 ex,
                 "Starting the computer restart scheduler failed; scheduled restarts will not run.");
+
+            StartupErrorMessage = ex.Message;
+            schedulerStartError = ex.Message;
         }
 
         MainWindoweBRestarter = AppHost!.Services.GetRequiredService<EBRestarter>();
@@ -117,6 +128,28 @@ public sealed partial class App : Application
         }
 
         MainWindoweBRestarter.Activate();
+
+        if (schedulerStartError is not null)
+        {
+            AppDispatcherQueue?.TryEnqueue(async () =>
+            {
+                try
+                {
+                    var dialogService = AppHost!.Services.GetRequiredService<IDialogService>();
+                    var localizationService = AppHost!.Services.GetRequiredService<IInboundPortLocalizationProvider>();
+                    string title = localizationService.RetrieveString("Startup_SchedulerError_Title") ?? "Initialisierungsfehler";
+                    string message = localizationService.RetrieveString("Startup_SchedulerError_Message") ?? "Der automatische Neustart-Planer konnte nicht gestartet werden. Geplante Neustarts werden nicht ausgeführt.";
+                    await dialogService.ShowMessageAsync(title, message, DialogIcon.Error);
+                }
+                catch (Exception dialogEx)
+                {
+                    logger.LogError(
+                        LogEventIds.UserInterface.ViewModelOperationFailed,
+                        dialogEx,
+                        "Displaying the startup scheduler failure dialog failed.");
+                }
+            });
+        }
     }
 
     private static void RegisterGlobalExceptionHandlers()

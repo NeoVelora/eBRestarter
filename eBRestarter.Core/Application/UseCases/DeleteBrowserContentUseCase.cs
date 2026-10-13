@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 
 namespace eBRestarter.Core.Application.UseCases;
@@ -19,16 +21,19 @@ public sealed class DeleteBrowserContentUseCase(
     IInboundPortLocalizationProvider localizationService,
     IOutboundPortOsProcessControl processService,
     TimeProvider timeProvider,
-    IInboundPortApplicationValidator<DeleteBrowserContentRequest> validator)
+    IInboundPortApplicationValidator<DeleteBrowserContentRequest> validator,
+    IOutboundPortApplicationLogger<DeleteBrowserContentUseCase> logger)
     : IUseCaseDeleteBrowserContent
 {
     private const int CloseDelayMilliseconds = 1000;
     private const string DefaultBrowserRunningMessage = "Browser is running";
+    private const string DefaultCleanupFailedMessage = "An unexpected error occurred while deleting browser content.";
     private const string DefaultDeleteProgressMessage = "Delete...";
     private const string DefaultNoPathsMessage = "No paths to clean";
     private const string LocalizationKeyAnalyzing = "Cleanup_Analyzing";
     private const string LocalizationKeyBrowserRunning = "Cleanup_BrowserRunning";
     private const string LocalizationKeyClosingBrowser = "Cleanup_ClosingBrowser";
+    private const string LocalizationKeyFailed = "Cleanup_Failed";
     private const string LocalizationKeyFinished = "Cleanup_Finished";
     private const string LocalizationKeyNoPaths = "Cleanup_NoPaths";
     private const string LocalizationKeyRunning = "Cleanup_Running";
@@ -39,6 +44,7 @@ public sealed class DeleteBrowserContentUseCase(
     private readonly IOutboundPortOsProcessControl _processService = processService ?? throw new ArgumentNullException(nameof(processService));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly IInboundPortApplicationValidator<DeleteBrowserContentRequest> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+    private readonly IOutboundPortApplicationLogger<DeleteBrowserContentUseCase> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public Task<DeleteBrowserContentResult> ExecuteAsync(
         DeleteBrowserContentRequest request,
@@ -119,7 +125,14 @@ public sealed class DeleteBrowserContentUseCase(
         }
         catch (Exception exception)
         {
-            return new DeleteBrowserContentFailure(exception.Message);
+            _logger.LogError(
+                LogEventIds.Browser.BrowserCleanupFailed,
+                exception,
+                "Unexpected error deleting browser content for browser {BrowserType}.",
+                request.BrowserType);
+
+            string failureMessage = _localizationService.RetrieveString(LocalizationKeyFailed) ?? DefaultCleanupFailedMessage;
+            return new DeleteBrowserContentFailure(failureMessage);
         }
     }
 }

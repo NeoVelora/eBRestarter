@@ -17,6 +17,9 @@ using NSubstitute.ExceptionExtensions;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
 using eBRestarter.Tests.TestDoubles;
 
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
+using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
+
 namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 {
     public class DeleteBrowserContentUseCaseTests
@@ -25,6 +28,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
         private readonly IOutboundPortFileDeletion _mockFileDeletionService;
         private readonly IOutboundPortOsProcessControl _mockProcessService;
         private readonly IInboundPortLocalizationProvider _mockLocalizationService;
+        private readonly IOutboundPortApplicationLogger<DeleteBrowserContentUseCase> _mockLogger;
         private readonly DeleteBrowserContentUseCase _sut;
 
         public DeleteBrowserContentUseCaseTests()
@@ -33,6 +37,7 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
             _mockFileDeletionService = Substitute.For<IOutboundPortFileDeletion>();
             _mockProcessService = Substitute.For<IOutboundPortOsProcessControl>();
             _mockLocalizationService = Substitute.For<IInboundPortLocalizationProvider>();
+            _mockLogger = Substitute.For<IOutboundPortApplicationLogger<DeleteBrowserContentUseCase>>();
 
             _mockLocalizationService
                 .RetrieveString(Arg.Any<string>())
@@ -45,7 +50,8 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
                 _mockLocalizationService,
                 _mockProcessService,
                 TimeProvider.System,
-                new AdapterFluentValidationWrapper<DeleteBrowserContentRequest>(new DeleteBrowserContentValidator()));
+                new AdapterFluentValidationWrapper<DeleteBrowserContentRequest>(new DeleteBrowserContentValidator()),
+                _mockLogger);
         }
 
         [Fact]
@@ -186,12 +192,18 @@ namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
         {
             var request = new DeleteBrowserContentRequest(BrowserType.Vivaldi, true, true, false);
             var progress = new Progress<DeleteBrowserContentProgress>();
+            var expectedException = new UnauthorizedAccessException("Zugriff verweigert");
 
-            _mockBrowserFactory.Create(Arg.Any<BrowserType>()).Throws(new UnauthorizedAccessException("Zugriff verweigert"));
+            _mockBrowserFactory.Create(Arg.Any<BrowserType>()).Throws(expectedException);
 
             var result = await _sut.ExecuteAsync(request, progress, CancellationToken.None);
 
-            (result is DeleteBrowserContentFailure failure && failure.Message == "Zugriff verweigert").ShouldBeTrue();
+            (result is DeleteBrowserContentFailure failure && failure.Message == "Cleanup_Failed").ShouldBeTrue();
+            _mockLogger.Received(1).LogError(
+                LogEventIds.Browser.BrowserCleanupFailed,
+                expectedException,
+                Arg.Any<string>(),
+                Arg.Any<object[]>());
         }
     }
 }

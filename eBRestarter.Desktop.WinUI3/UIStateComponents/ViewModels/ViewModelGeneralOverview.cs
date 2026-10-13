@@ -20,6 +20,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 
 using SkiaSharp;
 
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
@@ -360,6 +361,7 @@ public sealed partial class ViewModelGeneralOverview : ObservableObject,
     [RelayCommand]
     private void GoToAPILogin() => _navigationService.NavigateTo(RouteNameOptions, parameter: 1);
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI background task and timer tick boundary for refreshing overview earnings and IP statistics.")]
     private async Task LoadDataAsync()
     {
         try

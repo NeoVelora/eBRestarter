@@ -17,6 +17,7 @@
 		  Zeitpunkten unterschiedliche Pakete zieht.
 		-->
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>

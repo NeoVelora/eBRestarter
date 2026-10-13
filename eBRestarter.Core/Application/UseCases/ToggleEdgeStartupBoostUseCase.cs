@@ -16,6 +16,8 @@ public sealed class ToggleEdgeStartupBoostUseCase(
     IOutboundPortBrowserConfigRepository startupService)
     : IUseCaseToggleEdgeStartupBoost
 {
+    private const string DefaultErrorMessage = "Edge startup boost configuration could not be changed.";
+
     private readonly IOutboundPortBrowserFactory _browserFactory = browserFactory ?? throw new ArgumentNullException(nameof(browserFactory));
     private readonly IOutboundPortApplicationLogger<ToggleEdgeStartupBoostUseCase> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOutboundPortBrowserConfigRepository _startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
@@ -39,7 +41,7 @@ public sealed class ToggleEdgeStartupBoostUseCase(
                 "Toggling Edge startup boost to {ShouldEnable} failed.",
                 shouldEnable);
 
-            return new ToggleEdgeStartupBoostResponse(false, !shouldEnable, ex.Message);
+            return new ToggleEdgeStartupBoostResponse(false, !shouldEnable, DefaultErrorMessage);
         }
     }
 }

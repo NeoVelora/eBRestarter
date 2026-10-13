@@ -4,6 +4,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -66,6 +67,7 @@ public sealed partial class ViewModelInfocenter : ObservableObject
     }
 
     [RelayCommand]
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI command boundary for opening external support website.")]
     public void OpenSupportWebsite(string? url)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -101,6 +103,7 @@ public sealed partial class ViewModelInfocenter : ObservableObject
     [RelayCommand]
     private Task ShowAboutInfoAsync() => _dialogService.ShowAboutDialogAsync();
 
+    [ExceptionBoundary(ExceptionBoundaryKind.DegradationBoundary, Justification = "Degradation boundary for hardware and OS info loading with localized error message fallbacks.")]
     private async Task LoadDataAsync()
     {
         try

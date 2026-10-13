@@ -489,6 +489,15 @@
   <data name="Cleanup_Finished" xml:space="preserve">
     <value>Cleanup finished.</value>
   </data>
+  <data name="Cleanup_Failed" xml:space="preserve">
+    <value>Cleanup failed. Check the application log for details.</value>
+  </data>
+  <data name="Cleanup_FileError" xml:space="preserve">
+    <value>Browser cleanup failed due to a file access error.</value>
+  </data>
+  <data name="General_LoadError" xml:space="preserve">
+    <value>Failed to load browser configuration.</value>
+  </data>
   <data name="General_ErrorPrefix" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
@@ -884,13 +893,13 @@ Afterward, use your actual Microsoft account password (not your PIN) for AutoLog
     <value>Error</value>
   </data>
   <data name="Options_UpdateCheckError_Message" xml:space="preserve">
-    <value>An error occurred while checking for updates:\n{0}</value>
+    <value>An error occurred while checking for updates.</value>
   </data>
   <data name="Options_UpdateFailed_Title" xml:space="preserve">
     <value>Update failed</value>
   </data>
   <data name="Options_UpdateFailed_Message" xml:space="preserve">
-    <value>The update could not be downloaded or installed:\n{0}</value>
+    <value>The update could not be downloaded or installed.</value>
   </data>
   <data name="General_Yes" xml:space="preserve">
     <value>Yes</value>
@@ -950,7 +959,7 @@ Afterward, use your actual Microsoft account password (not your PIN) for AutoLog
     <value>Saved successfully!</value>
   </data>
   <data name="BrowserExtension_Config_Error_Message" xml:space="preserve">
-    <value>Unable to save tab_restarter_config.json:</value>
+    <value>Unable to save the browser extension configuration file.</value>
   </data>
   <data name="General_Error" xml:space="preserve">
     <value>Error</value>
@@ -973,7 +982,7 @@ Do you want to restart now?</value>
     <value>Could not open folder</value>
   </data>
   <data name="Options_ExtensionFolderOpenError_Message" xml:space="preserve">
-    <value>The extension folder could not be opened or created: {0}</value>
+    <value>The extension folder could not be opened or created.</value>
   </data>
   <data name="HTTPS_Timeout_Message" xml:space="preserve">
     <value>The request has exceeded the time limit</value>

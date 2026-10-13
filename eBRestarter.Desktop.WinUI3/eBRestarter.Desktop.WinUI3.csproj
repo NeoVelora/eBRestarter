@@ -38,6 +38,7 @@
 	  unterschiedliche (und potenziell kompromittierte) Paketversionen zieht.
 	-->
 	<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Resources\Images\**" />

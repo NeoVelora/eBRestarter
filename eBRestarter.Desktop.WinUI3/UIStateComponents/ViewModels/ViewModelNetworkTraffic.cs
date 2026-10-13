@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Timers;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.ObservableModel;
@@ -166,6 +167,7 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
         PerformUpdate();
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "Timer elapsed callback boundary for polling network interface statistics.")]
     private void PerformUpdate()
     {
         bool isAvailable = false;
@@ -184,8 +186,8 @@ public sealed partial class ViewModelNetworkTraffic : ObservableObject, IDisposa
         {
             _logger.LogDebug(
                 LogEventIds.UserInterface.ViewModelOperationFailed,
-                "Reading network interface statistics failed: {Reason}",
-                exception.Message);
+                exception,
+                "Reading network interface statistics failed.");
 
             isAvailable = false;
         }

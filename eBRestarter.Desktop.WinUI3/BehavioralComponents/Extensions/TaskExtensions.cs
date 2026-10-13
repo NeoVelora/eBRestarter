@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
@@ -9,22 +10,43 @@ namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 
 public static class TaskExtensions
 {
-#pragma warning disable S3168 // "async" methods should not return "void" - siehe <remarks> oben
-    public static async void Forget(this Task task, ILogger logger, string context)
-#pragma warning restore S3168
+    public static void Forget(this Task task, ILogger logger, string context)
     {
         ArgumentNullException.ThrowIfNull(task);
         ArgumentNullException.ThrowIfNull(logger);
 
-        try
+        if (task.IsCompleted)
         {
-            await task.ConfigureAwait(false);
+            if (task.IsFaulted && task.Exception is not null)
+            {
+                LogFault(task.Exception);
+            }
+            return;
         }
-        catch (Exception exception)
+
+        _ = task.ContinueWith(
+            static (completedTask, state) =>
+            {
+                var (log, ctx) = ((ILogger, string))state!;
+                if (completedTask.Exception is not null)
+                {
+                    log.LogError(
+                        LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
+                        completedTask.Exception.Flatten(),
+                        "Fire-and-forget task {Context} faulted.",
+                        ctx);
+                }
+            },
+            (logger, context),
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
+
+        void LogFault(AggregateException exception)
         {
             logger.LogError(
                 LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
-                exception,
+                exception.Flatten(),
                 "Fire-and-forget task {Context} faulted.",
                 context);
         }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.BehavioralComponents.Handlers;
+using eBRestarter.Core.Application.BehavioralComponents.Handlers.Interfaces;
 using eBRestarter.Core.Application.BehavioralComponents.Services;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
@@ -36,6 +37,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
 
         private readonly IOutboundPortBrowser _mockBrowser;
         private readonly FakeTimeProvider _fakeTimeProvider;
+        private readonly IOutboundPortApplicationLogger<RestarterCycleService> _mockLogger;
         private readonly RestarterCycleService _sut;
 
         public RestarterCycleServiceTests()
@@ -60,13 +62,15 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
             var delayStrategy = new DelayPhaseHandler(_fakeTimeProvider);
             var runStrategy = new RunBrowserPhaseHandler(_mockConfigService, _mockProcessService, _fakeTimeProvider);
 
+            _mockLogger = Substitute.For<IOutboundPortApplicationLogger<RestarterCycleService>>();
+
             _sut = new RestarterCycleService(
                 _mockCleanupScheduleHandler,
                 _mockBrowserFactory,
                 _mockConfigService,
                 delayStrategy,
                 _mockLocalizationService,
-                Substitute.For<IOutboundPortApplicationLogger<RestarterCycleService>>(),
+                _mockLogger,
                 runStrategy,
                 _fakeTimeProvider,
                 new AdapterFluentValidationWrapper<ManageRestarterCycleRequest>(new ManageRestarterCycleValidator()));
@@ -195,6 +199,75 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
 
             _sut.Stop();
             await cycleTask;
+        }
+
+        [Fact(Timeout = TestTimeoutMilliseconds)]
+        public async Task Stop_WhenCancellationCallbackThrows_ObservesExceptionAndLogsError()
+        {
+            var delayStrategyMock = Substitute.For<IDelayPhaseHandler>();
+            delayStrategyMock.ExecuteAsync(Arg.Any<RestartTaskState>(), Arg.Any<int>(), Arg.Any<Action<RestartTaskState, int, string?>>(), Arg.Any<CancellationToken>())
+                .Returns(callInfo =>
+                {
+                    var ct = callInfo.Arg<CancellationToken>();
+                    ct.Register(() => throw new InvalidOperationException("Simulation callback failure"));
+                    var tcs = new TaskCompletionSource();
+                    ct.Register(() => tcs.TrySetCanceled(ct));
+                    return tcs.Task;
+                });
+
+            var runStrategy = new RunBrowserPhaseHandler(_mockConfigService, _mockProcessService, _fakeTimeProvider);
+            var sutWithFaultingDelay = new RestarterCycleService(
+                _mockCleanupScheduleHandler,
+                _mockBrowserFactory,
+                _mockConfigService,
+                delayStrategyMock,
+                _mockLocalizationService,
+                _mockLogger,
+                runStrategy,
+                _fakeTimeProvider,
+                new AdapterFluentValidationWrapper<ManageRestarterCycleRequest>(new ManageRestarterCycleValidator()));
+
+            var request = new ManageRestarterCycleRequest(BrowserType.Firefox, "User", 10, 5, false);
+            var cycleTask = sutWithFaultingDelay.StartAsync(request, () => Task.CompletedTask);
+
+            sutWithFaultingDelay.Stop();
+            await cycleTask;
+
+            await Task.Delay(50);
+
+            _mockLogger.Received().LogError(
+                LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
+                Arg.Any<Exception>(),
+                Arg.Is<string>(msg => msg.Contains("Cancellation of restarter cycle encountered an error")));
+        }
+
+        [Fact(Timeout = TestTimeoutMilliseconds)]
+        public async Task StartAsync_WhenUnexpectedOperationCanceledExceptionThrown_TreatsAsCycleFaulted()
+        {
+            var delayStrategyMock = Substitute.For<IDelayPhaseHandler>();
+            delayStrategyMock.ExecuteAsync(Arg.Any<RestartTaskState>(), Arg.Any<int>(), Arg.Any<Action<RestartTaskState, int, string?>>(), Arg.Any<CancellationToken>())
+                .Returns(_ => Task.FromException(new OperationCanceledException("Unexpected downstream timeout cancellation")));
+
+            var runStrategy = new RunBrowserPhaseHandler(_mockConfigService, _mockProcessService, _fakeTimeProvider);
+            var sutWithUnexpectedCancellation = new RestarterCycleService(
+                _mockCleanupScheduleHandler,
+                _mockBrowserFactory,
+                _mockConfigService,
+                delayStrategyMock,
+                _mockLocalizationService,
+                _mockLogger,
+                runStrategy,
+                _fakeTimeProvider,
+                new AdapterFluentValidationWrapper<ManageRestarterCycleRequest>(new ManageRestarterCycleValidator()));
+
+            var request = new ManageRestarterCycleRequest(BrowserType.Firefox, "User", 10, 5, false);
+
+            await sutWithUnexpectedCancellation.StartAsync(request, () => Task.CompletedTask);
+
+            _mockLogger.Received(1).LogError(
+                LogEventIds.RestarterCycle.CycleFaulted,
+                Arg.Any<OperationCanceledException>(),
+                Arg.Is<string>(msg => msg.Contains("The restarter cycle aborted with an unhandled fault")));
         }
     }
 }

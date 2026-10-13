@@ -43,9 +43,9 @@ public sealed class AdapterWindowsCredentialValidationProvider(
 
             return isValid;
         }
-        catch (PrincipalServerDownException)
+        catch (PrincipalServerDownException exception)
         {
-            throw new InvalidOperationException(PrincipalServerDownMessage);
+            throw new InvalidOperationException(PrincipalServerDownMessage, exception);
         }
         catch (Exception exception)
         {

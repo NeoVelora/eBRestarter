@@ -12,6 +12,7 @@
       Zeitpunkten unterschiedliche (und potenziell kompromittierte) Paketversionen zieht."
     -->
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.BehavioralComponents.Handlers.Interfaces;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
@@ -66,6 +67,7 @@ public sealed class RestarterCycleService(
 
     public event EventHandler<RestarterCycleProgress>? ProgressChanged;
 
+    [ExceptionBoundary(ExceptionBoundaryKind.BackgroundLoop, Justification = "Top-level boundary for the continuous restarter cycle execution loop.")]
     public async Task StartAsync(
         ManageRestarterCycleRequest request,
         Func<Task> performCleanupCallback)
@@ -97,7 +99,7 @@ public sealed class RestarterCycleService(
         {
             await RunCycleAsync(request, performCleanupCallback, cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             _logger.LogDebug(
                 LogEventIds.RestarterCycle.RestartSchedulerStopped,
@@ -129,8 +131,29 @@ public sealed class RestarterCycleService(
 
         if (cts is not null)
         {
-            _ = cts.CancelAsync().ContinueWith(
-                _ => cts.Dispose(),
+            cts.CancelAsync().ContinueWith(
+                antecedent =>
+                {
+                    if (antecedent.IsFaulted && antecedent.Exception is not null)
+                    {
+                        _logger.LogError(
+                            LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
+                            antecedent.Exception,
+                            "Cancellation of restarter cycle encountered an error.");
+                    }
+
+                    try
+                    {
+                        cts.Dispose();
+                    }
+                    catch (Exception disposeEx)
+                    {
+                        _logger.LogError(
+                            LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
+                            disposeEx,
+                            "Disposing CancellationTokenSource after cancellation failed.");
+                    }
+                },
                 CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);

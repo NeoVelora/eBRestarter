@@ -7,6 +7,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Windows.ApplicationModel.Resources;
 
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
@@ -194,6 +195,7 @@ public sealed class LocalizationProvider : IInboundPortLocalizationProvider, IUI
         }
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.DegradationBoundary, Justification = "Degradation fallback returning bracketed resource key if resource resolution fails.")]
     private string ResolveResourceString(string resourceKey)
     {
         try

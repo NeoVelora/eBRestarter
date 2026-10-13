@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
+using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Handlers;
@@ -289,6 +290,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
     }
 
     [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI command boundary for manual application update check.")]
     private async Task CheckForUpdatesAsync()
     {
         IsCheckingForUpdates = true;
@@ -335,10 +337,9 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
                 exception,
                 "Checking for application updates failed.");
 
-            string errorFormat = _localizationService.RetrieveString(OptionsUpdateCheckErrorMessageResourceKey);
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(OptionsUpdateErrorTitleResourceKey),
-                string.Format(CultureInfo.CurrentCulture, errorFormat, exception.Message),
+                _localizationService.RetrieveString(OptionsUpdateCheckErrorMessageResourceKey),
                 DialogIcon.Error);
         }
         finally
@@ -487,6 +488,7 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
         });
     }
 
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI execution boundary for application update installation.")]
     private async Task PerformUpdateCoreAsync()
     {
         IsCheckingForUpdates = true;
@@ -502,11 +504,9 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
                 exception,
                 "Performing the application update failed.");
 
-            string errorFormat = _localizationService.RetrieveString(OptionsUpdateFailedMessageResourceKey);
-
             await _dialogService.ShowMessageAsync(
                 _localizationService.RetrieveString(OptionsUpdateFailedTitleResourceKey),
-                string.Format(CultureInfo.CurrentCulture, errorFormat, exception.Message),
+                _localizationService.RetrieveString(OptionsUpdateFailedMessageResourceKey),
                 DialogIcon.Error);
         }
         finally

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Shouldly;
 using System;
 using Xunit;
@@ -56,6 +57,19 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
         }
 
         [Fact]
+        public void SaveConfig_ShouldThrowInvalidOperationException_WhenFileSystemWriteFails()
+        {
+            var config = new AppConfig();
+            _mockFileSystem.GetDirectoryName(FakeFilePath).Returns(@"C:\AppData\eBRestarter");
+            _mockFileSystem.DirectoryExists(@"C:\AppData\eBRestarter").Returns(true);
+            _mockFileSystem.When(fs => fs.WriteAllText(FakeFilePath, Arg.Any<string>()))
+                .Do(_ => throw new System.IO.IOException("Disk full"));
+
+            var ex = Should.Throw<InvalidOperationException>(() => _service.SaveConfig(config));
+            ex.InnerException.ShouldBeOfType<System.IO.IOException>();
+        }
+
+        [Fact]
         public void LoadConfig_ShouldCreateAndReturnDefault_WhenFileDoesNotExist()
         {
             _mockFileSystem.FileExists(FakeFilePath).Returns(false);
@@ -69,15 +83,22 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
         }
 
         [Fact]
-        public void LoadConfig_ShouldReturnDefault_WhenJsonIsBroken()
+        public void LoadConfig_ShouldThrowInvalidOperationException_WhenJsonIsBroken()
         {
             _mockFileSystem.FileExists(FakeFilePath).Returns(true);
             _mockFileSystem.ReadAllText(FakeFilePath).Returns("Invalid JSON content {");
 
-            var result = _service.LoadConfig();
+            var ex = Should.Throw<InvalidOperationException>(() => _service.LoadConfig());
+            ex.InnerException.ShouldBeOfType<System.Text.Json.JsonException>();
+        }
 
-            result.ShouldNotBeNull();
-            result.Settings.ApiKey.ShouldBeEmpty();
+        [Fact]
+        public void LoadConfig_ShouldRethrow_WhenFileSystemThrowsException()
+        {
+            _mockFileSystem.FileExists(FakeFilePath).Returns(true);
+            _mockFileSystem.ReadAllText(FakeFilePath).Throws(new UnauthorizedAccessException("Access denied"));
+
+            Should.Throw<UnauthorizedAccessException>(() => _service.LoadConfig());
         }
 
         [Fact]

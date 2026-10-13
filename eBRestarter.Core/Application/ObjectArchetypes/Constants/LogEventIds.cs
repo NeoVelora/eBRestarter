@@ -32,6 +32,8 @@ public static class LogEventIds
         public const int BrowserCachePathOutsideRoot = 2024;
         public const int BrowserCacheSingleFileDeletionFailed = 2025;
         public const int BrowserCachePathResolutionFailed = 2026;
+        public const int BrowserCacheReparsePointEvaluationFailed = 2027;
+        public const int BrowserCleanupFailed = 2028;
     }
 
     public static class RestarterCycle

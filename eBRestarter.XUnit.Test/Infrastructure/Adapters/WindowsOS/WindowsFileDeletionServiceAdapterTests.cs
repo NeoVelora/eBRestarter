@@ -95,6 +95,28 @@ namespace eBRestarter.Tests.Infrastructure.Handlers
             Should.NotThrow(() => _sut.DeleteSingleFile(nonExistentPath));
         }
 
+        [Fact]
+        public async Task DeleteFilesAsync_ShouldHandleUnreadableDirectoryAttributes_WithoutThrowing()
+        {
+            var fakeLogger = new Microsoft.Extensions.Logging.Testing.FakeLogger<AdapterWindowsFileDeletionService>();
+            var service = new AdapterWindowsFileDeletionService(fakeLogger);
+
+            string testDir = Path.Combine(_baseTestDir, "SafeCleanupDir");
+            Directory.CreateDirectory(testDir);
+
+            var statusReporter = new SynchronousProgress<string>(_ => { });
+            var progressReporter = new SynchronousProgress<int>(_ => { });
+
+            await Should.NotThrowAsync(async () =>
+            {
+                await service.DeleteFilesAsync(
+                    new List<string> { testDir },
+                    statusReporter,
+                    progressReporter,
+                    CancellationToken.None);
+            });
+        }
+
         public void Dispose()
         {
             if (Directory.Exists(_baseTestDir))

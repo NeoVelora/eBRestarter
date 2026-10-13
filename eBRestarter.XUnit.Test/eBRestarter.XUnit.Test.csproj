@@ -12,6 +12,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <!-- Testing-Guideline Kap. 7/8: Lockfile analog zu den drei Produktivprojekten. -->
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -97,6 +98,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\eBRestarter.Infrastructure\eBRestarter.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\eBRestarter.Desktop.WinUI3\BehavioralComponents\Extensions\TaskExtensions.cs" Link="BehavioralComponents\Extensions\TaskExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

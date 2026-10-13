@@ -1,5 +1,6 @@
 using System;
 using eBRestarter.Core.Application.Common.Results;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
@@ -199,6 +200,12 @@ public class ConfigureAutoLogonUseCaseTests
 
         var outcome = _sut.Execute(request);
 
-        (outcome is AutoLogonUnexpectedError unexpected && unexpected.Message == "Critical system error").ShouldBeTrue();
+        (outcome is AutoLogonUnexpectedError unexpected &&
+         unexpected.Message == "An unexpected error occurred during AutoLogon configuration.").ShouldBeTrue();
+
+        _mockLogger.Received(1).LogError(
+            LogEventIds.Security.AutoLogonConfigurationFailed,
+            Arg.Any<InvalidCastException>(),
+            Arg.Any<string>());
     }
 }
