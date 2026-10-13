@@ -19,8 +19,9 @@ public sealed class AdapterWindowsApplicationLifetimeHandler(IServiceProvider? s
                 disposableProvider.Dispose();
             }
         }
-        catch
+        catch (Exception ex)
         {
+            _ = ex;
         }
 
         Environment.Exit(exitCode);
