@@ -21,10 +21,12 @@ public static class LogEventIds
         public const int BrowserStarting = 2000;
         public const int BrowserStartFailed = 2001;
         public const int BrowserTerminationFailed = 2002;
+        public const int BrowserExecutableNotFound = 2003;
         public const int BrowserProfileDiscoveryFailed = 2010;
         public const int BrowserTypeNotSupported = 2011;
         public const int BrowserDetailEvaluationFailed = 2012;
         public const int BrowserProfileFileUnreadable = 2013;
+        public const int BrowserVersionParsingTimedOut = 2014;
         public const int BrowserCacheDirectoryUnreadable = 2020;
         public const int BrowserCacheFileDeletionFailed = 2021;
         public const int BrowserCacheDirectoryNotRemoved = 2022;
@@ -56,6 +58,7 @@ public static class LogEventIds
         public const int UpdateResponseParsingFailed = 4001;
         public const int UpdateDownloadUrlMissing = 4002;
         public const int UpdateDownloaded = 4003;
+        public const int UpdatePayloadTooLarge = 4004;
         public const int BrowserInstallerCleanupFailed = 4010;
     }
 
@@ -106,6 +109,8 @@ public static class LogEventIds
         public const int SchedulerStartFailed = 7002;
         public const int HostDisposeFailed = 7003;
         public const int UnhandledUiException = 7004;
+        public const int UnhandledAppDomainException = 7005;
+        public const int UnhandledAppDomainObject = 7006;
         public const int LocalizationLookupFailed = 7010;
         public const int ViewModelOperationFailed = 7020;
         public const int ExtensionConfigReadFailed = 7030;

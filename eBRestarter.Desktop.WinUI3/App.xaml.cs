@@ -15,6 +15,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler.Interfaces;
@@ -66,7 +67,9 @@ public sealed partial class App : Application
         try
         {
             launchConfig = AppHost!.Services.GetRequiredService<IInboundPortStartupConfigProvider>().RetrieveStartupPreferences();
-            _ = AppHost!.Services.GetRequiredService<IUseCaseInitializeBrowserCleanup>().ExecuteAsync();
+            AppHost!.Services.GetRequiredService<IUseCaseInitializeBrowserCleanup>()
+                .ExecuteAsync()
+                .Forget(logger, nameof(IUseCaseInitializeBrowserCleanup));
             string languageCode = launchConfig.LanguageCode;
 
             ApplicationLanguages.PrimaryLanguageOverride = languageCode;
@@ -79,10 +82,7 @@ public sealed partial class App : Application
         }
         catch (Exception ex)
         {
-            logger.LogWarning(
-                LogEventIds.UserInterface.StartupConfigurationFailed,
-                ex,
-                "Loading the startup configuration failed; falling back to the default language.");
+            LogStartupConfigurationFailed(logger, ex);
 
             ApplicationLanguages.PrimaryLanguageOverride = DefaultLanguageCode;
         }
@@ -96,10 +96,7 @@ public sealed partial class App : Application
         }
         catch (Exception ex)
         {
-            logger.LogError(
-                LogEventIds.UserInterface.SchedulerStartFailed,
-                ex,
-                "Starting the computer restart scheduler failed; scheduled restarts will not run.");
+            LogSchedulerStartFailed(logger, ex);
 
             StartupErrorMessage = ex.Message;
             schedulerStartError = ex.Message;
@@ -121,10 +118,7 @@ public sealed partial class App : Application
         }
         catch (Exception ex)
         {
-            logger.LogWarning(
-                LogEventIds.UserInterface.ThemeLoadFailed,
-                ex,
-                "Applying the configured theme failed; the default theme stays active.");
+            LogThemeLoadFailed(logger, ex);
         }
 
         MainWindoweBRestarter.Activate();
@@ -143,10 +137,7 @@ public sealed partial class App : Application
                 }
                 catch (Exception dialogEx)
                 {
-                    logger.LogError(
-                        LogEventIds.UserInterface.ViewModelOperationFailed,
-                        dialogEx,
-                        "Displaying the startup scheduler failure dialog failed.");
+                    LogStartupSchedulerDialogFailed(logger, dialogEx);
                 }
             });
         }
@@ -156,16 +147,16 @@ public sealed partial class App : Application
     {
         Current.UnhandledException += OnUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+        AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
     }
 
     private static void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs args)
     {
         var logger = AppHost?.Services.GetService<ILogger<App>>();
-
-        logger?.LogCritical(
-            LogEventIds.UserInterface.UnhandledUiException,
-            args.Exception,
-            "Unhandled exception reached the UI thread; the application is terminating.");
+        if (logger is not null)
+        {
+            LogUnhandledUiException(logger, args.Exception);
+        }
     }
 
     private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs args)
@@ -174,13 +165,38 @@ public sealed partial class App : Application
 
         foreach (var innerException in args.Exception.Flatten().InnerExceptions)
         {
-            logger?.LogError(
-                LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
-                innerException,
-                "A fire-and-forget task faulted and its result was never observed.");
+            if (logger is not null)
+            {
+                LogUnobservedTaskException(logger, innerException);
+            }
         }
 
         args.SetObserved();
+    }
+
+    private static void OnAppDomainUnhandledException(object sender, System.UnhandledExceptionEventArgs args)
+    {
+        var logger = AppHost?.Services.GetService<ILogger<App>>();
+
+        if (logger is not null)
+        {
+            if (args.ExceptionObject is Exception ex)
+            {
+                LogUnhandledAppDomainException(logger, ex, args.IsTerminating);
+            }
+            else
+            {
+                LogUnhandledAppDomainObject(logger, args.ExceptionObject?.ToString(), args.IsTerminating);
+            }
+        }
+
+        try
+        {
+            AppHost?.Dispose();
+        }
+        catch
+        {
+        }
     }
 
     private static void OnMainWindowClosed(object sender, WindowEventArgs args)
@@ -198,12 +214,67 @@ public sealed partial class App : Application
         }
         catch (Exception ex)
         {
-            logger?.LogError(
-                LogEventIds.UserInterface.HostDisposeFailed,
-                ex,
-                "Disposing the application host during shutdown failed.");
+            if (logger is not null)
+            {
+                LogHostDisposeFailed(logger, ex);
+            }
         }
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.StartupConfigurationFailed,
+        Level = LogLevel.Warning,
+        Message = "Loading the startup configuration failed; falling back to the default language.")]
+    private static partial void LogStartupConfigurationFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.SchedulerStartFailed,
+        Level = LogLevel.Error,
+        Message = "Starting the computer restart scheduler failed; scheduled restarts will not run.")]
+    private static partial void LogSchedulerStartFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.ThemeLoadFailed,
+        Level = LogLevel.Warning,
+        Message = "Applying the configured theme failed; the default theme stays active.")]
+    private static partial void LogThemeLoadFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.ViewModelOperationFailed,
+        Level = LogLevel.Error,
+        Message = "Displaying the startup scheduler failure dialog failed.")]
+    private static partial void LogStartupSchedulerDialogFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.UnhandledUiException,
+        Level = LogLevel.Critical,
+        Message = "Unhandled exception reached the UI thread; the application is terminating.")]
+    private static partial void LogUnhandledUiException(ILogger logger, Exception? exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
+        Level = LogLevel.Error,
+        Message = "A fire-and-forget task faulted and its result was never observed.")]
+    private static partial void LogUnobservedTaskException(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.UnhandledAppDomainException,
+        Level = LogLevel.Critical,
+        Message = "Unhandled exception occurred in AppDomain (IsTerminating: {IsTerminating}); the application is terminating.")]
+    private static partial void LogUnhandledAppDomainException(ILogger logger, Exception exception, bool isTerminating);
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.UnhandledAppDomainObject,
+        Level = LogLevel.Critical,
+        Message = "Unhandled non-Exception object occurred in AppDomain: {ExceptionObject} (IsTerminating: {IsTerminating}); the application is terminating.")]
+    private static partial void LogUnhandledAppDomainObject(ILogger logger, string? exceptionObject, bool isTerminating);
+
+    [LoggerMessage(
+        EventId = LogEventIds.UserInterface.HostDisposeFailed,
+        Level = LogLevel.Error,
+        Message = "Disposing the application host during shutdown failed.")]
+    private static partial void LogHostDisposeFailed(ILogger logger, Exception exception);
 
     private static IHostBuilder CreateHostBuilder()
     {

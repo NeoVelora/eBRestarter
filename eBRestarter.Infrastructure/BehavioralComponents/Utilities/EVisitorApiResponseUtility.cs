@@ -8,7 +8,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Utilities;
 
-public static class EVisitorApiResponseUtility
+public static partial class EVisitorApiResponseUtility
 {
 
     private const string CountryCodePropertyName = "countryCode";
@@ -58,11 +58,7 @@ public static class EVisitorApiResponseUtility
         }
         catch (Exception exception)
         {
-            logger.LogWarning(
-                LogEventIds.Api.ApiResponseParsingFailed,
-                exception,
-                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
-                nameof(ParseDailyEarnings));
+            LogApiResponseParsingFailed(logger, exception, nameof(ParseDailyEarnings));
         }
 
         return dailyEarnings;
@@ -94,11 +90,7 @@ public static class EVisitorApiResponseUtility
         }
         catch (Exception exception)
         {
-            logger.LogWarning(
-                LogEventIds.Api.ApiResponseParsingFailed,
-                exception,
-                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
-                nameof(ParseHourlyEarnings));
+            LogApiResponseParsingFailed(logger, exception, nameof(ParseHourlyEarnings));
         }
 
         return hourly;
@@ -125,11 +117,7 @@ public static class EVisitorApiResponseUtility
         }
         catch (Exception exception)
         {
-            logger.LogWarning(
-                LogEventIds.Api.ApiResponseParsingFailed,
-                exception,
-                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
-                nameof(ParseIpInfo));
+            LogApiResponseParsingFailed(logger, exception, nameof(ParseIpInfo));
 
             return null;
         }
@@ -171,11 +159,7 @@ public static class EVisitorApiResponseUtility
         }
         catch (Exception exception)
         {
-            logger.LogWarning(
-                LogEventIds.Api.ApiResponseParsingFailed,
-                exception,
-                "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.",
-                nameof(ParseMonthlyEarnings));
+            LogApiResponseParsingFailed(logger, exception, nameof(ParseMonthlyEarnings));
         }
 
         return monthlyEarnings;
@@ -243,4 +227,11 @@ public static class EVisitorApiResponseUtility
 
         return 0.0;
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.ApiResponseParsingFailed,
+        Level = LogLevel.Warning,
+        Message = "Parsing the eBesucher API response in {ParseOperation} failed; falling back to default values.")]
+    private static partial void LogApiResponseParsingFailed(ILogger logger, Exception exception, string parseOperation);
 }

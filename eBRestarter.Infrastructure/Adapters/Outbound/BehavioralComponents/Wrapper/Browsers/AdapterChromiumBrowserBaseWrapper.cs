@@ -7,7 +7,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
-public abstract class AdapterChromiumBrowserBaseWrapper(
+public abstract partial class AdapterChromiumBrowserBaseWrapper(
     IOutboundPortOsProcessControl processControlPort,
     IOutboundPortSystemConfigurationRepository settingsPort,
     IOutboundPortFileSystem fileSystemPort,
@@ -149,10 +149,7 @@ public abstract class AdapterChromiumBrowserBaseWrapper(
         }
         catch (Exception exception)
         {
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                _logger.LogDebug(LogEventIds.Browser.BrowserProfileDiscoveryFailed, exception, "Could not retrieve additional profile folders for Chromium user data path {UserDataRoot}", userDataRoot);
-            }
+            LogBrowserProfileDiscoveryFailed(_logger, exception, userDataRoot);
         }
 
         foreach (var profilePath in allProfileFolders)
@@ -172,4 +169,11 @@ public abstract class AdapterChromiumBrowserBaseWrapper(
 
         return new BrowserPaths(cacheDirs, cookiesDirs, extensionsDirs);
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserProfileDiscoveryFailed,
+        Level = LogLevel.Debug,
+        Message = "Could not retrieve additional profile folders for Chromium user data path {UserDataRoot}")]
+    private static partial void LogBrowserProfileDiscoveryFailed(ILogger logger, Exception exception, string userDataRoot);
 }

@@ -9,7 +9,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
-public sealed class AdapterFirefoxBrowserWrapper(
+public sealed partial class AdapterFirefoxBrowserWrapper(
     IOutboundPortOsProcessControl processControlPort,
     IOutboundPortSystemConfigurationRepository settingsPort,
     IOutboundPortFileSystem fileSystemPort,
@@ -238,11 +238,18 @@ public sealed class AdapterFirefoxBrowserWrapper(
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Browser.BrowserProfileFileUnreadable, exception, "Error while parsing profiles.ini at {IniPath}", iniPath);
+            LogProfileFileParsingFailed(_logger, exception, iniPath);
         }
 
         return profiles;
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserProfileFileUnreadable,
+        Level = LogLevel.Error,
+        Message = "Error while parsing profiles.ini at {IniPath}")]
+    private static partial void LogProfileFileParsingFailed(ILogger logger, Exception exception, string iniPath);
 
 
     private readonly record struct ProfileInfo(string Path, bool IsRelative);

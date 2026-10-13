@@ -8,8 +8,14 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 
-public static class TaskExtensions
+public static partial class TaskExtensions
 {
+    [LoggerMessage(
+        EventId = LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
+        Level = LogLevel.Error,
+        Message = "Fire-and-forget task {Context} faulted.")]
+    private static partial void LogFireAndForgetTaskFaulted(ILogger logger, Exception exception, string context);
+
     public static void Forget(this Task task, ILogger logger, string context)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -30,11 +36,7 @@ public static class TaskExtensions
                 var (log, ctx) = ((ILogger, string))state!;
                 if (completedTask.Exception is not null)
                 {
-                    log.LogError(
-                        LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
-                        completedTask.Exception.Flatten(),
-                        "Fire-and-forget task {Context} faulted.",
-                        ctx);
+                    LogFireAndForgetTaskFaulted(log, completedTask.Exception.Flatten(), ctx);
                 }
             },
             (logger, context),
@@ -44,11 +46,7 @@ public static class TaskExtensions
 
         void LogFault(AggregateException exception)
         {
-            logger.LogError(
-                LogEventIds.RestarterCycle.FireAndForgetTaskFaulted,
-                exception.Flatten(),
-                "Fire-and-forget task {Context} faulted.",
-                context);
+            LogFireAndForgetTaskFaulted(logger, exception.Flatten(), context);
         }
     }
 }

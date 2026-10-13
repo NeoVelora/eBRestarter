@@ -13,19 +13,19 @@ using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Update;
 using eBRestarter.Infrastructure.Api.Interfaces;
+using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
 using eBRestarter.Infrastructure.ObjectArchetypes.Model;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.Update;
 
-public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
+public sealed partial class AdapterGitHubUpdateService : IOutboundPortUpdate
 {
     private const int DefaultVersionBuild = 0;
     private const int DefaultVersionMajor = 1;
     private const int DefaultVersionMinor = 0;
     private const string DefaultZeroVersionString = "0.0.0";
     private const string DownloadAndInstallFailedExceptionMessage = "Failed to download or install the application update.";
-    private const string ErrorParsingGitHubResponseLogMessage = "Error parsing the GitHub response.";
     private const string ExecutableFileExtension = ".exe";
     private const string GitHubApiUrl = $"https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest";
     private const string JsonPropertyAssets = "assets";
@@ -35,17 +35,14 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
     private const string JsonPropertyPublishedAt = "published_at";
     private const string JsonPropertyTagName = "tag_name";
     private const string MsiInstallerFileExtension = ".msi";
-    private const string NoDownloadUrlFoundLogMessage = "No download URL found in update information.";
     private const string RepoName = "eBRestarter";
     private const string RepoOwner = "NeoVelora";
     private const string TempEnvironmentVariable = "TEMP";
-    private const string UpdateCheckFailedLogMessage = "Update check failed: {Status}";
-    private const string UpdateDownloadedLogMessage = "Update downloaded to: {Path}";
     private const string UpdateFileNameFormat = "eBRestarter_Update_{0}.exe";
     private const char VersionTagPrefix = 'v';
 
     private const int MaximumUpdateJsonCharacterCount = 1024 * 1024;
-    private const string UpdatePayloadTooLargeLogMessage = "GitHub release payload exceeds maximum allowed size of 1 MB.";
+    private const string UpdateStagingFolderFormat = "eBRestarter_Update_{0}";
 
     private static readonly JsonDocumentOptions StrictDocumentOptions = new()
     {
@@ -53,11 +50,6 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         CommentHandling = JsonCommentHandling.Disallow,
         AllowTrailingCommas = false
     };
-
-    private const string RejectedDownloadHostLogMessage = "Refusing update download: {Url} does not point to an approved GitHub release host.";
-    private const string RejectedDownloadSchemeLogMessage = "Refusing update download: {Url} does not use HTTPS.";
-    private const string SignatureRejectedAbortLogMessage = "Update aborted: the downloaded package {Path} does not carry a valid, trusted code signature. The file was deleted and NOT executed.";
-    private const string UpdateStagingFolderFormat = "eBRestarter_Update_{0}";
 
     private static readonly string[] ApprovedDownloadHosts =
     [
@@ -117,14 +109,14 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
 
         if (!response.IsSuccess || string.IsNullOrEmpty(response.Content))
         {
-            _logger.LogWarning(LogEventIds.Update.UpdateCheckFailed, UpdateCheckFailedLogMessage, response.StatusCode);
+            LogUpdateCheckFailed(_logger, response.StatusCode);
 
             return new UpdateInfo { IsUpdateAvailable = false, CurrentVersion = currentVersion.ToString() };
         }
 
         if (response.Content.Length > MaximumUpdateJsonCharacterCount)
         {
-            _logger.LogWarning(LogEventIds.Update.UpdateResponseParsingFailed, UpdatePayloadTooLargeLogMessage);
+            LogUpdatePayloadTooLarge(_logger);
 
             return new UpdateInfo { IsUpdateAvailable = false, CurrentVersion = currentVersion.ToString() };
         }
@@ -173,7 +165,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Update.UpdateResponseParsingFailed, exception, ErrorParsingGitHubResponseLogMessage);
+            LogUpdateResponseParsingFailed(_logger, exception);
 
             return new UpdateInfo { IsUpdateAvailable = false };
         }
@@ -190,7 +182,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
     {
         if (string.IsNullOrWhiteSpace(updateInfo.DownloadUrl))
         {
-            _logger.LogError(LogEventIds.Update.UpdateDownloadUrlMissing, NoDownloadUrlFoundLogMessage);
+            LogUpdateDownloadUrlMissing(_logger);
             return;
         }
 
@@ -216,14 +208,11 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
                 new Progress<DownloadProgressStatus>(),
                 cancellationToken).ConfigureAwait(false);
 
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation(LogEventIds.Update.UpdateDownloaded, UpdateDownloadedLogMessage, tempFile);
-            }
+            LogUpdateDownloaded(_logger, tempFile);
 
             if (!_signatureVerifier.IsTrustedPublisher(tempFile))
             {
-                _logger.LogError(LogEventIds.Security.SignatureVerificationRejected, SignatureRejectedAbortLogMessage, tempFile);
+                LogSignatureVerificationRejected(_logger, tempFile);
                 _fileSystemPort.DeleteFile(tempFile);
 
                 return;
@@ -244,7 +233,7 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
         if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out Uri? uri)
             || !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal))
         {
-            _logger.LogError(LogEventIds.Security.DownloadSchemeRejected, RejectedDownloadSchemeLogMessage, downloadUrl);
+            LogDownloadSchemeRejected(_logger, downloadUrl);
             return false;
         }
 
@@ -253,8 +242,57 @@ public sealed class AdapterGitHubUpdateService : IOutboundPortUpdate
             return true;
         }
 
-        _logger.LogError(LogEventIds.Security.DownloadHostRejected, RejectedDownloadHostLogMessage, downloadUrl);
+        LogDownloadHostRejected(_logger, downloadUrl);
 
         return false;
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.Update.UpdateCheckFailed,
+        Level = LogLevel.Warning,
+        Message = "Update check failed: {Status}")]
+    private static partial void LogUpdateCheckFailed(ILogger logger, ResponseCode status);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Update.UpdatePayloadTooLarge,
+        Level = LogLevel.Warning,
+        Message = "GitHub release payload exceeds maximum allowed size of 1 MB.")]
+    private static partial void LogUpdatePayloadTooLarge(ILogger logger);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Update.UpdateResponseParsingFailed,
+        Level = LogLevel.Error,
+        Message = "Error parsing the GitHub response.")]
+    private static partial void LogUpdateResponseParsingFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Update.UpdateDownloadUrlMissing,
+        Level = LogLevel.Error,
+        Message = "No download URL found in update information.")]
+    private static partial void LogUpdateDownloadUrlMissing(ILogger logger);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Update.UpdateDownloaded,
+        Level = LogLevel.Information,
+        Message = "Update downloaded to: {Path}")]
+    private static partial void LogUpdateDownloaded(ILogger logger, string path);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Security.SignatureVerificationRejected,
+        Level = LogLevel.Error,
+        Message = "Update aborted: the downloaded package {Path} does not carry a valid, trusted code signature. The file was deleted and NOT executed.")]
+    private static partial void LogSignatureVerificationRejected(ILogger logger, string path);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Security.DownloadSchemeRejected,
+        Level = LogLevel.Error,
+        Message = "Refusing update download: {Url} does not use HTTPS.")]
+    private static partial void LogDownloadSchemeRejected(ILogger logger, string url);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Security.DownloadHostRejected,
+        Level = LogLevel.Error,
+        Message = "Refusing update download: {Url} does not point to an approved GitHub release host.")]
+    private static partial void LogDownloadHostRejected(ILogger logger, string url);
 }

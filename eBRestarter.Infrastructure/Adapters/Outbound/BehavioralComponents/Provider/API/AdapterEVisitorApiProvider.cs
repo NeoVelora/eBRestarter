@@ -15,17 +15,12 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API;
 
-public sealed class AdapterEVisitorApiProvider(
+public sealed partial class AdapterEVisitorApiProvider(
     IOutboundPortEVisitorConfigRepository configPort,
     ILogger<AdapterEVisitorApiProvider> logger,
     IRestClient restClientPort,
     TimeProvider? timeProvider = null) : IOutboundPortEVisitorApiProvider
 {
-    private const string ErrorParsingDailyEarningsLogMessage = "Error parsing daily earnings.";
-    private const string ErrorParsingHourlyEarningsLogMessage = "Error parsing hourly earnings.";
-    private const string ErrorParsingIpDataLogMessage = "Error parsing IP data.";
-    private const string ErrorParsingMonthlyEarningsLogMessage = "Error parsing monthly earnings.";
-    private const string ErrorRetrievingEarningsLogMessage = "Error retrieving earnings (overall process).";
     private const int HoursInDayCount = 24;
     private const int MonthsInYearCount = 12;
 
@@ -74,7 +69,7 @@ public sealed class AdapterEVisitorApiProvider(
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Api.EarningsRetrievalFailed, exception, ErrorRetrievingEarningsLogMessage);
+            LogEarningsRetrievalFailed(_logger, exception);
             return null;
         }
     }
@@ -100,7 +95,7 @@ public sealed class AdapterEVisitorApiProvider(
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingIpDataLogMessage);
+            LogResponseParsingFailed(_logger, exception, "IP data");
             return null;
         }
     }
@@ -139,7 +134,7 @@ public sealed class AdapterEVisitorApiProvider(
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingDailyEarningsLogMessage);
+            LogResponseParsingFailed(_logger, exception, "daily earnings");
             return new double[daysInMonth];
         }
     }
@@ -167,7 +162,7 @@ public sealed class AdapterEVisitorApiProvider(
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingHourlyEarningsLogMessage);
+            LogResponseParsingFailed(_logger, exception, "hourly earnings");
             return new double[HoursInDayCount];
         }
     }
@@ -204,8 +199,21 @@ public sealed class AdapterEVisitorApiProvider(
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Api.ApiResponseParsingFailed, exception, ErrorParsingMonthlyEarningsLogMessage);
+            LogResponseParsingFailed(_logger, exception, "monthly earnings");
             return new double[MonthsInYearCount];
         }
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.EarningsRetrievalFailed,
+        Level = LogLevel.Error,
+        Message = "Error retrieving earnings (overall process).")]
+    private static partial void LogEarningsRetrievalFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Api.ApiResponseParsingFailed,
+        Level = LogLevel.Error,
+        Message = "Error parsing {DataType}.")]
+    private static partial void LogResponseParsingFailed(ILogger logger, Exception exception, string dataType);
 }

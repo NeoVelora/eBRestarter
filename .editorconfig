@@ -8,3 +8,24 @@ dotnet_diagnostic.xUnit1051.severity = none
 
 # S1075: Refactor your code not to use hardcoded absolute paths or URIs (needed for Windows default paths)
 dotnet_diagnostic.S1075.severity = none
+
+# Logging (Microsoft.CodeAnalysis.NetAnalyzers - Guideline Kap. 22)
+# CA2254: Template muss statisch sein (Kap. 4/12)
+dotnet_diagnostic.CA2254.severity = error
+# CA2253: Keine numerischen Platzhalter (Kap. 4)
+dotnet_diagnostic.CA2253.severity = error
+# CA2017: Parameteranzahl passt nicht zum Template
+dotnet_diagnostic.CA2017.severity = error
+# CA2023: Ungültige Klammern im Template
+dotnet_diagnostic.CA2023.severity = error
+# CA1727: PascalCase-Platzhalter (Kap. 3.4)
+dotnet_diagnostic.CA1727.severity = warning
+# CA1848: LoggerMessage verwenden (Kap. 3) - Als suggestion gestuft, da TreatWarningsAsErrors aktiv ist
+dotnet_diagnostic.CA1848.severity = suggestion
+# CA1873: Teure Log-Argumente (Kap. 13) - Als suggestion gestuft, da TreatWarningsAsErrors aktiv ist
+dotnet_diagnostic.CA1873.severity = suggestion
+
+# Test-spezifische Ausnahmen für Test-Asserts/Mocks
+[**/*Tests.cs]
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none

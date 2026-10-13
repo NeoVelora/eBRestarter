@@ -19,6 +19,7 @@ public sealed class AdapterMicrosoftExtensionsLoggerWrapper<TCategory>(
     public IDisposable? BeginScope(string key, object? value)
         => _logger.BeginScope(new Dictionary<string, object?> { [key] = value });
 
+#pragma warning disable CA1848 // Adapter bridges dynamic port calls to Microsoft.Extensions.Logging
 #pragma warning disable CA2254 // Template should be a static expression
         public void LogCritical(int eventId, Exception? exception, string message, params object?[] args)
         => _logger.LogCritical(new EventId(eventId), exception, message, args);
@@ -38,4 +39,5 @@ public sealed class AdapterMicrosoftExtensionsLoggerWrapper<TCategory>(
     public void LogWarning(int eventId, Exception? exception, string message, params object?[] args)
         => _logger.LogWarning(new EventId(eventId), exception, message, args);
 #pragma warning restore CA2254 // Template should be a static expression
+#pragma warning restore CA1848 // Use the LoggerMessage delegates
 }

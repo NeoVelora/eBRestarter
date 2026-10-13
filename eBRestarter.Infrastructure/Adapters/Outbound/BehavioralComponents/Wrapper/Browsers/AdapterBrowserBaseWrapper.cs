@@ -71,10 +71,7 @@ public abstract partial class AdapterBrowserBaseWrapper(
 
         if (!TryRetrieveExecutablePath(out string? exePath))
         {
-            _logger.LogWarning(
-                LogEventIds.Browser.BrowserStartFailed,
-                "{BrowserType} was not started because no installed executable could be located.",
-                Type);
+            LogBrowserExecutableMissing(_logger, Type);
 
             return false;
         }
@@ -83,11 +80,7 @@ public abstract partial class AdapterBrowserBaseWrapper(
         {
             if (_logger.IsEnabled(LogLevel.Debug))
             {
-                _logger.LogDebug(
-                    LogEventIds.Browser.BrowserStarting,
-                    "Starting {BrowserType} with URL {Url}...",
-                    Type,
-                    LogRedaction.MaskUrlUserSegment(url));
+                LogStartingBrowser(_logger, Type, LogRedaction.MaskUrlUserSegment(url));
             }
 
             var quotedUrl = $"\"{url.Trim()}\"";
@@ -102,7 +95,7 @@ public abstract partial class AdapterBrowserBaseWrapper(
         }
         catch (Exception exception)
         {
-            _logger.LogError(LogEventIds.Browser.BrowserStartFailed, exception, "Error while starting {BrowserType}", Type);
+            LogBrowserStartFailed(_logger, exception, Type);
 
             return false;
         }
@@ -147,8 +140,10 @@ public abstract partial class AdapterBrowserBaseWrapper(
                 return match.Value;
             }
         }
-        catch (RegexMatchTimeoutException)
+        catch (RegexMatchTimeoutException exception)
         {
+            LogBrowserVersionParsingTimedOut(_logger, exception, Type);
+
             return DefaultVersion;
         }
 
@@ -161,6 +156,31 @@ public abstract partial class AdapterBrowserBaseWrapper(
 
         return executablePath is not null;
     }
+
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserExecutableNotFound,
+        Level = LogLevel.Warning,
+        Message = "{BrowserType} was not started because no installed executable could be located.")]
+    private static partial void LogBrowserExecutableMissing(ILogger logger, BrowserType browserType);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserStarting,
+        Level = LogLevel.Debug,
+        Message = "Starting {BrowserType} with URL {Url}...")]
+    private static partial void LogStartingBrowser(ILogger logger, BrowserType browserType, string url);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserStartFailed,
+        Level = LogLevel.Error,
+        Message = "Error while starting {BrowserType}")]
+    private static partial void LogBrowserStartFailed(ILogger logger, Exception exception, BrowserType browserType);
+
+    [LoggerMessage(
+        EventId = LogEventIds.Browser.BrowserVersionParsingTimedOut,
+        Level = LogLevel.Warning,
+        Message = "Regex matching timed out while evaluating browser version for {BrowserType}. Falling back to default version.")]
+    private static partial void LogBrowserVersionParsingTimedOut(ILogger logger, Exception exception, BrowserType browserType);
 
     [GeneratedRegex(@"^[\d\.]+", RegexOptions.NonBacktracking, matchTimeoutMilliseconds: 100)]
     private static partial Regex VersionRegex();
