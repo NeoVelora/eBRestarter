@@ -16,24 +16,22 @@
         <Grid
             Margin="20,10,20,20"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Top">
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="360" />
-                <ColumnDefinition Width="385" />
-            </Grid.ColumnDefinitions>
+            VerticalAlignment="Top"
+            ColumnDefinitions="360,385">
 
             <Border
                 Grid.Column="0"
                 Padding="16"
-                Background="{ThemeResource DashletBackgroundColor_2}"
-                CornerRadius="6">
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
 
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Spacing="12">
 
                     <StackPanel
-                        Margin="0,0,0,12"
-                        Orientation="Horizontal">
+                        Orientation="Horizontal"
+                        Spacing="10">
 
                         <Image
                             Width="40"
@@ -42,35 +40,39 @@
 
                         <TextBlock
                             x:Uid="eVisitor_API_Options"
-                            Margin="10,8,0,0"
+                            VerticalAlignment="Center"
+                            d:Text="eBesucher API Optionen"
                             FontSize="16"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                     </StackPanel>
 
                     <Border
-                        Margin="0,0,0,10"
                         Padding="10"
-                        Background="{ThemeResource DashletBackgroundColor_5}"
-                        CornerRadius="6">
+                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8">
 
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Vertical" Spacing="8">
 
                             <Button
                                 x:Uid="Connect_to_API_interface"
                                 Width="330"
                                 Height="40"
-                                Margin="0,0,0,8"
+                                d:Content="Mit API Schnittstelle verbinden"
                                 FontSize="16"
-                                Style="{ThemeResource AccentButtonStyle}"
+                                Style="{StaticResource AccentButtonStyle}"
                                 Command="{x:Bind ViewModel.ShowActivateApiDialogCommand}" />
 
                             <Button
                                 x:Uid="Deactivate_API_interface"
                                 Width="330"
                                 Height="40"
+                                d:Content="API Schnittstelle deaktivieren"
                                 FontSize="16"
-                                Style="{ThemeResource AccentButtonStyle}"
+                                Style="{StaticResource AccentButtonStyle}"
                                 Command="{x:Bind ViewModel.RemoveApiCredentialsCommand}" />
 
                         </StackPanel>

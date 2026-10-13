@@ -11,16 +11,12 @@
 
     <Border
         Padding="0"
-        Background="{ThemeResource MenuBackgroundColor}"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
-        CornerRadius="4">
+        CornerRadius="8">
 
-        <Grid>
-
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" MinHeight="60" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <Grid RowDefinitions="Auto,*">
 
             <!--  Header-Zeile (Icon + Titel)  -->
             <StackPanel
@@ -41,7 +37,7 @@
                     VerticalAlignment="Center"
                     FontSize="18"
                     FontWeight="SemiBold"
-                    Foreground="{ThemeResource FontColor_1}"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                     TextWrapping="Wrap" />
 
             </StackPanel>
@@ -59,7 +55,7 @@
                         x:Uid="ShowIPDetails"
                         FontSize="14"
                         FontWeight="Normal"
-                        Foreground="{ThemeResource FontColor_1}" />
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                 </Expander.Header>
 
                 <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
@@ -68,6 +64,7 @@
                     <Grid
                         Padding="0,4,12,0"
                         ColumnSpacing="12"
+                        RowDefinitions="Auto,Auto,Auto"
                         RowSpacing="8">
 
                         <Grid.ColumnDefinitions>
@@ -77,29 +74,19 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Grid.RowDefinitions>
-                            <!--  IP  -->
-                            <RowDefinition Height="Auto" />
-                            <!--  Host  -->
-                            <RowDefinition Height="Auto" />
-                            <!--  Standort  -->
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
                         <!--  Zeile 0: IP  -->
                         <TextBlock
                             x:Uid="IPAddress"
                             Grid.Row="0"
                             Grid.Column="0"
                             VerticalAlignment="Top"
-                            Foreground="{ThemeResource FontColor_1}"
-                            Opacity="0.7" />
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                         <TextBlock
                             Grid.Row="0"
                             Grid.Column="1"
                             FontWeight="SemiBold"
-                            Foreground="{ThemeResource FontColor_1}"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                             IsTextSelectionEnabled="True"
                             Text="{x:Bind ViewModelGeneralOverview.IpAddress, Mode=OneWay}"
                             TextWrapping="Wrap" />
@@ -110,13 +97,12 @@
                             Grid.Row="1"
                             Grid.Column="0"
                             VerticalAlignment="Top"
-                            Foreground="{ThemeResource FontColor_1}"
-                            Opacity="0.7" />
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                         <TextBlock
                             Grid.Row="1"
                             Grid.Column="1"
-                            Foreground="{ThemeResource FontColor_1}"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                             IsTextSelectionEnabled="True"
                             Text="{x:Bind ViewModelGeneralOverview.Host, Mode=OneWay}"
                             TextWrapping="Wrap" />
@@ -127,8 +113,7 @@
                             Grid.Row="2"
                             Grid.Column="0"
                             VerticalAlignment="Top"
-                            Foreground="{ThemeResource FontColor_1}"
-                            Opacity="0.7" />
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                         <!--  Standort Name und Code kombiniert  -->
                         <StackPanel
@@ -138,13 +123,12 @@
                             Spacing="4">
 
                             <TextBlock
-                                Foreground="{ThemeResource FontColor_1}"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                                 Text="{x:Bind ViewModelGeneralOverview.CountryName, Mode=OneWay}"
                                 TextWrapping="Wrap" />
 
                             <TextBlock
-                                Foreground="{ThemeResource FontColor_1}"
-                                Opacity="0.8"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 Text="{x:Bind ViewModelGeneralOverview.CountryCode, Mode=OneWay}" />
 
                         </StackPanel>

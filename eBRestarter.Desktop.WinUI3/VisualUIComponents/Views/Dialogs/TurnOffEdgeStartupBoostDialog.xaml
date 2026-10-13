@@ -6,9 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Uid="StartupBoostDialog"
-    DefaultButton="Close"
-    RequestedTheme="Dark"
     Style="{StaticResource DefaultContentDialogStyle}"
+    DefaultButton="Close"
     mc:Ignorable="d">
 
     <Grid MaxWidth="500">

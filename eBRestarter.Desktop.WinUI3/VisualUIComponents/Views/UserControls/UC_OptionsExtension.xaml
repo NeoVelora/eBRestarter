@@ -16,17 +16,9 @@
         <Grid
             Margin="20,10,20,20"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Top">
-
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+            VerticalAlignment="Top"
+            ColumnDefinitions="Auto,Auto"
+            RowDefinitions="Auto,Auto">
 
             <!--  Header Card: Warum Erweiterung benötigt  -->
             <Border
@@ -36,8 +28,10 @@
                 Margin="0,0,0,20"
                 Padding="16"
                 HorizontalAlignment="Left"
-                Background="{ThemeResource DashletBackgroundColor_2}"
-                CornerRadius="6">
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
 
                 <StackPanel Orientation="Horizontal" Spacing="16">
 
@@ -54,14 +48,16 @@
                         <TextBlock
                             x:Uid="BrowserExtension_WhyNeededTitle"
                             Margin="0,0,0,6"
+                            d:Text="Warum wird diese Erweiterung benötigt?"
                             FontSize="16"
                             FontWeight="SemiBold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <TextBlock
                             x:Uid="BrowserExtension_WhyNeededDesc"
                             Width="740"
-                            Foreground="{ThemeResource FontColor_1}"
+                            d:Text="Der Tab Restarter überwacht Chrome im Hintergrund. Sollte eine Webseite einfrieren, nicht mehr laden oder ein eingestelltes Zeitlimit ablaufen, leitet die Erweiterung automatisch auf die definierte Ziel-URL um."
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                             LineHeight="20"
                             TextWrapping="Wrap" />
 
@@ -80,60 +76,69 @@
                 Padding="16"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Background="{ThemeResource DashletBackgroundColor_2}"
-                CornerRadius="6">
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
 
                 <StackPanel Orientation="Vertical">
 
                     <TextBlock
                         x:Uid="BrowserExtension_InstallTitle"
                         Margin="0,0,0,12"
+                        d:Text="Installation in Google Chrome"
                         FontSize="18"
                         FontWeight="SemiBold"
-                        Foreground="{ThemeResource FontColor_1}" />
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                     <TextBlock
                         x:Uid="BrowserExtension_InstallDesc"
                         Margin="0,0,0,15"
-                        Foreground="{ThemeResource FontColor_1}"
+                        d:Text="Damit der Tab Restarter funktioniert, muss die Erweiterung in Chrome geladen werden."
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                         TextWrapping="Wrap" />
 
                     <StackPanel Margin="0,0,0,20" Spacing="8">
 
                         <TextBlock
                             x:Uid="BrowserExtension_Step1"
+                            d:Text="1. Öffne in Chrome die Adresse:"
                             FontWeight="Bold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <TextBox IsReadOnly="True" Text="chrome://extensions/" />
 
                         <TextBlock
                             x:Uid="BrowserExtension_Step2"
                             Margin="0,5,0,0"
+                            d:Text="2. Aktiviere oben rechts den Entwicklermodus."
                             FontWeight="Bold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <TextBlock
                             x:Uid="BrowserExtension_Step3"
                             Margin="0,5,0,0"
+                            d:Text="3. Klicke auf 'Entpackte Erweiterung laden'."
                             FontWeight="Bold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <TextBlock
                             x:Uid="BrowserExtension_Step4"
                             Margin="0,5,0,0"
+                            d:Text="4. Wähle den folgenden Ordner aus:"
                             FontWeight="Bold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                     </StackPanel>
 
                     <Button
                         x:Uid="BrowserExtension_BtnOpenFolder"
                         Height="40"
-                        Margin="0,17.5,0,0"
+                        Margin="0,18,0,0"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Bottom"
-                        Style="{ThemeResource AccentButtonStyle}"
+                        d:Content="Erweiterungs-Ordner öffnen"
+                        Style="{StaticResource AccentButtonStyle}"
                         Command="{x:Bind ViewModel.OpenExtensionFolderCommand}" />
 
                 </StackPanel>
@@ -147,28 +152,33 @@
                 Width="400"
                 Padding="16"
                 VerticalAlignment="Top"
-                Background="{ThemeResource DashletBackgroundColor_2}"
-                CornerRadius="6">
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
 
                 <StackPanel Spacing="14">
 
                     <TextBlock
                         x:Uid="BrowserExtension_ConfigTitle"
                         Margin="0,0,0,6"
+                        d:Text="Konfiguration (config.json)"
                         FontSize="18"
                         FontWeight="SemiBold"
-                        Foreground="{ThemeResource FontColor_1}" />
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                     <StackPanel>
 
                         <TextBlock
                             x:Uid="BrowserExtension_TargetUrl"
                             Margin="0,0,0,4"
+                            d:Text="Ziel-URL (inkl. https://)"
                             FontWeight="Bold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <TextBox
                             x:Uid="BrowserExtension_TargetUrlBox"
+                            d:PlaceholderText="https://www.beispiel.de"
                             Text="{x:Bind ViewModel.ExtensionUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                     </StackPanel>
@@ -178,8 +188,9 @@
                         <TextBlock
                             x:Uid="BrowserExtension_WaitTime"
                             Margin="0,0,0,4"
+                            d:Text="Wartezeit bis zur Umleitung (Minuten)"
                             FontWeight="Bold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <NumberBox
                             Minimum="1"
@@ -193,8 +204,9 @@
                         <TextBlock
                             x:Uid="BrowserExtension_Language"
                             Margin="0,0,0,4"
+                            d:Text="Sprache des Erweiterungs-Menüs"
                             FontWeight="Bold"
-                            Foreground="{ThemeResource FontColor_1}" />
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <ComboBox
                             HorizontalAlignment="Stretch"
@@ -214,7 +226,8 @@
                         Height="40"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Bottom"
-                        Style="{ThemeResource AccentButtonStyle}"
+                        d:Content="Konfiguration speichern"
+                        Style="{StaticResource AccentButtonStyle}"
                         Command="{x:Bind ViewModel.SaveExtensionConfigCommand}" />
 
                     <TextBlock

@@ -10,45 +10,37 @@
     <Border
         HorizontalAlignment="Stretch"
         VerticalAlignment="Top"
-        Padding="0"
-        Background="{ThemeResource DashletBackgroundColor_3}"
+        Padding="10"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
-        CornerRadius="5">
+        CornerRadius="8">
 
-        <StackPanel
-            Width="340"
-            Height="130"
-            HorizontalAlignment="Left">
+        <StackPanel Spacing="10">
 
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" Spacing="10">
 
                 <Image
-                    Width="35"
-                    Height="35"
-                    Margin="10,10,0,0"
+                    Width="32"
+                    Height="32"
+                    VerticalAlignment="Center"
                     Source="{x:Bind HeaderImageEarnings, Mode=OneWay}" />
 
                 <TextBlock
-                    Height="30"
-                    Margin="10,5,0,0"
-                    FontSize="22"
-                    FontWeight="Normal"
-                    Foreground="{ThemeResource FontColor_1}"
+                    VerticalAlignment="Center"
+                    FontSize="20"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                     Text="{x:Bind HeaderTitleEarnings, Mode=OneWay}"
                     TextWrapping="Wrap" />
 
             </StackPanel>
 
-            <StackPanel Orientation="Horizontal">
-
-                <TextBlock
-                    Margin="10,20,0,0"
-                    FontSize="24"
-                    FontWeight="Light"
-                    Foreground="{ThemeResource FontColor_1}"
-                    Text="{x:Bind EarningsAmount, Mode=OneWay}" />
-
-            </StackPanel>
+            <TextBlock
+                FontSize="24"
+                FontWeight="Normal"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                Text="{x:Bind EarningsAmount, Mode=OneWay}" />
 
         </StackPanel>
 

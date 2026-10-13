@@ -12,12 +12,14 @@
 
     <StackPanel
         HorizontalAlignment="Stretch"
+        Padding="5"
+        Background="Transparent"
         Orientation="Horizontal"
-        Background="{ThemeResource MenuBackgroundColor}">
+        Spacing="10">
 
-        <usercontrol:UC_RestartTask Margin="5" />
+        <usercontrol:UC_RestartTask />
 
-        <usercontrol:UC_DeleteBrowserContentTask Margin="5" />
+        <usercontrol:UC_DeleteBrowserContentTask />
 
     </StackPanel>
 

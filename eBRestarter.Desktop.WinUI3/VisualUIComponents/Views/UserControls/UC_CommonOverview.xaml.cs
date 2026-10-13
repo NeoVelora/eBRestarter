@@ -19,10 +19,4 @@ public sealed partial class UC_CommonOverview : UserControl
 
         this.DataContext = ViewModelGeneralOverView;
     }
-
-    private void BtnGoToeVisitorAPI_Click(object sender, RoutedEventArgs e)
-    {
-        System.ArgumentNullException.ThrowIfNull(sender);
-        System.ArgumentNullException.ThrowIfNull(e);
-    }
 }

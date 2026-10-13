@@ -10,9 +10,9 @@
 
     <Grid>
         <TextBlock
+            x:Uid="SettingsPage_Title"
             HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Text="Settings Page" />
+            VerticalAlignment="Center" />
     </Grid>
 
 </Page>

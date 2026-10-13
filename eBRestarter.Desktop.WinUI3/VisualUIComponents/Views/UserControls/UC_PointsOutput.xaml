@@ -10,83 +10,78 @@
     mc:Ignorable="d">
 
     <Grid
-        Background="{ThemeResource DashletBackgroundColor_2}"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
-        CornerRadius="8">
+        CornerRadius="8"
+        RowDefinitions="Auto,*">
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        <Pivot
+            Grid.Row="0"
+            Margin="12,12,12,4"
+            SelectedIndex="{x:Bind ViewModelGeneralOverview.SelectedPivotIndex, Mode=TwoWay}">
 
-        <Grid Grid.Row="0" Margin="12,12,12,4">
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <!--  Kalender-Tag-Symbol (CalendarDay)  -->
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            Glyph="&#xE916;" />
+                        <TextBlock
+                            x:Uid="Today"
+                            VerticalAlignment="Center"
+                            d:Text="Heute"
+                            FontSize="14"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    </StackPanel>
+                </PivotItem.Header>
+            </PivotItem>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <!--  Kalender-Monat-Symbol (CalendarWeek)  -->
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            Glyph="&#xE787;" />
+                        <TextBlock
+                            x:Uid="Month"
+                            VerticalAlignment="Center"
+                            d:Text="Monat"
+                            FontSize="14"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    </StackPanel>
+                </PivotItem.Header>
+            </PivotItem>
 
-            <Pivot Grid.Column="1" SelectedIndex="{x:Bind ViewModelGeneralOverview.SelectedPivotIndex, Mode=TwoWay}">
+            <PivotItem>
+                <PivotItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <!--  Kalender-Jahr-Symbol (Calendar)  -->
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                            Glyph="&#xE909;" />
+                        <TextBlock
+                            x:Uid="Year"
+                            VerticalAlignment="Center"
+                            d:Text="Jahr"
+                            FontSize="14"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    </StackPanel>
+                </PivotItem.Header>
+            </PivotItem>
 
-                <PivotItem>
-                    <PivotItem.Header>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <!--  Kalender-Tag-Symbol (CalendarDay)  -->
-                            <FontIcon
-                                FontSize="16"
-                                Foreground="{ThemeResource FontColor_1}"
-                                Glyph="&#xE916;" />
-                            <TextBlock
-                                x:Uid="Today"
-                                VerticalAlignment="Center"
-                                FontSize="14"
-                                Foreground="{ThemeResource FontColor_1}" />
-                        </StackPanel>
-                    </PivotItem.Header>
-                </PivotItem>
-
-                <PivotItem>
-                    <PivotItem.Header>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <!--  Kalender-Monat-Symbol (CalendarWeek)  -->
-                            <FontIcon
-                                FontSize="16"
-                                Foreground="{ThemeResource FontColor_1}"
-                                Glyph="&#xE787;" />
-                            <TextBlock
-                                x:Uid="Month"
-                                VerticalAlignment="Center"
-                                FontSize="14"
-                                Foreground="{ThemeResource FontColor_1}" />
-                        </StackPanel>
-                    </PivotItem.Header>
-                </PivotItem>
-
-                <PivotItem>
-                    <PivotItem.Header>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <!--  Kalender-Jahr-Symbol (Calendar)  -->
-                            <FontIcon
-                                FontSize="16"
-                                Foreground="{ThemeResource FontColor_1}"
-                                Glyph="&#xE909;" />
-                            <TextBlock
-                                x:Uid="Year"
-                                VerticalAlignment="Center"
-                                FontSize="14"
-                                Foreground="{ThemeResource FontColor_1}" />
-                        </StackPanel>
-                    </PivotItem.Header>
-                </PivotItem>
-
-            </Pivot>
-
-        </Grid>
+        </Pivot>
 
         <Border
             Grid.Row="1"
             Margin="12"
             Background="{ThemeResource ChartBorderBackground}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
             BorderThickness="1"
             CornerRadius="8">
 

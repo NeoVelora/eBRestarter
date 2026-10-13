@@ -11,7 +11,8 @@
 
     <Border
         Padding="16"
-        Background="{ThemeResource DashletBackgroundColor_1}"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
         CornerRadius="8">
 
@@ -30,9 +31,10 @@
                 <TextBlock
                     x:Uid="Restart_And_Runtime_Options"
                     VerticalAlignment="Center"
+                    d:Text="Neustart- und Laufzeitoptionen"
                     FontSize="17"
                     FontWeight="SemiBold"
-                    Foreground="{ThemeResource FontColor_1}" />
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
             </StackPanel>
 
@@ -41,37 +43,27 @@
 
                 <TextBlock
                     x:Uid="Waiting_time_until_the_browser_restarts"
+                    d:Text="Wartezeit bis der Browser wieder startet"
                     FontSize="15"
-                    Foreground="{ThemeResource FontColor_1}" />
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                 <!--  Ein sauberes Grid ordnet Slider, TextBox und Einheit ("s") nebeneinander an  -->
-                <Grid ColumnSpacing="16">
-
-                    <Grid.ColumnDefinitions>
-                        <!--  Der Slider nimmt sich den kompletten restlichen Platz (*)  -->
-                        <ColumnDefinition Width="*" />
-                        <!--  Das Eingabefeld bekommt eine feste Breite  -->
-                        <ColumnDefinition Width="120" />
-                        <!--  Die Einheit bekommt nur so viel Platz wie nötig (Auto)  -->
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <Grid ColumnDefinitions="*,120,Auto" ColumnSpacing="16">
 
                     <Slider
                         Grid.Column="0"
                         Padding="2,0,0,0"
                         VerticalAlignment="Center"
                         Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                        Maximum="{x:Bind ViewModelRestarterProperties.RuntimePauseSecondsMax, Mode=OneTime}"
                         Minimum="{x:Bind ViewModelRestarterProperties.RuntimePauseSecondsMin, Mode=OneTime}"
+                        Maximum="{x:Bind ViewModelRestarterProperties.RuntimePauseSecondsMax, Mode=OneTime}"
                         Value="{x:Bind ViewModelRestarterProperties.RuntimePauseSeconds, Mode=TwoWay}" />
 
                     <NumberBox
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        BorderBrush="{ThemeResource FontColor_1}"
-                        Foreground="{ThemeResource FontColor_1}"
-                        Maximum="60"
                         Minimum="20"
+                        Maximum="60"
                         SmallChange="1"
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModelRestarterProperties.RuntimePauseSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
@@ -80,7 +72,7 @@
                         Grid.Column="2"
                         VerticalAlignment="Center"
                         FontSize="16"
-                        Foreground="{ThemeResource FontColor_1}"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                         Text="s" />
 
                 </Grid>
@@ -92,32 +84,25 @@
 
                 <TextBlock
                     x:Uid="Determine_your_browser_runtime_here"
+                    d:Text="Bestimme hier deine Browserlaufzeit"
                     FontSize="15"
-                    Foreground="{ThemeResource FontColor_1}" />
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
-                <Grid ColumnSpacing="16">
-
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="120" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <Grid ColumnDefinitions="*,120,Auto" ColumnSpacing="16">
 
                     <Slider
                         Grid.Column="0"
                         VerticalAlignment="Center"
                         Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
-                        Maximum="{x:Bind ViewModelRestarterProperties.BrowserRuntimeHoursMax, Mode=OneTime}"
                         Minimum="{x:Bind ViewModelRestarterProperties.BrowserRuntimeHoursMin, Mode=OneTime}"
+                        Maximum="{x:Bind ViewModelRestarterProperties.BrowserRuntimeHoursMax, Mode=OneTime}"
                         Value="{x:Bind ViewModelRestarterProperties.RuntimeHours, Mode=TwoWay}" />
 
                     <NumberBox
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        BorderBrush="{ThemeResource FontColor_1}"
-                        Foreground="{ThemeResource FontColor_1}"
-                        Maximum="12"
                         Minimum="1"
+                        Maximum="12"
                         SmallChange="1"
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModelRestarterProperties.RuntimeHours, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
@@ -126,7 +111,7 @@
                         Grid.Column="2"
                         VerticalAlignment="Center"
                         FontSize="16"
-                        Foreground="{ThemeResource FontColor_1}"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                         Text="h" />
 
                 </Grid>

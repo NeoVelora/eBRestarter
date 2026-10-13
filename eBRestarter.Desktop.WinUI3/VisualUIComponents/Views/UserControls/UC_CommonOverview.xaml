@@ -11,21 +11,16 @@
     mc:Ignorable="d">
 
     <Grid
-        Background="{ThemeResource MenuBackgroundColor_2}"
-        CornerRadius="8,0,0,0">
-
-        <!--  Header + Content  -->
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        Background="Transparent"
+        CornerRadius="8,0,0,0"
+        RowDefinitions="Auto,*">
 
         <!--  HEADER  -->
         <Grid
             Grid.Row="0"
             Height="40"
             Margin="6,5,6,0"
-            Background="{ThemeResource MenuBackgroundColor}"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
             CornerRadius="8">
 
             <StackPanel
@@ -33,8 +28,7 @@
                 Padding="10,0,0,0"
                 VerticalAlignment="Center"
                 Orientation="Horizontal"
-                Spacing="10"
-                Background="{ThemeResource MenuBackgroundColor}">
+                Spacing="10">
 
                 <!--  Dashboard-Symbol (ViewDashboard)  -->
                 <FontIcon
@@ -42,7 +36,7 @@
                     VerticalAlignment="Bottom"
                     FontFamily="Segoe MDL2 Assets"
                     FontSize="26"
-                    Foreground="{ThemeResource FontColor_1}"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                     Glyph="&#xE7F4;" />
 
                 <TextBlock
@@ -51,7 +45,7 @@
                     VerticalAlignment="Center"
                     FontSize="18"
                     FontWeight="Bold"
-                    Foreground="{ThemeResource FontColor_1}" />
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
             </StackPanel>
 
         </Grid>
@@ -59,7 +53,7 @@
         <!--  CONTENT  -->
         <ScrollViewer
             Grid.Row="1"
-            Background="{ThemeResource MenuBackgroundColor_2}"
+            Background="Transparent"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">
 
@@ -75,19 +69,14 @@
                 </Grid.ColumnDefinitions>
 
                 <!--  LINKS  -->
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
 
                     <!--  Card: Titel + Timer  -->
                     <Border
                         Grid.Row="0"
                         Margin="0,0,0,12"
                         Padding="12"
-                        Background="{ThemeResource MenuBackgroundColor}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="12">
@@ -100,7 +89,7 @@
                             <TextBlock
                                 FontSize="14"
                                 FontWeight="SemiBold"
-                                Foreground="{ThemeResource FontColor_1}"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                                 Text="{x:Bind ViewModelGeneralOverView.ChartTitle, Mode=OneWay}"
                                 TextAlignment="Center" />
 
@@ -108,7 +97,7 @@
                                 HorizontalAlignment="Center"
                                 FontSize="16"
                                 FontWeight="SemiBold"
-                                Foreground="{ThemeResource FontColor_1}"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                                 Opacity="0.85"
                                 Text="{x:Bind ViewModelGeneralOverView.ClockNextEarningsRefresh, Mode=OneWay}" />
 
@@ -121,7 +110,7 @@
                         Grid.Row="1"
                         Margin="0,0,0,12"
                         Padding="12"
-                        Background="{ThemeResource MenuBackgroundColor}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="12">
@@ -135,7 +124,7 @@
                     <Border
                         Grid.Row="2"
                         Padding="12"
-                        Background="{ThemeResource MenuBackgroundColor}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="12">
@@ -143,13 +132,8 @@
                         <Grid
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
+                            ColumnDefinitions="*,*,*"
                             ColumnSpacing="12">
-
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
 
                             <local:UC_EarningsAmount
                                 Grid.Column="0"
@@ -190,7 +174,7 @@
                     <!--  Card: IP  -->
                     <Border
                         Padding="12"
-                        Background="{ThemeResource MenuBackgroundColor}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="12">
@@ -201,7 +185,7 @@
                     <!--  Card: Network  -->
                     <Border
                         Padding="12"
-                        Background="{ThemeResource MenuBackgroundColor}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="12">
@@ -212,7 +196,7 @@
                     <!--  Card: Action Button  -->
                     <Border
                         Padding="12"
-                        Background="{ThemeResource MenuBackgroundColor}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="12">
@@ -223,15 +207,9 @@
                             Height="55"
                             HorizontalAlignment="Center"
                             FontSize="16"
-                            Click="BtnGoToeVisitorAPI_Click"
                             Command="{x:Bind ViewModelGeneralOverView.GoToAPILoginCommand}">
 
-                            <Grid ColumnSpacing="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
 
                                 <!--  Einstellungen-Symbol (Setting)  -->
                                 <FontIcon VerticalAlignment="Center" Glyph="&#xE713;" />

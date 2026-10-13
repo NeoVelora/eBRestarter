@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Network;
 
@@ -32,6 +34,7 @@ public sealed class AdapterHttpClientDownloadHandler : IOutboundPortHttpDownload
     private readonly IHttpClientFactory? _httpClientFactory;
 
 
+    [ActivatorUtilitiesConstructor]
     public AdapterHttpClientDownloadHandler(IHttpClientFactory httpClientFactory)
     {
         ArgumentNullException.ThrowIfNull(httpClientFactory);

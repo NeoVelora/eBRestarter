@@ -102,7 +102,8 @@ public static class InfrastructureServiceRegistration
             AutoReplenishment = true
         }));
 
-        services.AddSingleton<IOutboundPortHttpDownload, AdapterHttpClientDownloadHandler>();
+        services.AddSingleton<IOutboundPortHttpDownload>(static serviceProvider =>
+            new AdapterHttpClientDownloadHandler(serviceProvider.GetRequiredService<System.Net.Http.IHttpClientFactory>()));
 
         services.AddSingleton<IRestClient, RestSharpClient>();
         services.AddSingleton<IOutboundPortApiAuthenticationProvider, AdapterEVisitorApiAuthenticationProvider>();

@@ -10,28 +10,32 @@
 
     <Border
         Padding="0"
-        Background="{ThemeResource MenuBackgroundColor}"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
-        CornerRadius="2">
+        CornerRadius="8">
 
         <StackPanel>
 
-            <StackPanel Height="46" Orientation="Horizontal">
+            <StackPanel
+                Height="46"
+                Orientation="Horizontal"
+                Spacing="8">
 
                 <Image
                     Width="32"
                     Height="32"
-                    Margin="5,0,0,0"
+                    Margin="8,0,0,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Source="ms-appx:///Resources/Visuals/Icons/Intersection/globe-grid.png" />
 
                 <TextBlock
                     x:Uid="NetworkTraffic"
-                    Margin="5,0,0,0"
                     VerticalAlignment="Center"
+                    d:Text="Netzwerktraffic"
                     FontSize="20"
-                    Foreground="{ThemeResource FontColor_1}" />
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
             </StackPanel>
 
@@ -50,67 +54,63 @@
 
                             <DataTemplate x:DataType="models:NetworkCardDisplayModel">
 
-                                <Grid Margin="0,0,0,15">
+                                <Grid
+                                    Margin="0,0,0,12"
+                                    ColumnDefinitions="Auto,*"
+                                    ColumnSpacing="8"
+                                    RowDefinitions="Auto,Auto,Auto"
+                                    RowSpacing="4">
 
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-
-                                    <StackPanel
+                                    <Image
                                         Grid.Row="0"
-                                        Margin="0,0,0,5"
-                                        Orientation="Horizontal">
+                                        Grid.Column="0"
+                                        Width="23"
+                                        Height="23"
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Source="{ThemeResource NetworkCardIcon}" />
 
-                                        <Image
-                                            Width="23"
-                                            Height="23"
-                                            Margin="5,0,0,0"
-                                            Source="{ThemeResource NetworkCardIcon}" />
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                        Text="{x:Bind AdapterName, Mode=OneWay}" />
 
-                                        <TextBlock
-                                            Margin="5,0,0,0"
-                                            FontSize="15"
-                                            Foreground="{ThemeResource FontColor_1}"
-                                            Text="{x:Bind AdapterName, Mode=OneWay}" />
-
-                                    </StackPanel>
-
-                                    <StackPanel
+                                    <Image
                                         Grid.Row="1"
-                                        Margin="0,0,0,5"
-                                        Orientation="Horizontal">
+                                        Grid.Column="0"
+                                        Width="23"
+                                        Height="23"
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Source="{ThemeResource DownloadIcon}" />
 
-                                        <Image
-                                            Width="23"
-                                            Height="23"
-                                            Margin="5,0,0,0"
-                                            Source="{ThemeResource DownloadIcon}" />
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                        Text="{x:Bind ReceivedData, Mode=OneWay}" />
 
-                                        <TextBlock
-                                            Margin="5,0,0,0"
-                                            FontSize="15"
-                                            Foreground="{ThemeResource FontColor_1}"
-                                            Text="{x:Bind ReceivedData, Mode=OneWay}" />
+                                    <Image
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Width="23"
+                                        Height="23"
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Source="{ThemeResource SendDataIcon}" />
 
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Row="2" Orientation="Horizontal">
-
-                                        <Image
-                                            Width="23"
-                                            Height="23"
-                                            Margin="5,0,0,0"
-                                            Source="{ThemeResource SendDataIcon}" />
-
-                                        <TextBlock
-                                            Margin="5,0,0,0"
-                                            FontSize="15"
-                                            Foreground="{ThemeResource FontColor_1}"
-                                            Text="{x:Bind SentData, Mode=OneWay}" />
-
-                                    </StackPanel>
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                        Text="{x:Bind SentData, Mode=OneWay}" />
 
                                 </Grid>
 

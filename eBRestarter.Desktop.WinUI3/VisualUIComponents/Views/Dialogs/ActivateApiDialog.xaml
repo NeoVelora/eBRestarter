@@ -7,23 +7,17 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Uid="ActivateApiDialog"
-    RequestedTheme="Dark"
     Style="{StaticResource DefaultContentDialogStyle}"
     mc:Ignorable="d">
 
     <ContentDialog.Resources>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
     </ContentDialog.Resources>
 
-    <Grid MinWidth="400" RowSpacing="15">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid
+        MinWidth="400"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+        RowSpacing="15">
 
         <StackPanel Orientation="Horizontal" Spacing="15">
             <Image
@@ -61,7 +55,7 @@
             Spacing="10">
             <ProgressBar
                 IsIndeterminate="True"
-                Visibility="{x:Bind ViewModelActivateApi.IsBusy, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                Visibility="{x:Bind ViewModelActivateApi.IsBusy, Mode=OneWay}" />
 
             <TextBlock
                 HorizontalAlignment="Center"

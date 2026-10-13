@@ -14,7 +14,7 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Background="{ThemeResource MenuBackgroundColor}">
+    <Grid Background="Transparent">
 
         <Grid.RowDefinitions>
             <!--  TitleBar  -->
@@ -25,10 +25,11 @@
 
         <!--  TitleBar  -->
         <controls:TitleBar
-            x:Uid="AppTitleBar"
             x:Name="AppTitleBar"
+            x:Uid="AppTitleBar"
             Grid.Row="0"
-            Foreground="{ThemeResource FontColor_1}"
+            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+            AutomationProperties.AutomationId="AppTitleBar"
             IsBackButtonEnabled="{x:Bind NavigationFrame.CanGoBack, Mode=OneWay}"
             IsBackButtonVisible="false"
             IsPaneToggleButtonVisible="True"
@@ -46,15 +47,16 @@
         <NavigationView
             x:Name="NavView"
             Grid.Row="1"
-            Background="{ThemeResource MenuBackgroundColor}"
             CompactPaneLength="56"
+            OpenPaneLength="260"
+            Background="Transparent"
+            PaneToggleButtonStyle="{StaticResource CustomPaneToggleButtonStyle}"
+            AutomationProperties.AutomationId="NavView"
             IsBackButtonVisible="Collapsed"
             IsPaneOpen="True"
             IsPaneToggleButtonVisible="False"
             IsSettingsVisible="False"
-            OpenPaneLength="260"
             PaneDisplayMode="Left"
-            PaneToggleButtonStyle="{StaticResource CustomPaneToggleButtonStyle}"
             ItemInvoked="NavView_ItemInvoked">
 
             <!--  Footer unten im Pane  -->
@@ -65,14 +67,13 @@
                     <Border
                         Height="1"
                         Margin="0,0,0,8"
-                        Background="{ThemeResource FontColor_1}" />
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
                     <TextBlock
                         x:Name="TxbVersion"
                         FontSize="12"
-                        Foreground="{ThemeResource FontColor_1}"
-                        Opacity="0.6"
-                        Text="v1.0.0" />
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        d:Text="v1.0.0" />
 
                 </StackPanel>
 

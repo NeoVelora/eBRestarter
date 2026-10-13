@@ -13,9 +13,9 @@ public sealed partial class UC_Networktraffic : UserControl
 
     public UC_Networktraffic()
     {
-        InitializeComponent();
-
         ViewModelNetworkTraffic = App.AppHost!.Services.GetRequiredService<Func<ViewModelNetworkTraffic>>()();
+
+        InitializeComponent();
 
         this.DataContext = ViewModelNetworkTraffic;
 

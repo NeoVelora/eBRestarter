@@ -11,21 +11,16 @@
 
     <Grid
         Padding="4"
-        Background="{ThemeResource DashletBackgroundColor_1}"
-        BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
-        CornerRadius="8">
+        CornerRadius="8"
+        RowDefinitions="Auto,*">
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <Grid Grid.Row="0" Margin="0,0,0,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <Grid
+            Grid.Row="0"
+            Margin="0,0,0,12"
+            ColumnDefinitions="Auto,*">
 
             <Image
                 Width="24"
@@ -38,8 +33,9 @@
                 x:Uid="Installed_browser"
                 Grid.Column="1"
                 VerticalAlignment="Center"
+                d:Text="Installierte Browser"
                 FontSize="18"
-                Foreground="{ThemeResource FontColor_1}" />
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
         </Grid>
 

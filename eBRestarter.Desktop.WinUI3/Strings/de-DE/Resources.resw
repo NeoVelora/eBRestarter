@@ -315,6 +315,21 @@
   <data name="Browser_download_links.Text" xml:space="preserve">
     <value>Browser Downloadverlinkungen</value>
   </data>
+  <data name="BrowserDownload_Brave.Content" xml:space="preserve">
+    <value>Brave Download</value>
+  </data>
+  <data name="BrowserDownload_Chrome.Content" xml:space="preserve">
+    <value>Chrome Download</value>
+  </data>
+  <data name="BrowserDownload_Edge.Content" xml:space="preserve">
+    <value>Edge Download</value>
+  </data>
+  <data name="BrowserDownload_Firefox.Content" xml:space="preserve">
+    <value>Firefox Download</value>
+  </data>
+  <data name="BrowserDownload_Vivaldi.Content" xml:space="preserve">
+    <value>Vivaldi Download</value>
+  </data>
   <data name="About_eV_Restarter.Text" xml:space="preserve">
     <value>Über eBRestarter</value>
   </data>
@@ -1007,5 +1022,8 @@ Möchten Sie die Anwendung jetzt neu starten?</value>
   </data>
   <data name="Cleanup_Running" xml:space="preserve">
     <value>Löschvorgang läuft...</value>
+  </data>
+  <data name="SettingsPage_Title.Text" xml:space="preserve">
+    <value>Einstellungen</value>
   </data>
 </root>
