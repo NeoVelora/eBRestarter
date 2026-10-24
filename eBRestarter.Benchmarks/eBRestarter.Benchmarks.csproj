@@ -16,7 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\eBRestarter.Core\eBRestarter.Core.csproj" />
+    <ProjectReference Include="..\eBRestarter.Core\Application\eBRestarter.Application.csproj" />
+    <ProjectReference Include="..\eBRestarter.Core\Domain\eBRestarter.Domain.csproj" />
     <ProjectReference Include="..\eBRestarter.Infrastructure\eBRestarter.Infrastructure.csproj" />
   </ItemGroup>
 

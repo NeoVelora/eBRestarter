@@ -1,5 +1,8 @@
-namespace eBRestarter.Core.Domain.ValueObjects;
+namespace eBRestarter.Core.Domain.Entities;
 
+/// <summary>
+/// Domänen-Entität, die einen Ziel-Computer mit seinen Neustart-Einstellungen und Lebenszyklus repräsentiert.
+/// </summary>
 public sealed record Computer
 {
     public DateTime? NextRestartDate { get; set; }
@@ -41,3 +44,4 @@ public sealed record Computer
         NextRestartDate = date;
     }
 }
+

@@ -15,12 +15,12 @@ using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
-using eBRestarter.Core.Domain.Handlers;
+using eBRestarter.Core.Domain.Services;
 
 namespace eBRestarter.Core.Application.BehavioralComponents.Services;
 
 public sealed class RestarterCycleService(
-    IBrowserCleanupScheduleHandler browserCleanupScheduleHandler,
+    IBrowserCleanupScheduleService browserCleanupScheduleService,
     IOutboundPortBrowserFactory browserFactory,
     IOutboundPortEVisitorConfigRepository configService,
     IDelayPhaseHandler delayPhaseHandler,
@@ -45,7 +45,7 @@ public sealed class RestarterCycleService(
     private const string LocalizationKeyStatusStopped = "Task_StatusStopped";
     private const int SecondsPerHour = 3600;
 
-    private readonly IBrowserCleanupScheduleHandler _browserCleanupScheduleHandler = browserCleanupScheduleHandler ?? throw new ArgumentNullException(nameof(browserCleanupScheduleHandler));
+    private readonly IBrowserCleanupScheduleService _browserCleanupScheduleService = browserCleanupScheduleService ?? throw new ArgumentNullException(nameof(browserCleanupScheduleService));
     private readonly IOutboundPortBrowserFactory _browserFactory = browserFactory ?? throw new ArgumentNullException(nameof(browserFactory));
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly IDelayPhaseHandler _delayPhaseHandler = delayPhaseHandler ?? throw new ArgumentNullException(nameof(delayPhaseHandler));
@@ -262,7 +262,7 @@ public sealed class RestarterCycleService(
         var appConfig = _configService.LoadConfig();
         var browser = appConfig.Browser;
 
-        if (browser is null || !_browserCleanupScheduleHandler.ShouldRunCleanupNow(browser.DeleteBrowserCacheIntervalDays, browser.NextBrowserDeleteCacheDate))
+        if (browser is null || !_browserCleanupScheduleService.ShouldRunCleanupNow(browser.DeleteBrowserCacheIntervalDays, browser.NextBrowserDeleteCacheDate))
             return;
 
         CloseCurrentBrowser();
@@ -272,7 +272,7 @@ public sealed class RestarterCycleService(
         await performCleanupCallback().ConfigureAwait(false);
 
         var today = _timeProvider.GetLocalNow().Date;
-        var newDate = _browserCleanupScheduleHandler.CalculateNextCleanupDateAfterRun(today, appConfig.Browser.DeleteBrowserCacheIntervalDays);
+        var newDate = _browserCleanupScheduleService.CalculateNextCleanupDateAfterRun(today, appConfig.Browser.DeleteBrowserCacheIntervalDays);
 
         appConfig.Browser.SetNextCleanupDate(newDate);
         _configService.SaveConfig(appConfig);

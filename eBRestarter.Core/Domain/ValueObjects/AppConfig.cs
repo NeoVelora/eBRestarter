@@ -1,3 +1,5 @@
+using eBRestarter.Core.Domain.Entities;
+
 namespace eBRestarter.Core.Domain.ValueObjects;
 
 public sealed record AppConfig

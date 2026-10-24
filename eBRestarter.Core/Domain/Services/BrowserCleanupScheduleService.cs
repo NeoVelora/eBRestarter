@@ -1,6 +1,9 @@
-namespace eBRestarter.Core.Domain.Handlers;
+namespace eBRestarter.Core.Domain.Services;
 
-public sealed class BrowserCleanupScheduleHandler(TimeProvider timeProvider) : IBrowserCleanupScheduleHandler
+/// <summary>
+/// Domänenservice zur Überprüfung und Berechnung von Zeitfenstern für Browser-Bereinigungen.
+/// </summary>
+public sealed class BrowserCleanupScheduleService(TimeProvider timeProvider) : IBrowserCleanupScheduleService
 {
     private readonly TimeProvider _timeProvider = timeProvider;
 
@@ -19,3 +22,4 @@ public sealed class BrowserCleanupScheduleHandler(TimeProvider timeProvider) : I
         return fromDate.AddDays(intervalDays);
     }
 }
+

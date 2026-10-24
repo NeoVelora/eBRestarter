@@ -1,7 +1,10 @@
 using System.Text.RegularExpressions;
 
-namespace eBRestarter.Core.Domain.Validators;
+namespace eBRestarter.Core.Domain.Policies;
 
+/// <summary>
+/// Fachliche Richtlinie (Policy) für gültige eVisitor-Benutzernamen in der Domäne.
+/// </summary>
 public static partial class EVisitorUsernamePolicy
 {
     private const int MaximumLength = 64;
@@ -21,3 +24,4 @@ public static partial class EVisitorUsernamePolicy
     [GeneratedRegex(@"^[A-Za-z0-9._-]+$", RegexOptions.NonBacktracking, matchTimeoutMilliseconds: 100)]
     private static partial Regex AllowedUsernameRegex();
 }
+

@@ -1,7 +1,7 @@
 using FluentValidation;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Domain.Validators;
+using eBRestarter.Core.Domain.Policies;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Validators;
 

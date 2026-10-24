@@ -1,5 +1,5 @@
 using BenchmarkDotNet.Attributes;
-using eBRestarter.Core.Domain.Validators;
+using eBRestarter.Core.Domain.Policies;
 
 namespace eBRestarter.Benchmarks.Benchmarks;
 

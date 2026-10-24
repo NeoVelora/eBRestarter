@@ -16,7 +16,7 @@ using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Core.Domain.Handlers;
+using eBRestarter.Core.Domain.Services;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
 using eBRestarter.Infrastructure.Common.Statics;
@@ -32,7 +32,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
         private readonly IOutboundPortBrowserFactory _mockBrowserFactory;
         private readonly IInboundPortLocalizationProvider _mockLocalizationService;
         private readonly IOutboundPortEVisitorConfigRepository _mockConfigService;
-        private readonly IBrowserCleanupScheduleHandler _mockCleanupScheduleHandler;
+        private readonly IBrowserCleanupScheduleService _mockCleanupScheduleHandler;
         private readonly IOutboundPortOsProcessControl _mockProcessService;
 
         private readonly IOutboundPortBrowser _mockBrowser;
@@ -45,7 +45,7 @@ namespace eBRestarter.XUnit.Test.Core.Application.Services
             _mockBrowserFactory = Substitute.For<IOutboundPortBrowserFactory>();
             _mockLocalizationService = Substitute.For<IInboundPortLocalizationProvider>();
             _mockConfigService = Substitute.For<IOutboundPortEVisitorConfigRepository>();
-            _mockCleanupScheduleHandler = Substitute.For<IBrowserCleanupScheduleHandler>();
+            _mockCleanupScheduleHandler = Substitute.For<IBrowserCleanupScheduleService>();
             _mockProcessService = Substitute.For<IOutboundPortOsProcessControl>();
             _mockBrowser = Substitute.For<IOutboundPortBrowser>();
 

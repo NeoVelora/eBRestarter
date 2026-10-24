@@ -11,6 +11,7 @@ using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Core.Domain.ValueObjects;
 
 namespace eBRestarter.XUnit.Test.Core.Application.Services

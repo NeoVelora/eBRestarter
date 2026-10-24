@@ -7,7 +7,7 @@ using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
 using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
 using eBRestarter.Core.Application.UseCases;
-using eBRestarter.Core.Domain.Handlers;
+using eBRestarter.Core.Domain.Services;
 using eBRestarter.Core.Domain.Validators;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,8 +20,8 @@ public static class ApplicationServiceRegistration
         services.AddSingleton<IDelayPhaseHandler, DelayPhaseHandler>();
         services.AddSingleton<IRunBrowserPhaseHandler, RunBrowserPhaseHandler>();
 
-        services.AddSingleton<IRestartCalculationHandler, RestartCalculationHandler>();
-        services.AddSingleton<IBrowserCleanupScheduleHandler, BrowserCleanupScheduleHandler>();
+        services.AddSingleton<IRestartCalculationService, RestartCalculationService>();
+        services.AddSingleton<IBrowserCleanupScheduleService, BrowserCleanupScheduleService>();
 
         services.AddSingleton<IInboundPortNextRestartDateHandler, NextRestartDateHandler>();
         services.AddSingleton<IInboundPortStartupConfigProvider, StartupConfigProvider>();

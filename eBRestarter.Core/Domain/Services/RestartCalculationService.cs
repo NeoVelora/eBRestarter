@@ -1,6 +1,9 @@
-namespace eBRestarter.Core.Domain.Handlers;
+namespace eBRestarter.Core.Domain.Services;
 
-public sealed class RestartCalculationHandler(TimeProvider timeProvider) : IRestartCalculationHandler
+/// <summary>
+/// Domänenservice zur zonenbewussten Berechnung von Neustartzeiten.
+/// </summary>
+public sealed class RestartCalculationService(TimeProvider timeProvider) : IRestartCalculationService
 {
     private readonly TimeProvider _timeProvider = timeProvider;
 
@@ -14,3 +17,4 @@ public sealed class RestartCalculationHandler(TimeProvider timeProvider) : IRest
         return DateTime.MinValue;
     }
 }
+
