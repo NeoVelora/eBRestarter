@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
-namespace eBRestarter.Core.Application.UseCases.System;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.System;
 
 public sealed class ToggleAppAutoStartUseCase(
     IOutboundPortEVisitorConfigRepository configService,
     IOutboundPortAutoStartRepository startupManagerService)
-    : IUseCaseToggleAppAutoStart
 {
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly IOutboundPortAutoStartRepository _startupManagerService = startupManagerService ?? throw new ArgumentNullException(nameof(startupManagerService));

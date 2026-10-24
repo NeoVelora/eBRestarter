@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Security;
 
-namespace eBRestarter.Core.Application.UseCases.Browser;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 
 public sealed class DownloadBrowserUseCase(
     IOutboundPortHttpDownload downloadService,
@@ -21,7 +20,6 @@ public sealed class DownloadBrowserUseCase(
     IInboundPortOsAppPathProvider pathProvider,
     IOutboundPortOsProcessControl processControlPort,
     IOutboundPortExecutableSignatureVerifier signatureVerifier)
-    : IUseCaseDownloadBrowser
 {
     private const string InstallerFileNameSuffix = "_Installer.exe";
     private const string UntrustedInstallerExceptionMessage = "The downloaded browser installer does not carry a valid, trusted code signature and was not executed.";

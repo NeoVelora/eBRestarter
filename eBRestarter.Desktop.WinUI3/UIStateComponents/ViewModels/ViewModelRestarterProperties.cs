@@ -17,7 +17,7 @@ using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
@@ -47,7 +47,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject, IDi
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly IInboundPortLocalizationProvider _localizationService;
     private readonly IOutboundPortOsProcessControl _osProcessControlPort;
-    private readonly IUseCaseScheduleBrowserCleanup _scheduleBrowserCleanupUseCase;
+    private readonly ScheduleBrowserCleanupUseCase _scheduleBrowserCleanupUseCase;
     private readonly IUIOptionsProvider _uiOptionsService;
 
     private volatile bool _disposed;
@@ -184,7 +184,7 @@ public sealed partial class ViewModelRestarterProperties : ObservableObject, IDi
         IInboundPortLocalizationProvider localizationService,
         ILogger<ViewModelRestarterProperties> logger,
         IOutboundPortOsProcessControl osProcessControlPort,
-        IUseCaseScheduleBrowserCleanup scheduleBrowserCleanupUseCase,
+        ScheduleBrowserCleanupUseCase scheduleBrowserCleanupUseCase,
         IUIOptionsProvider uiOptionsService)
     {
         ArgumentNullException.ThrowIfNull(browserService);

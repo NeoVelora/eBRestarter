@@ -10,7 +10,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
-using eBRestarter.Core.Application.UseCases.Browser;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
 using NSubstitute.ExceptionExtensions;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;

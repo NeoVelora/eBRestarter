@@ -5,7 +5,7 @@ using System;
 using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Credentials;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
@@ -22,7 +22,7 @@ public sealed partial class ViewModelOptionsApi : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly IInboundPortLocalizationProvider _localizationService;
-    private readonly IUseCaseRemoveApiCredentials _removeApiCredentialsUseCase;
+    private readonly RemoveApiCredentialsUseCase _removeApiCredentialsUseCase;
 
     private readonly AppConfig? _currentConfig;
 
@@ -30,7 +30,7 @@ public sealed partial class ViewModelOptionsApi : ObservableObject
         IDialogService dialogService,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository,
         IInboundPortLocalizationProvider localizationService,
-        IUseCaseRemoveApiCredentials removeApiCredentialsUseCase)
+        RemoveApiCredentialsUseCase removeApiCredentialsUseCase)
     {
         ArgumentNullException.ThrowIfNull(dialogService);
         ArgumentNullException.ThrowIfNull(evRestarterConfigRepository);

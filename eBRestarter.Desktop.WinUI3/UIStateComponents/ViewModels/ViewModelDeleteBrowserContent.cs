@@ -11,7 +11,7 @@ using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Domain.ValueObjects;
@@ -37,7 +37,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
 
     private readonly IOutboundPortBrowserFactory _browserFactory;
     private readonly ILogger<ViewModelDeleteBrowserContent> _logger;
-    private readonly IUseCaseDeleteBrowserContent _deleteBrowserContentUseCase;
+    private readonly DeleteBrowserContentUseCase _deleteBrowserContentUseCase;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly IInboundPortLocalizationProvider _localizationService;
 
@@ -49,7 +49,7 @@ public sealed partial class ViewModelDeleteBrowserContent : ObservableObject
 
 
     public ViewModelDeleteBrowserContent(
-        IUseCaseDeleteBrowserContent deleteBrowserContentUseCase,
+        DeleteBrowserContentUseCase deleteBrowserContentUseCase,
         IOutboundPortBrowserFactory browserFactory,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository,
         IInboundPortLocalizationProvider localizationService,

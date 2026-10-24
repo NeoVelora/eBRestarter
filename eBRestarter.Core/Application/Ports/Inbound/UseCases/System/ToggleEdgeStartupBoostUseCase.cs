@@ -3,18 +3,16 @@
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
-namespace eBRestarter.Core.Application.UseCases.System;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.System;
 
 public sealed class ToggleEdgeStartupBoostUseCase(
     IOutboundPortBrowserFactory browserFactory,
     IOutboundPortApplicationLogger<ToggleEdgeStartupBoostUseCase> logger,
     IOutboundPortBrowserConfigRepository startupService)
-    : IUseCaseToggleEdgeStartupBoost
 {
     private const string DefaultErrorMessage = "Edge startup boost configuration could not be changed.";
 

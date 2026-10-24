@@ -2,19 +2,18 @@
 
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.AutoLogon;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Inbound.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
-namespace eBRestarter.Core.Application.UseCases.AutoLogon;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.AutoLogon;
 
 public sealed class ConfigureAutoLogonUseCase(
     IOutboundPortOsAutoLogonRepository autoLogonPort,
     IOutboundPortCredentialValidationProvider credentialValidationPort,
     IOutboundPortApplicationLogger<ConfigureAutoLogonUseCase> logger,
     IOutboundPortSystemInfoProvider systemInfoPort,
-    IInboundPortApplicationValidator<ConfigureAutoLogonRequest> validator) : IUseCaseConfigureAutoLogon
+    IInboundPortApplicationValidator<ConfigureAutoLogonRequest> validator)
 {
     private const string ErrorMessageAdminRequiredActivation = "Administrator rights required to disable passwordless mode.";
     private const string ErrorMessageAdminRequiredDeactivation = "Administrator rights required to restore passwordless mode.";

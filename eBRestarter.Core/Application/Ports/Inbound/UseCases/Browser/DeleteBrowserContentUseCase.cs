@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Inbound.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Logging;
 
-namespace eBRestarter.Core.Application.UseCases.Browser;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 
 public sealed class DeleteBrowserContentUseCase(
     IOutboundPortBrowserFactory browserFactory,
@@ -22,7 +21,6 @@ public sealed class DeleteBrowserContentUseCase(
     TimeProvider timeProvider,
     IInboundPortApplicationValidator<DeleteBrowserContentRequest> validator,
     IOutboundPortApplicationLogger<DeleteBrowserContentUseCase> logger)
-    : IUseCaseDeleteBrowserContent
 {
     private const int CloseDelayMilliseconds = 1000;
     private const string DefaultBrowserRunningMessage = "Browser is running";

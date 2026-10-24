@@ -17,7 +17,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
@@ -48,7 +48,7 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
     private readonly IDialogService _dialogService;
     private readonly ILogger<ViewModelBrowserItem> _logger;
-    private readonly IUseCaseDownloadBrowser _downloadBrowserUseCase;
+    private readonly DownloadBrowserUseCase _downloadBrowserUseCase;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly IInboundPortLocalizationProvider _localizationService;
 
@@ -60,7 +60,7 @@ public sealed partial class ViewModelBrowserItem : ObservableObject
 
     public ViewModelBrowserItem(
         BrowserInfo browserInfo,
-        IUseCaseDownloadBrowser downloadBrowserUseCase,
+        DownloadBrowserUseCase downloadBrowserUseCase,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository,
         IDialogService dialogService,
         IInboundPortLocalizationProvider localizationService,

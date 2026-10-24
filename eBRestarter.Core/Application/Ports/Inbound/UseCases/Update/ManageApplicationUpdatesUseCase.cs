@@ -2,14 +2,12 @@
 using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Update;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Update;
 
-namespace eBRestarter.Core.Application.UseCases.Update;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.Update;
 
 public sealed class ManageApplicationUpdatesUseCase(
     IOutboundPortUpdate updateService)
-    : IUseCaseManageApplicationUpdates
 {
     private readonly IOutboundPortUpdate _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
 

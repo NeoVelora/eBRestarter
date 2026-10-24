@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.System;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
@@ -26,7 +26,7 @@ public sealed partial class ViewModelTurnOffEdgeStartupBoost : ObservableObject
 
     private readonly IDialogService _dialogService;
     private readonly IInboundPortLocalizationProvider _localizationService;
-    private readonly IUseCaseToggleEdgeStartupBoost _toggleEdgeStartupBoostUseCase;
+    private readonly ToggleEdgeStartupBoostUseCase _toggleEdgeStartupBoostUseCase;
     private readonly IOutboundPortSystemInfoProvider _windowsSystemInfo;
 
     private bool _isRevertingState;
@@ -82,7 +82,7 @@ public sealed partial class ViewModelTurnOffEdgeStartupBoost : ObservableObject
     public ViewModelTurnOffEdgeStartupBoost(
         IDialogService dialogService,
         IInboundPortLocalizationProvider localizationService,
-        IUseCaseToggleEdgeStartupBoost toggleEdgeStartupBoostUseCase,
+        ToggleEdgeStartupBoostUseCase toggleEdgeStartupBoostUseCase,
         IOutboundPortSystemInfoProvider windowsSystemInfo)
     {
         ArgumentNullException.ThrowIfNull(dialogService);

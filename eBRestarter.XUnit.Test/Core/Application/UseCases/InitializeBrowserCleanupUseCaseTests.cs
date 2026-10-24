@@ -5,7 +5,7 @@ using System;
 using System.Threading.Tasks;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.UseCases.Browser;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Core.Domain.ValueObjects;
 
 namespace eBRestarter.XUnit.Test.Core.Application.UseCases;

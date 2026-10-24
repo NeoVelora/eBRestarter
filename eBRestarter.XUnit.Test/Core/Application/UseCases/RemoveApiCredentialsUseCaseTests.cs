@@ -3,7 +3,7 @@ using Shouldly;
 using System;
 using Xunit;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
-using eBRestarter.Core.Application.UseCases.Credentials;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Credentials;
 using eBRestarter.Core.Domain.ValueObjects;
 using NSubstitute.ExceptionExtensions;
 

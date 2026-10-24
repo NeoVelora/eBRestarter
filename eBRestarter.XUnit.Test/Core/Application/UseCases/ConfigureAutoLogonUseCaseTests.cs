@@ -5,7 +5,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.DTOs.AutoLogon;
 using eBRestarter.Core.Application.Ports.Inbound.Validators;
 using eBRestarter.Core.Application.Ports.Outbound.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Core.Application.UseCases.AutoLogon;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.AutoLogon;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Shouldly;

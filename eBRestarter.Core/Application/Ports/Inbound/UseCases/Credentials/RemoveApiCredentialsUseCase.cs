@@ -1,12 +1,11 @@
 ﻿using System;
 
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 
-namespace eBRestarter.Core.Application.UseCases.Credentials;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.Credentials;
 
 public sealed class RemoveApiCredentialsUseCase(
-    IOutboundPortEVisitorConfigRepository configService) : IUseCaseRemoveApiCredentials
+    IOutboundPortEVisitorConfigRepository configService)
 {
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
 

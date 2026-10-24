@@ -16,7 +16,9 @@ using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Handlers;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Services;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.AutoLogon;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.System;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Update;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Domain.ValueObjects;
@@ -66,17 +68,17 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
     private readonly IInboundPortOsAppPathProvider _appPathProvider;
     private readonly ILogger<ViewModelOptionsGeneral> _logger;
     private readonly IInboundPortComputerRestartService _computerRestartScheduler;
-    private readonly IUseCaseConfigureAutoLogon _configureAutoLogonUseCase;
+    private readonly ConfigureAutoLogonUseCase _configureAutoLogonUseCase;
     private readonly IDialogService _dialogService;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly ILanguageHandler _languageService;
     private readonly IInboundPortLocalizationProvider _localizationService;
-    private readonly IUseCaseManageApplicationUpdates _manageApplicationUpdatesUseCase;
+    private readonly ManageApplicationUpdatesUseCase _manageApplicationUpdatesUseCase;
     private readonly IInboundPortNextRestartDateHandler _nextRestartDateHandler;
     private readonly IOutboundPortOsAutoLogonRepository _osAutoLogonPort;
     private readonly IOutboundPortOsProcessControl _osProcessControlPort;
     private readonly IThemeHandler _themeService;
-    private readonly IUseCaseToggleAppAutoStart _toggleAppAutoStartUseCase;
+    private readonly ToggleAppAutoStartUseCase _toggleAppAutoStartUseCase;
     private readonly IUIOptionsProvider _uiOptionsService;
     private readonly IOutboundPortSystemInfoProvider _windowsSystemInfo;
 
@@ -195,18 +197,18 @@ public sealed partial class ViewModelOptionsGeneral : ObservableObject, IDisposa
     public ViewModelOptionsGeneral(
         IInboundPortOsAppPathProvider appPathProvider,
         IInboundPortComputerRestartService computerRestartScheduler,
-        IUseCaseConfigureAutoLogon configureAutoLogonUseCase,
+        ConfigureAutoLogonUseCase configureAutoLogonUseCase,
         IDialogService dialogService,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository,
         ILanguageHandler languageService,
         IInboundPortLocalizationProvider localizationService,
         ILogger<ViewModelOptionsGeneral> logger,
-        IUseCaseManageApplicationUpdates manageApplicationUpdatesUseCase,
+        ManageApplicationUpdatesUseCase manageApplicationUpdatesUseCase,
         IInboundPortNextRestartDateHandler nextRestartDateHandler,
         IOutboundPortOsAutoLogonRepository osAutoLogonPort,
         IOutboundPortOsProcessControl osProcessControlPort,
         IThemeHandler themeService,
-        IUseCaseToggleAppAutoStart toggleAppAutoStartUseCase,
+        ToggleAppAutoStartUseCase toggleAppAutoStartUseCase,
         IUIOptionsProvider uiOptionsService,
         IOutboundPortSystemInfoProvider windowsSystemInfo)
     {

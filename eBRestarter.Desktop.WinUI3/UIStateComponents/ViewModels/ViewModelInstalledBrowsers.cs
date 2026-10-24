@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
@@ -27,7 +27,7 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<ViewModelInstalledBrowsers> _logger;
     private readonly IDialogService _dialogService;
-    private readonly IUseCaseDownloadBrowser _downloadBrowserUseCase;
+    private readonly DownloadBrowserUseCase _downloadBrowserUseCase;
     private readonly IOutboundPortEVisitorConfigRepository _evRestarterConfigRepository;
     private readonly IInboundPortLocalizationProvider _localizationService;
 
@@ -43,7 +43,7 @@ public sealed partial class ViewModelInstalledBrowsers : ObservableObject, IDisp
     public ViewModelInstalledBrowsers(
         IOutboundPortBrowserDiscoveryProvider browserService,
         IDialogService dialogService,
-        IUseCaseDownloadBrowser downloadBrowserUseCase,
+        DownloadBrowserUseCase downloadBrowserUseCase,
         IInboundPortLocalizationProvider localizationService,
         ILoggerFactory loggerFactory,
         IOutboundPortEVisitorConfigRepository evRestarterConfigRepository)

@@ -1,14 +1,13 @@
 ﻿using System;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 
-namespace eBRestarter.Core.Application.UseCases.Browser;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 
 public sealed class ScheduleBrowserCleanupUseCase(
     IOutboundPortEVisitorConfigRepository configService,
-    TimeProvider timeProvider) : IUseCaseScheduleBrowserCleanup
+    TimeProvider timeProvider)
 {
     private const int DisabledIntervalDays = 0;
     private const int IntervalBiWeeklyDays = 14;

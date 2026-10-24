@@ -14,7 +14,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Services;
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler;
@@ -67,9 +67,9 @@ public sealed partial class App : Application
         try
         {
             launchConfig = AppHost!.Services.GetRequiredService<IInboundPortStartupConfigProvider>().RetrieveStartupPreferences();
-            AppHost!.Services.GetRequiredService<IUseCaseInitializeBrowserCleanup>()
+            AppHost!.Services.GetRequiredService<InitializeBrowserCleanupUseCase>()
                 .ExecuteAsync()
-                .Forget(logger, nameof(IUseCaseInitializeBrowserCleanup));
+                .Forget(logger, nameof(InitializeBrowserCleanupUseCase));
             string languageCode = launchConfig.LanguageCode;
 
             ApplicationLanguages.PrimaryLanguageOverride = languageCode;

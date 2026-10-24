@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 
-namespace eBRestarter.Core.Application.UseCases.Browser;
+namespace eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 
 public sealed class InitializeBrowserCleanupUseCase(
     IOutboundPortEVisitorConfigRepository configService,
     TimeProvider timeProvider)
-    : IUseCaseInitializeBrowserCleanup
 {
     private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
