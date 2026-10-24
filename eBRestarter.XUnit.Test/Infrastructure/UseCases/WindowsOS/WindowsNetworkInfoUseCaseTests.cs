@@ -1,9 +1,9 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System.Linq;
 using System.Net.NetworkInformation;
 using Xunit;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Network;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
 using eBRestarter.Infrastructure.BehavioralComponents.Providers;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Services.WindowsOS

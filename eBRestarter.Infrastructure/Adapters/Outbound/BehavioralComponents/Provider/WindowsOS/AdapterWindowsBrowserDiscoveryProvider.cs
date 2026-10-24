@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;

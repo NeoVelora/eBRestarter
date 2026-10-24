@@ -1,7 +1,7 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.AutoLogon;
 
 namespace eBRestarter.Desktop.WinUI3.VisualUIComponents.Views.Dialogs;
 

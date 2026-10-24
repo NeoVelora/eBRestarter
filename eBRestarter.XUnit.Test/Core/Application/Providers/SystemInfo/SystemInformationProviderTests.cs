@@ -1,12 +1,12 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System;
 using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.BehavioralComponents.Providers;
 using eBRestarter.Core.Application.Common.Results;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using NSubstitute.ExceptionExtensions;
 
 namespace eBRestarter.Tests.Core.Application.UseCases.GetSystemInformation

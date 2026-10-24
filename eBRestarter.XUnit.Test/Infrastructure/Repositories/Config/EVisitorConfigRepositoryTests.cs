@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Shouldly;
 using System;
 using Xunit;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Config;
 using Microsoft.Extensions.Logging.Testing;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Time.Testing;
@@ -7,10 +7,10 @@ using Shouldly;
 using Xunit;
 using eBRestarter.Core.Application.BehavioralComponents.Services;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Domain.Entities;
 using eBRestarter.Core.Domain.ValueObjects;
 

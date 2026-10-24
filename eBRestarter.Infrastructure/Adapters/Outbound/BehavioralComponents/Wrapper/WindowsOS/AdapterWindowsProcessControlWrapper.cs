@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.BehavioralComponents.Wrappers;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Services;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions.DependencyInjections;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler;

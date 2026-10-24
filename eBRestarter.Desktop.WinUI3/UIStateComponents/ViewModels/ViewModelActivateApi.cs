@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -7,9 +7,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Authentication;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;
 using Microsoft.Extensions.Logging;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;

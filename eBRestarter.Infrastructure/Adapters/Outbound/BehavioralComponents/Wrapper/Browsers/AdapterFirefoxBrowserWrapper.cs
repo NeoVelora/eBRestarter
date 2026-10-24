@@ -1,9 +1,9 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Microsoft.Extensions.Logging;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.Common.Statics;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 

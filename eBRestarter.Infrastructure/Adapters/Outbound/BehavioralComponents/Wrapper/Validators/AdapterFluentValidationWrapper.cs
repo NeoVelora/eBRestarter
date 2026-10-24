@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using FluentValidation;
 
 using eBRestarter.Core.Application.Common.Results;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Validators;
+using eBRestarter.Core.Application.Ports.Inbound.Validators;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
 

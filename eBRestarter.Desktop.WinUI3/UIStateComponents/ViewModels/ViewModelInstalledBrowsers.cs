@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.ObjectModel;
@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Common.Attributes;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;

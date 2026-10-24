@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -21,10 +21,10 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 
 using eBRestarter.Core.Application.Common.Attributes;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;
 using Microsoft.Extensions.Logging;

@@ -1,0 +1,13 @@
+﻿using System;
+using System.Threading.Tasks;
+
+namespace eBRestarter.Core.Application.Ports.Inbound.Services;
+
+public interface IInboundPortComputerRestartService
+{
+    event EventHandler<DateTime?>? NextRestartDateChanged;
+
+    void StartScheduler();
+
+    Task StopSchedulerAsync();
+}

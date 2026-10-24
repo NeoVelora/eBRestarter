@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Globalization;
 
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.ImmutableSnapshot;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Handlers;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Handlers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Domain.Validators;
 using eBRestarter.Core.Domain.ValueObjects;
 

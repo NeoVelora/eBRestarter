@@ -1,8 +1,8 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System.IO;
 using Xunit;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Infrastructure.BehavioralComponents.Providers;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS

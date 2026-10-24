@@ -1,13 +1,12 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.BehavioralComponents.Handlers.Interfaces;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Cycle;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
 namespace eBRestarter.Core.Application.BehavioralComponents.Handlers;
 

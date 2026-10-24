@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -13,13 +13,13 @@ using CommunityToolkit.Mvvm.Messaging;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Common.Attributes;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.UseCases;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;
 using Microsoft.Extensions.Logging;

@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.IO;
 
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
 

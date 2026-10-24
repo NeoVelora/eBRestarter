@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using eBRestarter.Core.Application.Common.Results;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Validators;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.AutoLogon;
+using eBRestarter.Core.Application.Ports.Inbound.Validators;
+using eBRestarter.Core.Application.Ports.Outbound.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.UseCases.AutoLogon;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Shouldly;

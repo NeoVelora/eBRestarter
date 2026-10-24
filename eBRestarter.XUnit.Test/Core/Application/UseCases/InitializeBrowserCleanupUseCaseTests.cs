@@ -4,8 +4,8 @@ using Xunit;
 using System;
 using System.Threading.Tasks;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.UseCases.Browser;
 using eBRestarter.Core.Domain.ValueObjects;
 
 namespace eBRestarter.XUnit.Test.Core.Application.UseCases;

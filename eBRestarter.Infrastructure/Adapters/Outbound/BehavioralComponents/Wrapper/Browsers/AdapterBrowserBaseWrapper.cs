@@ -1,12 +1,12 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;

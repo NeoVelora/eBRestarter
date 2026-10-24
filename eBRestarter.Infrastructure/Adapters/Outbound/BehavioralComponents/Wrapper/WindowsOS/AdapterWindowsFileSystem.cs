@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.IO;
 
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.WindowsOS;
 

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.PresentationDTO;
 

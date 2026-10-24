@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;
@@ -10,8 +10,8 @@ using System.Timers;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Common.Attributes;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.ObservableModel;
 using Microsoft.Extensions.Logging;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;

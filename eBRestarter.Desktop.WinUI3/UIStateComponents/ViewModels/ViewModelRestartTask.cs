@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.UI.Dispatching;
@@ -12,14 +12,15 @@ using System.Threading.Tasks;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Common.Attributes;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Cycle;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Handlers;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Inbound.Handlers;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Inbound.Services;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Utilities.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.SignalDTO.Messages;

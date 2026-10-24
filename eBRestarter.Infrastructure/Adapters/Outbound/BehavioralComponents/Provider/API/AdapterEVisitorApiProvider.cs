@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Infrastructure.Api;
 using eBRestarter.Infrastructure.Api.Interfaces;
 using eBRestarter.Infrastructure.BehavioralComponents.Utilities;

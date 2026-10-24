@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Logging;
 

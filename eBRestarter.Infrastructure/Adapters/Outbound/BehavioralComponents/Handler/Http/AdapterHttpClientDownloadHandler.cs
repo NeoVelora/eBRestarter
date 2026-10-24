@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.IO;
@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Network;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handler.Http;
 

@@ -1,6 +1,6 @@
-using System.DirectoryServices.AccountManagement;
+﻿using System.DirectoryServices.AccountManagement;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
+using eBRestarter.Core.Application.Ports.Outbound.Authentication;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS.Authentication;
 

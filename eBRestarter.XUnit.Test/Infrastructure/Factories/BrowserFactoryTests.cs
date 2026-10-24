@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -6,8 +6,8 @@ using System;
 using Xunit;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 using eBRestarter.Infrastructure.BehavioralComponents.Factories;
 using Microsoft.Extensions.Logging.Testing;

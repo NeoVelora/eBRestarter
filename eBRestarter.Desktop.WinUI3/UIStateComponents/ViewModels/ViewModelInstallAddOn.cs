@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using System;
 using System.Collections.Generic;
@@ -10,8 +10,8 @@ using System.Linq;
 
 using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using Microsoft.Extensions.Logging;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 

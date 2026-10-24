@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Buffers.Text;
 using System.Security.Cryptography;
 using System.Text;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
+using eBRestarter.Core.Application.Ports.Outbound.Security;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Utility;
 

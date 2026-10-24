@@ -1,24 +1,23 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.UseCases.Browser;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
 using NSubstitute.ExceptionExtensions;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
 using eBRestarter.Tests.TestDoubles;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.Logging;
 
 namespace eBRestarter.Tests.Core.Application.UseCases.DeleteBrowserContent
 {

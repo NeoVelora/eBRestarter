@@ -1,6 +1,6 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Repositories.Authentication;
 

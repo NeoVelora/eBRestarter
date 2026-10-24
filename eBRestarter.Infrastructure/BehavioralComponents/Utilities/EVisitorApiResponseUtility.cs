@@ -1,10 +1,10 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.Text.Json;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Utilities;
 

@@ -1,14 +1,14 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Authentication;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Security;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Repositories.Authentication;

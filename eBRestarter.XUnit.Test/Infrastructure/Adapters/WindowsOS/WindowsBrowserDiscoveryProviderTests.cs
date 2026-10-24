@@ -1,4 +1,4 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System;
 using System.Linq;
@@ -8,7 +8,7 @@ using eBRestarter.Core.Application.Common.Results;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
 using NSubstitute.ExceptionExtensions;
 

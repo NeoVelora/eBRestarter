@@ -1,10 +1,10 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System;
 using System.DirectoryServices.AccountManagement;
 using Xunit;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
+using eBRestarter.Core.Application.Ports.Outbound.Authentication;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS.Authentication;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.Extensions.Logging.Testing;

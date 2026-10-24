@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
 namespace eBRestarter.Core.Application.BehavioralComponents.Providers;
 

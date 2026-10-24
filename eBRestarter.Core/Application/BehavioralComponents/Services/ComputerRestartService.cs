@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Services;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Inbound.Services;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 
 namespace eBRestarter.Core.Application.BehavioralComponents.Services;
 

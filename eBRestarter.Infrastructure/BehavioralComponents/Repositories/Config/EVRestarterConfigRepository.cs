@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 

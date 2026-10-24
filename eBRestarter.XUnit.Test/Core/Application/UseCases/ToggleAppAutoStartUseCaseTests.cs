@@ -1,10 +1,10 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.UseCases.System;
 using eBRestarter.Core.Domain.ValueObjects;
 
 namespace eBRestarter.Tests.Core.Application.UseCases.ToggleAppAutoStart

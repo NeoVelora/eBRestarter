@@ -1,8 +1,0 @@
-using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-
-namespace eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-
-public interface IOutboundPortBrowserFactory
-{
-    IOutboundPortBrowser Create(BrowserType type);
-}

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Shouldly;
@@ -6,8 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API;
 using eBRestarter.Infrastructure.Api;

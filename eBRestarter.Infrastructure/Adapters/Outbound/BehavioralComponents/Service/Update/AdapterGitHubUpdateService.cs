@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Globalization;
 using System.Reflection;
@@ -6,12 +6,13 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Network;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Update;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Update;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Security;
+using eBRestarter.Core.Application.Ports.Outbound.Update;
 using eBRestarter.Infrastructure.Api.Interfaces;
 using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
 using eBRestarter.Infrastructure.ObjectArchetypes.Model;

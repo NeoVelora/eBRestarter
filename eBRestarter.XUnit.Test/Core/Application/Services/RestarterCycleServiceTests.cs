@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Time.Testing;
+﻿using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -7,21 +7,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.BehavioralComponents.Handlers;
-using eBRestarter.Core.Application.BehavioralComponents.Handlers.Interfaces;
 using eBRestarter.Core.Application.BehavioralComponents.Services;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Cycle;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Domain.Services;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
 using eBRestarter.Infrastructure.Common.Statics;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.Logging;
 
 namespace eBRestarter.XUnit.Test.Core.Application.Services
 {

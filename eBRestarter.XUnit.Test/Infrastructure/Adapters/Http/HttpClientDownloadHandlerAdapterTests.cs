@@ -1,4 +1,4 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handler.Http;
 using eBRestarter.Tests.TestDoubles;
 

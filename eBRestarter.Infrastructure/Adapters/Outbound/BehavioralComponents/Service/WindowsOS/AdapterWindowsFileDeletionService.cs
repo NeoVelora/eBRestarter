@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.BehavioralComponents.Logging;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.WindowsOS;

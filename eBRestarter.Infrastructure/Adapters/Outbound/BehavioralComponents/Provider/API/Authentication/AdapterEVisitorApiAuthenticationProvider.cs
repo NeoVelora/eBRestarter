@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Update;
+using eBRestarter.Core.Application.Ports.Outbound.Authentication;
 using eBRestarter.Infrastructure.Api;
 using eBRestarter.Infrastructure.Api.Interfaces;
 using eBRestarter.Infrastructure.ObjectArchetypes.Enums;

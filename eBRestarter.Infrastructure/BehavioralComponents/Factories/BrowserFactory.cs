@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,7 +6,7 @@ using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Factories;

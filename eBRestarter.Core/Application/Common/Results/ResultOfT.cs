@@ -1,4 +1,4 @@
-using eBRestarter.Core.Application.Common.Results.structs;
+using eBRestarter.Core.Application.Common.Results.Structs;
 
 namespace eBRestarter.Core.Application.Common.Results;
 

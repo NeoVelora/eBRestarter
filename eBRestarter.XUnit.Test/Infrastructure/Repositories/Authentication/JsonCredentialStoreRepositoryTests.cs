@@ -1,15 +1,15 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System.IO;
 using System.Text.Json;
 using Xunit;
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Authentication;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Logging;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Security;
+using eBRestarter.Core.Application.Ports.Outbound.Security;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 {

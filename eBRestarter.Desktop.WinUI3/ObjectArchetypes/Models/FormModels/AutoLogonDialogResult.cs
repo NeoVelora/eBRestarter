@@ -1,4 +1,4 @@
-using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Records;
+﻿using eBRestarter.Core.Application.ObjectArchetypes.DTOs.AutoLogon;
 
 namespace eBRestarter.Desktop.WinUI3.ObjectArchetypes.Models.FormModels;
 

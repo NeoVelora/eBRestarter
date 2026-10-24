@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -10,8 +10,8 @@ using CommunityToolkit.Mvvm.Input;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.Common.Attributes;
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Browser;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using Microsoft.Extensions.Logging;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 

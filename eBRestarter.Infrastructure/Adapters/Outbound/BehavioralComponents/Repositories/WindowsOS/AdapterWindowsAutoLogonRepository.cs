@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System;
 using System.ComponentModel;
@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.WindowsOS;

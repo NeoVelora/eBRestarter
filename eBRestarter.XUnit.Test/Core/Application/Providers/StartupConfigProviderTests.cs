@@ -1,8 +1,8 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using Xunit;
 using eBRestarter.Core.Application.BehavioralComponents.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Config;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Domain.ValueObjects;
 
 namespace eBRestarter.XUnit.Test.Core.Application.Providers;

@@ -1,10 +1,10 @@
-using System.DirectoryServices.AccountManagement;
+﻿using System.DirectoryServices.AccountManagement;
 using Microsoft.Extensions.Logging;
 
 using eBRestarter.Core.Application.BehavioralComponents.Extensions;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Authentication;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.OperatingSystem;
+using eBRestarter.Core.Application.Ports.Outbound.Authentication;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS.Authentication;

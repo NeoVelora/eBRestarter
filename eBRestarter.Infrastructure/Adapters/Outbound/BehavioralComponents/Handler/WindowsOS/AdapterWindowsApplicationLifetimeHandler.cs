@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Logging;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
+﻿using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 
 namespace eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handler.WindowsOS;
 

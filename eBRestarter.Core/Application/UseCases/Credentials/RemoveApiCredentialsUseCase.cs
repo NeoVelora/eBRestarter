@@ -1,0 +1,26 @@
+﻿using System;
+
+using eBRestarter.Core.Application.Ports.Inbound.UseCases;
+using eBRestarter.Core.Application.Ports.Outbound.Config;
+
+namespace eBRestarter.Core.Application.UseCases.Credentials;
+
+public sealed class RemoveApiCredentialsUseCase(
+    IOutboundPortEVisitorConfigRepository configService) : IUseCaseRemoveApiCredentials
+{
+    private readonly IOutboundPortEVisitorConfigRepository _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+
+    public void Execute()
+    {
+        var currentConfig = _configService.LoadConfig();
+        if (currentConfig.Settings is null)
+        {
+            return;
+        }
+
+        currentConfig.Settings.ApiUsername = string.Empty;
+        currentConfig.Settings.ApiKey = string.Empty;
+
+        _configService.SaveConfig(currentConfig);
+    }
+}

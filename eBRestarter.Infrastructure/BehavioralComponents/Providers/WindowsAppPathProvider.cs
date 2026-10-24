@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Runtime.Versioning;
 
-using eBRestarter.Core.Application.Ports.Inbound.Interfaces.Providers;
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 
 namespace eBRestarter.Infrastructure.BehavioralComponents.Providers;
 

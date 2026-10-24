@@ -1,4 +1,4 @@
-using Microsoft.UI;
+﻿using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -6,7 +6,7 @@ using Microsoft.UI.Xaml.Media.Animation;
 using System;
 using System.IO;
 
-using eBRestarter.Core.Application.Ports.Outbound.Interfaces.Application;
+using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralUIComponents.Helpers.Interfaces;
