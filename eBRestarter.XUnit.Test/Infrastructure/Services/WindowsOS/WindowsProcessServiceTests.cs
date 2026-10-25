@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.Common.Results;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.WindowsOS;
-using eBRestarter.Infrastructure.BehavioralComponents.Wrappers;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrappers.WindowsOS;
+using eBRestarter.Infrastructure.BehavioralComponents.Wrappers.WindowsOS;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.Extensions.Logging.Testing;
 

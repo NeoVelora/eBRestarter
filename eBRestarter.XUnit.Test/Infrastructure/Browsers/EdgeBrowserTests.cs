@@ -3,7 +3,7 @@ using NSubstitute;
 using Shouldly;
 using Xunit;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrappers.Browsers;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Browsers

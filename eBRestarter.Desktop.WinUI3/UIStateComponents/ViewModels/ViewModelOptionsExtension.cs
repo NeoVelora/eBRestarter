@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
@@ -19,7 +19,7 @@ using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.UIOptionDTO;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
-using eBRestarter.Infrastructure.Common.Statics;
+using eBRestarter.Infrastructure.ObjectArchetypes.Constants;
 using eBRestarter.Infrastructure.ObjectArchetypes.DTOs;
 using Microsoft.Extensions.Logging;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;

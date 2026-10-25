@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Time.Testing;
+using Microsoft.Extensions.Time.Testing;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -18,8 +18,8 @@ using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Domain.Services;
 using eBRestarter.Core.Domain.ValueObjects;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
-using eBRestarter.Infrastructure.Common.Statics;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
+using eBRestarter.Infrastructure.ObjectArchetypes.Constants;
+
 using eBRestarter.Core.Application.Ports.Outbound.Logging;
 
 namespace eBRestarter.XUnit.Test.Core.Application.Services

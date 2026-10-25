@@ -6,7 +6,7 @@ using Xunit;
 using eBRestarter.Core.Application.Common.Results;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.WindowsOS;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.Extensions.Logging.Testing;
 

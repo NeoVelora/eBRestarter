@@ -1,4 +1,4 @@
-using eBRestarter.Infrastructure.Common.Statics;
+using eBRestarter.Infrastructure.ObjectArchetypes.Constants;
 
 namespace eBRestarter.Infrastructure.ObjectArchetypes.DTOs;
 

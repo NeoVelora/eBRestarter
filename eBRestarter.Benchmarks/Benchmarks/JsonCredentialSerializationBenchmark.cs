@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
-using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Authentication;
+using eBRestarter.Infrastructure.BehavioralComponents.Serialization;
 
 namespace eBRestarter.Benchmarks.Benchmarks;
 

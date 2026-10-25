@@ -8,10 +8,11 @@ using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Domain.ValueObjects;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API;
-using eBRestarter.Infrastructure.Api;
-using eBRestarter.Infrastructure.Api.Interfaces;
-using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.API;
+
+using eBRestarter.Infrastructure.BehavioralComponents.Clients.Http;
+using eBRestarter.Infrastructure.ObjectArchetypes.Constants;
+using eBRestarter.Infrastructure.ObjectArchetypes.Models;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.Tests.Infrastructure.Adapters

@@ -1,4 +1,4 @@
-using Shouldly;
+﻿using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Services.WindowsOS;
 using eBRestarter.Tests.TestDoubles;
 
 namespace eBRestarter.Tests.Infrastructure.Handlers

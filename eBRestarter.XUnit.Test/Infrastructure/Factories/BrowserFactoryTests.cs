@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -8,13 +8,13 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
-using eBRestarter.Infrastructure.BehavioralComponents.Factories;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrappers.Browsers;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Factories;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Factories
 {
-    public class BrowserFactoryProviderAdapterTests
+    public class AdapterBrowserFactoryProviderAdapterTests
     {
         [Theory]
         [InlineData(BrowserType.Chrome, typeof(AdapterChromeBrowserWrapper))]
@@ -41,7 +41,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
             services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Brave, fakeBrave);
             services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Vivaldi, fakeVivaldi);
 
-            var factory = new BrowserFactory(services.BuildServiceProvider());
+            var factory = new AdapterBrowserFactory(services.BuildServiceProvider());
 
             var result = factory.Create(inputType);
 
@@ -52,7 +52,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
         [Fact]
         public void Create_ShouldThrowNotSupportedException_ForInvalidBrowserType()
         {
-            var factory = new BrowserFactory(new ServiceCollection().BuildServiceProvider());
+            var factory = new AdapterBrowserFactory(new ServiceCollection().BuildServiceProvider());
 
             var invalidBrowserType = (BrowserType)999;
 
@@ -60,7 +60,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
 
             var exception = act.ShouldThrow<NotSupportedException>();
             exception.Message.ShouldContain("is not supported");
-            exception.Message.ShouldContain(nameof(BrowserFactory));
+            exception.Message.ShouldContain(nameof(AdapterBrowserFactory));
         }
 
         [Fact]
@@ -74,7 +74,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
 
             services.AddKeyedSingleton<IOutboundPortBrowser>(BrowserType.Chrome, fakeChrome);
             var sp = services.BuildServiceProvider();
-            var factory = new BrowserFactory(sp);
+            var factory = new AdapterBrowserFactory(sp);
 
             var result = factory.Create(BrowserType.Chrome);
 
@@ -84,7 +84,7 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Factories
         [Fact]
         public void Constructor_ShouldThrowArgumentNullException_WhenServiceProviderIsNull()
         {
-            Action act = () => new BrowserFactory(null!);
+            Action act = () => new AdapterBrowserFactory(null!);
 
             act.ShouldThrow<ArgumentNullException>()
                 .ParamName.ShouldBe("serviceProvider");

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Shouldly;
@@ -7,7 +7,7 @@ using Xunit;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Domain.ValueObjects;
-using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Config;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.Config;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
@@ -16,19 +16,19 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
     {
         private readonly IInboundPortOsAppPathProvider _mockPathProvider;
         private readonly IOutboundPortFileSystem _mockFileSystem;
-        private readonly FakeLogger<EVRestarterConfigRepository> _mockLogger;
-        private readonly EVRestarterConfigRepository _service;
+        private readonly FakeLogger<AdapterEVRestarterConfigRepository> _mockLogger;
+        private readonly AdapterEVRestarterConfigRepository _service;
         private const string FakeFilePath = @"C:\AppData\eBRestarter\config.json";
 
         public EVisitorConfigRepositoryTests()
         {
             _mockPathProvider = Substitute.For<IInboundPortOsAppPathProvider>();
             _mockFileSystem = Substitute.For<IOutboundPortFileSystem>();
-            _mockLogger = new FakeLogger<EVRestarterConfigRepository>();
+            _mockLogger = new FakeLogger<AdapterEVRestarterConfigRepository>();
 
             _mockPathProvider.RetrieveConfigFilePath().Returns(FakeFilePath);
 
-            _service = new EVRestarterConfigRepository(
+            _service = new AdapterEVRestarterConfigRepository(
                 _mockPathProvider, 
                 _mockFileSystem, 
                 _mockLogger

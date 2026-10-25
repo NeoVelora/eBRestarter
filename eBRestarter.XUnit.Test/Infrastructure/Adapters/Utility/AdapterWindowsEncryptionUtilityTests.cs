@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using System;
 using Xunit;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Utility;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Utilities;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Utility;
 

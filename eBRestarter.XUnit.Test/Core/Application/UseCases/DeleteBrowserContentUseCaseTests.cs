@@ -1,4 +1,4 @@
-﻿using NSubstitute;
+using NSubstitute;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
 using NSubstitute.ExceptionExtensions;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
+
 using eBRestarter.Tests.TestDoubles;
 
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;

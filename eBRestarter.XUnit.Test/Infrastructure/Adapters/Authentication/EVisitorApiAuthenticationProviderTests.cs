@@ -1,12 +1,12 @@
-using NSubstitute;
+﻿using NSubstitute;
 using Shouldly;
 using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.Common.Results;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API.Authentication;
-using eBRestarter.Infrastructure.Api.Interfaces;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.API.Authentication;
+using eBRestarter.Infrastructure.BehavioralComponents.Clients.Http;
 using eBRestarter.Infrastructure.ObjectArchetypes.Enums;
-using eBRestarter.Infrastructure.ObjectArchetypes.Model;
+using eBRestarter.Infrastructure.ObjectArchetypes.Models;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Adapters.Authentication
 {

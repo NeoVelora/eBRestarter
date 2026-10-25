@@ -1,4 +1,4 @@
-﻿using NSubstitute;
+using NSubstitute;
 using Shouldly;
 using System.IO;
 using System.Text.Json;
@@ -6,14 +6,14 @@ using Xunit;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.System;
 using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
-using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Authentication;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.Authentication;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Logging;
 using eBRestarter.Core.Application.Ports.Outbound.Security;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 {
-    public class JsonCredentialStoreRepositoryTests
+    public class AdapterJsonCredentialStoreRepositoryTests
     {
         private readonly string _expectedStoragePath = Path.Combine(@"C:\FakeAppData", "Skylar", "eBRestarter", "eBRestarterConfig.json");
 
@@ -28,10 +28,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
                 .CombinePaths(Arg.Any<string[]>())
                 .Returns(ci => Path.Combine(ci.Arg<string[]>()));
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
             var credentials = new ApiCredentials("TestUser", "TestKey123");
 
@@ -58,10 +58,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             string fakeJson = "{\"Username\":\"TestUser\",\"ApiKey\":\"TestKey123\"}";
             mockFileSystem.ReadAllText(_expectedStoragePath).Returns(fakeJson);
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
 
             var result = store.LoadCredentials();
@@ -91,10 +91,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
                 mockFileSystem.ReadAllText(_expectedStoragePath).Returns(fileContent);
             }
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
 
             var result = store.LoadCredentials();
@@ -115,10 +115,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 
             mockFileSystem.FileExists(_expectedStoragePath).Returns(true);
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
 
             store.ClearCredentials();
@@ -137,10 +137,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
                 .CombinePaths(Arg.Any<string[]>())
                 .Returns(ci => Path.Combine(ci.Arg<string[]>()));
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
 
             var ms = new MemoryStream();
@@ -174,10 +174,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
 
             mockFileSystem.FileExists("nonExistentPath").Returns(false);
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
 
             var result = store.ImportFromLegacyFile("nonExistentPath");
@@ -199,10 +199,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             mockFileSystem.FileExists(_expectedStoragePath).Returns(true);
             mockFileSystem.ReadAllText(_expectedStoragePath).Returns(@"{""Username"":""User1"",""Username"":""User2"",""ApiKey"":""Key""}");
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
 
             var result = store.LoadCredentials();
@@ -224,10 +224,10 @@ namespace eBRestarter.XUnit.Test.Infrastructure.Services.Authentication
             mockFileSystem.FileExists(_expectedStoragePath).Returns(true);
             mockFileSystem.ReadAllText(_expectedStoragePath).Returns(new string('a', 65 * 1024));
 
-            var store = new JsonCredentialStoreRepository(
+            var store = new AdapterJsonCredentialStoreRepository(
                 CreateRoundTripEncryption(),
                 mockFileSystem,
-                new FakeLogger<JsonCredentialStoreRepository>(),
+                new FakeLogger<AdapterJsonCredentialStoreRepository>(),
                 mockPathProvider);
 
             var result = store.LoadCredentials();

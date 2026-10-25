@@ -1,37 +1,36 @@
-﻿using eBRestarter.Core.Application.ObjectArchetypes.Enums;
+using System;
+using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Validators;
-using eBRestarter.Core.Application.Ports.Outbound.Network;
-using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Application;
 using eBRestarter.Core.Application.Ports.Outbound.Authentication;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Logging;
+using eBRestarter.Core.Application.Ports.Outbound.Network;
+using eBRestarter.Core.Application.Ports.Outbound.OperatingSystem;
 using eBRestarter.Core.Application.Ports.Outbound.Security;
 using eBRestarter.Core.Application.Ports.Outbound.Update;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handler.Http;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handler.WindowsOS;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.API.Authentication;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS.Authentication;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Factories;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handlers.Http;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handlers.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.API;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.API.Authentication;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.WindowsOS.Authentication;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.Authentication;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.Config;
 using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.WindowsOS;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.Update;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Service.WindowsOS;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Utility;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Browsers;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Logging;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.Validators;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrapper.WindowsOS;
-using eBRestarter.Infrastructure.Api.Interfaces;
-using eBRestarter.Infrastructure.API;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Services.Update;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Services.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Utilities;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrappers.Browsers;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrappers.Logging;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Wrappers.WindowsOS;
+using eBRestarter.Infrastructure.BehavioralComponents.Clients.Http;
 using eBRestarter.Infrastructure.BehavioralComponents.Providers;
-using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Authentication;
-using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Config;
-using eBRestarter.Infrastructure.BehavioralComponents.Wrappers;
-using eBRestarter.Infrastructure.BehavioralComponents.Factories;
 using eBRestarter.Infrastructure.BehavioralComponents.Validators;
+using eBRestarter.Infrastructure.BehavioralComponents.Wrappers.WindowsOS;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -42,7 +41,6 @@ public static class InfrastructureServiceRegistration
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
-
         services.AddSingleton<IProcessWrapper, ProcessWrapper>();
         services.AddSingleton<IOutboundPortOsProcessControl, AdapterWindowsProcessControlWrapper>();
         services.AddSingleton<IOutboundPortFileSystem, AdapterWindowsFileSystem>();
@@ -55,7 +53,7 @@ public static class InfrastructureServiceRegistration
         services.AddSingleton<IOutboundPortEncryption, AdapterWindowsEncryptionUtility>();
 
         services.AddSingleton<IOutboundPortExecutableSignatureVerifier, AdapterWindowsAuthenticodeVerifier>();
-        services.AddSingleton<IOutboundPortBrowserFactory, BrowserFactory>();
+        services.AddSingleton<IOutboundPortBrowserFactory, AdapterBrowserFactory>();
         services.AddSingleton<IOutboundPortBrowserDiscoveryProvider, AdapterWindowsBrowserDiscoveryProvider>();
         services.AddSingleton<IOutboundPortSystemInfoProvider, AdapterWindowsSystemInfoProvider>();
         services.AddSingleton<IOutboundPortEVisitorApiProvider, AdapterEVisitorApiProvider>();
@@ -115,19 +113,16 @@ public static class InfrastructureServiceRegistration
         services.AddSingleton<IOutboundPortAutoStartRepository, AdapterWindowsStartupRepository>();
         services.AddSingleton<IOutboundPortBrowserConfigRepository, AdapterWindowsStartupRepository>();
         services.AddSingleton<IOutboundPortOsAutoLogonRepository, AdapterWindowsAutoLogonRepository>();
-        services.AddSingleton<EVRestarterConfigRepository>();
+        services.AddSingleton<AdapterEVRestarterConfigRepository>();
 
         services.AddSingleton<IOutboundPortEVisitorConfigRepository>(provider =>
-
-            new EncryptedEVisitorConfigRepositoryDecorator(
-
-                provider.GetRequiredService<EVRestarterConfigRepository>(),
+            new AdapterEncryptedEVisitorConfigRepositoryDecorator(
+                provider.GetRequiredService<AdapterEVRestarterConfigRepository>(),
                 provider.GetRequiredService<IOutboundPortEncryption>(),
-                provider.GetRequiredService<ILogger<EncryptedEVisitorConfigRepositoryDecorator>>()
-
+                provider.GetRequiredService<ILogger<AdapterEncryptedEVisitorConfigRepositoryDecorator>>()
             ));
 
-        services.AddSingleton<IOutboundPortCredentialStoreRepository, JsonCredentialStoreRepository>();
+        services.AddSingleton<IOutboundPortCredentialStoreRepository, AdapterJsonCredentialStoreRepository>();
 
         services.AddValidatorsFromAssemblyContaining<ConfigureAutoLogonValidator>();
         services.AddTransient(typeof(IInboundPortApplicationValidator<>), typeof(AdapterFluentValidationWrapper<>));

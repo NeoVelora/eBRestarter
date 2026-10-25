@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
 using System;
@@ -6,25 +6,25 @@ using Xunit;
 using eBRestarter.Core.Application.Ports.Outbound.Config;
 using eBRestarter.Core.Application.Ports.Outbound.Security;
 using eBRestarter.Core.Domain.ValueObjects;
-using eBRestarter.Infrastructure.BehavioralComponents.Repositories.Config;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Repositories.Config;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace eBRestarter.XUnit.Test.Infrastructure.Repositories.Config
 {
-    public class EncryptedEVisitorConfigRepositoryDecoratorTests
+    public class AdapterEncryptedEVisitorConfigRepositoryDecoratorTests
     {
         private readonly IOutboundPortEVisitorConfigRepository _mockInnerService;
         private readonly IOutboundPortEncryption _mockEncryptionUseCase;
-        private readonly FakeLogger<EncryptedEVisitorConfigRepositoryDecorator> _mockLogger;
-        private readonly EncryptedEVisitorConfigRepositoryDecorator _decorator;
+        private readonly FakeLogger<AdapterEncryptedEVisitorConfigRepositoryDecorator> _mockLogger;
+        private readonly AdapterEncryptedEVisitorConfigRepositoryDecorator _decorator;
 
-        public EncryptedEVisitorConfigRepositoryDecoratorTests()
+        public AdapterEncryptedEVisitorConfigRepositoryDecoratorTests()
         {
             _mockInnerService = Substitute.For<IOutboundPortEVisitorConfigRepository>();
             _mockEncryptionUseCase = Substitute.For<IOutboundPortEncryption>();
-            _mockLogger = new FakeLogger<EncryptedEVisitorConfigRepositoryDecorator>();
+            _mockLogger = new FakeLogger<AdapterEncryptedEVisitorConfigRepositoryDecorator>();
 
-            _decorator = new EncryptedEVisitorConfigRepositoryDecorator(
+            _decorator = new AdapterEncryptedEVisitorConfigRepositoryDecorator(
                 _mockInnerService,
                 _mockEncryptionUseCase,
                 _mockLogger

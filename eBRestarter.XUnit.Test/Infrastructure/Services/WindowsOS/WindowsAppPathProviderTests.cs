@@ -1,8 +1,8 @@
-using Shouldly;
+﻿using Shouldly;
 using System;
 using System.IO;
 using Xunit;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.WindowsOS;
 using eBRestarter.Infrastructure.BehavioralComponents.Providers;
 
 namespace eBRestarter.Tests.Infrastructure.Services.WindowsOS

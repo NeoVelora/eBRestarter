@@ -1,5 +1,5 @@
-using BenchmarkDotNet.Attributes;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Utility;
+﻿using BenchmarkDotNet.Attributes;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Utilities;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace eBRestarter.Benchmarks.Benchmarks;

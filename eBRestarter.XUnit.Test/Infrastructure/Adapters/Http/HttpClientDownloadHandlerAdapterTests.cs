@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using eBRestarter.Core.Application.ObjectArchetypes.DTOs.Browser;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handler.Http;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Handlers.Http;
 using eBRestarter.Tests.TestDoubles;
 
 namespace eBRestarter.Tests.Infrastructure.Handlers

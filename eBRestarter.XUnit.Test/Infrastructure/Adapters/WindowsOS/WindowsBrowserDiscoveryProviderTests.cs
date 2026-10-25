@@ -9,7 +9,7 @@ using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.ObjectArchetypes.Models;
 using eBRestarter.Core.Application.Ports.Outbound.Browser;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.WindowsOS;
 using NSubstitute.ExceptionExtensions;
 
 namespace eBRestarter.Tests.Infrastructure.Adapters.WindowsOS

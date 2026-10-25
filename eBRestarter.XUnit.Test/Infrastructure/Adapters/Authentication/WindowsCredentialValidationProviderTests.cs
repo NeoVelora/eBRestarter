@@ -5,7 +5,7 @@ using System.DirectoryServices.AccountManagement;
 using Xunit;
 using eBRestarter.Core.Application.ObjectArchetypes.Enums;
 using eBRestarter.Core.Application.Ports.Outbound.Authentication;
-using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Provider.WindowsOS.Authentication;
+using eBRestarter.Infrastructure.Adapters.Outbound.BehavioralComponents.Providers.WindowsOS.Authentication;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Logging;
