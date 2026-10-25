@@ -1,0 +1,139 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
+using eBRestarter.Core.Application.Common.Attributes;
+using eBRestarter.Core.Application.Ports.Inbound.Providers;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using eBRestarter.Core.Application.ObjectArchetypes.Constants;
+
+namespace eBRestarter.Desktop.WinUI3.UIStateComponents.ViewModels.Pages;
+
+public sealed partial class ViewModelInfocenter : ObservableObject
+{
+    private const string InfocenterBrowserPrefixResourceKey = "Infocenter_BrowserPrefix";
+    private const string InfocenterBuildPrefixResourceKey = "Infocenter_BuildPrefix";
+    private const string InfocenterEditionPrefixResourceKey = "Infocenter_EditionPrefix";
+    private const string InfocenterGraphicsPrefixResourceKey = "Infocenter_GraphicsPrefix";
+    private const string InfocenterLoadFailedResourceKey = "Infocenter_LoadFailed";
+    private const string InfocenterLoadingResourceKey = "Infocenter_Loading";
+    private const string InfocenterProcessorPrefixResourceKey = "Infocenter_ProcessorPrefix";
+    private const string InfocenterRamPrefixResourceKey = "Infocenter_RamPrefix";
+    private const string InfocenterVersionPrefixResourceKey = "Infocenter_VersionPrefix";
+
+    private readonly IDialogService _dialogService;
+    private readonly ILogger<ViewModelInfocenter> _logger;
+    private readonly IInboundPortLocalizationProvider _localizationService;
+    private readonly IInboundPortSystemInformationProvider _systemInformationProvider;
+
+    [ObservableProperty] public partial string BrowserText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string GraphicsText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string OsBuildText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string OsEditionText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string OsVersionText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string ProcessorText { get; set; } = string.Empty;
+    [ObservableProperty] public partial string RamText { get; set; } = string.Empty;
+
+    public ViewModelInfocenter(
+        IDialogService dialogService,
+        IInboundPortLocalizationProvider localizationService,
+        ILogger<ViewModelInfocenter> logger,
+        IInboundPortSystemInformationProvider systemInformationProvider)
+    {
+        ArgumentNullException.ThrowIfNull(dialogService);
+        ArgumentNullException.ThrowIfNull(localizationService);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(systemInformationProvider);
+
+        _logger = logger;
+        _dialogService = dialogService;
+        _localizationService = localizationService;
+        _systemInformationProvider = systemInformationProvider;
+
+        string loadingPlaceholder = _localizationService.RetrieveString(InfocenterLoadingResourceKey);
+
+        BrowserText = loadingPlaceholder;
+        GraphicsText = loadingPlaceholder;
+        OsBuildText = loadingPlaceholder;
+        OsEditionText = loadingPlaceholder;
+        OsVersionText = loadingPlaceholder;
+        ProcessorText = loadingPlaceholder;
+        RamText = loadingPlaceholder;
+
+        _ = LoadDataAsync();
+    }
+
+    [RelayCommand]
+    [ExceptionBoundary(ExceptionBoundaryKind.ThreadRoot, Justification = "UI command boundary for opening external support website.")]
+    public void OpenSupportWebsite(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? targetUri)
+            || (!string.Equals(targetUri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal)
+                && !string.Equals(targetUri.Scheme, Uri.UriSchemeHttp, StringComparison.Ordinal)))
+        {
+            _logger.LogWarning(
+                LogEventIds.Security.UnsafeUrlLaunchBlocked,
+                "Blocked an attempt to shell-execute a non-web URL: {Url}",
+                url);
+
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(targetUri.AbsoluteUri) { UseShellExecute = true });
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                LogEventIds.OperatingSystem.ProcessStartFailed,
+                exception,
+                "Opening the web URL in the default browser failed.");
+        }
+    }
+
+    [RelayCommand]
+    private Task ShowAboutInfoAsync() => _dialogService.ShowAboutDialogAsync();
+
+    [ExceptionBoundary(ExceptionBoundaryKind.DegradationBoundary, Justification = "Degradation boundary for hardware and OS info loading with localized error message fallbacks.")]
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            var systemInformation = await _systemInformationProvider.RetrieveAsync();
+
+            ProcessorText = $"{_localizationService.RetrieveString(InfocenterProcessorPrefixResourceKey)} {systemInformation.ProcessorName}";
+            GraphicsText = $"{_localizationService.RetrieveString(InfocenterGraphicsPrefixResourceKey)} {systemInformation.GraphicsCardName}";
+            RamText = $"{_localizationService.RetrieveString(InfocenterRamPrefixResourceKey)} {systemInformation.InstalledRam}";
+            OsEditionText = $"{_localizationService.RetrieveString(InfocenterEditionPrefixResourceKey)} {systemInformation.OsEdition}";
+            OsVersionText = $"{_localizationService.RetrieveString(InfocenterVersionPrefixResourceKey)} {systemInformation.OsDisplayVersion}";
+            OsBuildText = $"{_localizationService.RetrieveString(InfocenterBuildPrefixResourceKey)} {systemInformation.OsBuildVersion}";
+            BrowserText = $"{_localizationService.RetrieveString(InfocenterBrowserPrefixResourceKey)} {systemInformation.StandardBrowserName}";
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(
+                LogEventIds.OperatingSystem.WmiQueryFailed,
+                exception,
+                "Loading hardware and operating system information failed.");
+
+            string failureMessage = _localizationService.RetrieveString(InfocenterLoadFailedResourceKey);
+
+            BrowserText = failureMessage;
+            GraphicsText = failureMessage;
+            OsBuildText = failureMessage;
+            OsEditionText = failureMessage;
+            OsVersionText = failureMessage;
+            ProcessorText = failureMessage;
+            RamText = failureMessage;
+        }
+    }
+}

@@ -1,0 +1,26 @@
+using System;
+
+using eBRestarter.Desktop.WinUI3.UIStateComponents.ViewModels.Components;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml.Controls;
+
+
+namespace eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls;
+
+public sealed partial class UC_Networktraffic : UserControl
+{
+    public ViewModelNetworkTraffic ViewModelNetworkTraffic { get; }
+
+    public UC_Networktraffic()
+    {
+        ViewModelNetworkTraffic = App.AppHost!.Services.GetRequiredService<Func<ViewModelNetworkTraffic>>()();
+
+        InitializeComponent();
+
+        this.DataContext = ViewModelNetworkTraffic;
+
+        Loaded += (_, _) => ViewModelNetworkTraffic.StartPolling();
+        Unloaded += (_, _) => ViewModelNetworkTraffic.StopPolling();
+    }
+}
+

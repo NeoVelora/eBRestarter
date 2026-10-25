@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
-using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Models.FormModels;
+using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Models.DialogResults;
 
 namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 

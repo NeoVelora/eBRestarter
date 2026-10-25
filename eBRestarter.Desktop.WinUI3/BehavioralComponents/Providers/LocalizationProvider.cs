@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +11,7 @@ using eBRestarter.Core.Application.Common.Attributes;
 using eBRestarter.Core.Application.ObjectArchetypes.Constants;
 using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
-using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.UIOptionDTO;
+using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.Options;
 
 namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers;
 

@@ -9,8 +9,8 @@ using Microsoft.UI.Xaml.Media;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
-using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Models.FormModels;
-using eBRestarter.Desktop.WinUI3.VisualUIComponents.Views.Dialogs;
+using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Models.DialogResults;
+using eBRestarter.Desktop.WinUI3.VisualUIComponents.Dialogs;
 
 namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Services;
 

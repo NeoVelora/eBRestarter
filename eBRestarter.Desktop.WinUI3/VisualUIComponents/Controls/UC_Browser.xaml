@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls.UC_Browser"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:VM="using:eBRestarter.Desktop.WinUI3.UIStateComponents.ViewModels.Components"
+    xmlns:converters="using:eBRestarter.Desktop.WinUI3.VisualUIComponents.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=VM:ViewModelBrowserItem}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:StringKeyToStyleConverter x:Key="StringKeyToStyleConverter" />
+    </UserControl.Resources>
+
+    <Border
+        Width="260"
+        Height="85"
+        Padding="0"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+
+        <Canvas>
+
+            <Button
+                Canvas.Left="0"
+                Canvas.Top="0"
+                Width="80"
+                Height="83"
+                HorizontalAlignment="Left"
+                Style="{x:Bind ViewModel.DownloadButtonStyleKey, Converter={StaticResource StringKeyToStyleConverter}, Mode=OneWay}"
+                Command="{x:Bind ViewModel.ToggleDownloadCommand, Mode=OneWay}"
+                Content="{x:Bind ViewModel.DownloadButtonContent, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsDownloadButtonVisible, Mode=OneWay}" />
+
+            <Button
+                x:Uid="Select"
+                Canvas.Left="0"
+                Canvas.Top="0"
+                Width="80"
+                Height="83"
+                FontSize="11"
+                Style="{StaticResource ButtonChooseBrowser}"
+                Command="{x:Bind ViewModel.ChooseBrowserCommand, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsChooseButtonVisible, Mode=OneWay}" />
+
+            <Image
+                Canvas.Left="85"
+                Canvas.Top="5"
+                Width="{x:Bind ViewModel.ImageSizeWidthBrowser, Mode=OneWay}"
+                Height="{x:Bind ViewModel.ImageSizeHeightBrowser, Mode=OneWay}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Source="{x:Bind ViewModel.HeaderImageBrowser, Mode=OneWay}" />
+
+            <TextBlock
+                Canvas.Left="122"
+                Canvas.Top="6"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                FontSize="16"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                Text="{x:Bind ViewModel.HeaderTitleBrowser, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Canvas.Left="86"
+                Canvas.Top="57"
+                FontSize="14"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                Text="{x:Bind ViewModel.BrowserVersionText, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Canvas.Left="230"
+                Canvas.Top="1"
+                FontFamily="Segoe Fluent Icons"
+                FontSize="25"
+                Foreground="{x:Bind ViewModel.InstallStateGlyphForeground, Mode=OneWay}"
+                Text="{x:Bind ViewModel.InstallStateGlyph, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <ProgressBar
+                Canvas.Left="85"
+                Canvas.Top="41"
+                Width="168"
+                Height="14"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                Value="{x:Bind ViewModel.DownloadProgressValue, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsDownloadButtonVisible, Mode=OneWay}" />
+
+            <TextBlock
+                Canvas.Left="86"
+                Canvas.Top="57"
+                FontSize="14"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                Text="{x:Bind ViewModel.DownloadSizeText, Mode=OneWay}"
+                Visibility="{x:Bind ViewModel.IsDownloadSizeTextVisible, Mode=OneWay}" />
+
+        </Canvas>
+
+    </Border>
+
+</UserControl>

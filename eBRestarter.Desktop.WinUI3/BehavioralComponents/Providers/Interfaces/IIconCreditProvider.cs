@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.PresentationDTO;
+using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.Presentation;
 
 namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 

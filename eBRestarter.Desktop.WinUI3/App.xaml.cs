@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,17 +16,16 @@ using eBRestarter.Core.Application.Ports.Inbound.Providers;
 using eBRestarter.Core.Application.Ports.Inbound.Services;
 using eBRestarter.Core.Application.Ports.Inbound.UseCases.Browser;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions;
-using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions.DependencyInjections;
-using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler;
-using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handler.Interfaces;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Extensions.DependencyInjection;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handlers;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Handlers.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Providers.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Utilities;
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Utilities.Interfaces;
-using eBRestarter.Desktop.WinUI3.BehavioralUIComponents.Helpers;
-using eBRestarter.Desktop.WinUI3.BehavioralUIComponents.Helpers.Interfaces;
-using eBRestarter.Desktop.WinUI3.Extensions.DependencyInjections;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Helpers;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Helpers.Interfaces;
 using eBRestarter.Desktop.WinUI3.ObjectArchetypes.Enums;
 using eBRestarter.Infrastructure.BehavioralComponents.Extensions.DependencyInjection;
 

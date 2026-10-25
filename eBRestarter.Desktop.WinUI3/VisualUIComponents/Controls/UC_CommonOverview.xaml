@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls.UC_CommonOverview"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:VM="using:eBRestarter.Desktop.WinUI3.UIStateComponents.ViewModels.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=VM:ViewModelGeneralOverview}"
+    mc:Ignorable="d">
+
+    <Grid
+        Background="Transparent"
+        CornerRadius="8,0,0,0"
+        RowDefinitions="Auto,*">
+
+        <!--  HEADER  -->
+        <Grid
+            Grid.Row="0"
+            Height="40"
+            Margin="6,5,6,0"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            CornerRadius="8">
+
+            <StackPanel
+                Height="35"
+                Padding="10,0,0,0"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="10">
+
+                <!--  Dashboard-Symbol (ViewDashboard)  -->
+                <FontIcon
+                    Margin="0,6,0,3"
+                    VerticalAlignment="Bottom"
+                    FontFamily="Segoe MDL2 Assets"
+                    FontSize="26"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                    Glyph="&#xE7F4;" />
+
+                <TextBlock
+                    x:Uid="GeneralOverview"
+                    Margin="0,6,0,7"
+                    VerticalAlignment="Center"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+            </StackPanel>
+
+        </Grid>
+
+        <!--  CONTENT  -->
+        <ScrollViewer
+            Grid.Row="1"
+            Background="Transparent"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+
+            <!--  Gesamt-Layout: links Inhalt, rechts Sidebar  -->
+            <Grid Margin="5,10,5,5">
+                <Grid.ColumnDefinitions>
+                    <!--  Links flexibel  -->
+                    <ColumnDefinition Width="*" />
+                    <!--  Abstand  -->
+                    <ColumnDefinition Width="12" />
+                    <!--  Rechts Sidebar fix  -->
+                    <ColumnDefinition Width="320" />
+                </Grid.ColumnDefinitions>
+
+                <!--  LINKS  -->
+                <Grid Grid.Column="0" RowDefinitions="Auto,*,Auto">
+
+                    <!--  Card: Titel + Timer  -->
+                    <Border
+                        Grid.Row="0"
+                        Margin="0,0,0,12"
+                        Padding="12"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <StackPanel
+                            HorizontalAlignment="Stretch"
+                            Orientation="Vertical"
+                            Spacing="6">
+
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                Text="{x:Bind ViewModelGeneralOverView.ChartTitle, Mode=OneWay}"
+                                TextAlignment="Center" />
+
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                FontSize="16"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                Opacity="0.85"
+                                Text="{x:Bind ViewModelGeneralOverView.ClockNextEarningsRefresh, Mode=OneWay}" />
+
+                        </StackPanel>
+
+                    </Border>
+
+                    <!--  Card: Chart / Output  -->
+                    <Border
+                        Grid.Row="1"
+                        Margin="0,0,0,12"
+                        Padding="12"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <!--  Control bleibt unverändert, nur Margin rausgenommen  -->
+                        <local:UC_PointsOutput Margin="0" />
+
+                    </Border>
+
+                    <!--  Card: Earnings  -->
+                    <Border
+                        Grid.Row="2"
+                        Padding="12"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <Grid
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"
+                            ColumnDefinitions="*,*,*"
+                            ColumnSpacing="12">
+
+                            <local:UC_EarningsAmount
+                                Grid.Column="0"
+                                Height="111"
+                                HorizontalAlignment="Stretch"
+                                EarningsAmount="{x:Bind ViewModelGeneralOverView.EarningsThisDaySum, Mode=OneWay}"
+                                HeaderImageEarnings="{ThemeResource ClockIcon}"
+                                HeaderTitleEarnings="{x:Bind ViewModelGeneralOverView.CurrentDay, Mode=OneWay}" />
+
+                            <local:UC_EarningsAmount
+                                Grid.Column="1"
+                                Height="111"
+                                HorizontalAlignment="Stretch"
+                                EarningsAmount="{x:Bind ViewModelGeneralOverView.EarningsThisMonthSum, Mode=OneWay}"
+                                HeaderImageEarnings="{ThemeResource CalendarIcon}"
+                                HeaderTitleEarnings="{x:Bind ViewModelGeneralOverView.CurrentMonth, Mode=OneWay}" />
+
+                            <local:UC_EarningsAmount
+                                Grid.Column="2"
+                                Height="111"
+                                HorizontalAlignment="Stretch"
+                                EarningsAmount="{x:Bind ViewModelGeneralOverView.EarningsThisYearSum, Mode=OneWay}"
+                                HeaderImageEarnings="{ThemeResource GlobeIcon4}"
+                                HeaderTitleEarnings="{x:Bind ViewModelGeneralOverView.CurrentYear, Mode=OneWay}" />
+
+                        </Grid>
+
+                    </Border>
+
+                </Grid>
+
+                <!--  RECHTS (Sidebar)  -->
+                <StackPanel
+                    Grid.Column="2"
+                    HorizontalAlignment="Right"
+                    Spacing="12">
+
+                    <!--  Card: IP  -->
+                    <Border
+                        Padding="12"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <local:UC_IPInformation Width="280" Height="280" />
+                    </Border>
+
+                    <!--  Card: Network  -->
+                    <Border
+                        Padding="12"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <local:UC_Networktraffic Width="280" Height="228" />
+                    </Border>
+
+                    <!--  Card: Action Button  -->
+                    <Border
+                        Padding="12"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="12">
+
+                        <Button
+                            x:Name="BtnGoToeVisitorAPI"
+                            Width="276"
+                            Height="55"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            Command="{x:Bind ViewModelGeneralOverView.GoToAPILoginCommand}">
+
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+
+                                <!--  Einstellungen-Symbol (Setting)  -->
+                                <FontIcon VerticalAlignment="Center" Glyph="&#xE713;" />
+
+                                <TextBlock
+                                    x:Uid="Go_to_API_options"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center" />
+
+                                <!--  Weiter-Symbol (ChevronRight)  -->
+                                <FontIcon
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    Opacity="0.8"
+                                    Glyph="&#xE72A;" />
+                            </Grid>
+                        </Button>
+                    </Border>
+
+                </StackPanel>
+
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+
+</UserControl>

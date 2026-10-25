@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls.UC_InformationsCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Border
+        Height="140"
+        Background="{x:Bind BackGroundColor, Mode=OneWay}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+
+        <StackPanel Height="140" Orientation="Vertical">
+
+            <StackPanel
+                Height="40"
+                Orientation="Horizontal"
+                Spacing="10">
+
+                <Image
+                    Width="{x:Bind ImageWidth, Mode=OneWay}"
+                    Height="{x:Bind ImageHeight, Mode=OneWay}"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Source="{x:Bind HeaderImage, Mode=OneWay}" />
+
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    FontWeight="SemiBold"
+                    Foreground="{x:Bind TitleForeground, Mode=OneWay}"
+                    Text="{x:Bind HeaderTitle, Mode=OneWay}" />
+
+            </StackPanel>
+
+            <TextBlock
+                Margin="15,7,0,0"
+                FontSize="16"
+                Foreground="{x:Bind InformationRowForeground, Mode=OneWay}"
+                Text="{x:Bind InformationRow1, Mode=OneWay}"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Margin="15,10,0,0"
+                FontSize="16"
+                Foreground="{x:Bind InformationRowForeground, Mode=OneWay}"
+                Text="{x:Bind InformationRow2, Mode=OneWay}" />
+
+            <TextBlock
+                Margin="15,10,0,15"
+                FontSize="16"
+                Foreground="{x:Bind InformationRowForeground, Mode=OneWay}"
+                Text="{x:Bind InformationRow3, Mode=OneWay}" />
+
+        </StackPanel>
+    </Border>
+</UserControl>

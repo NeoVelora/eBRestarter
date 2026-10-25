@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 
 using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Interfaces;
-using eBRestarter.Desktop.WinUI3.BehavioralUIComponents.Navigation;
+using eBRestarter.Desktop.WinUI3.BehavioralComponents.Services.Navigation;
 
 namespace eBRestarter.Desktop.WinUI3.BehavioralComponents.Services;
 

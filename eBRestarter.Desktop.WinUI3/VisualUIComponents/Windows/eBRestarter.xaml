@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="eBRestarter.Desktop.WinUI3.EBRestarter"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:usercontrol="using:eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls"
+    Title="eBRestarter.Desktop.WinUI3"
+    mc:Ignorable="d">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid Background="Transparent">
+
+        <Grid.RowDefinitions>
+            <!--  TitleBar  -->
+            <RowDefinition Height="Auto" />
+            <!--  NavigationView  -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  TitleBar  -->
+        <controls:TitleBar
+            x:Name="AppTitleBar"
+            x:Uid="AppTitleBar"
+            Grid.Row="0"
+            Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+            AutomationProperties.AutomationId="AppTitleBar"
+            IsBackButtonEnabled="{x:Bind NavigationFrame.CanGoBack, Mode=OneWay}"
+            IsBackButtonVisible="false"
+            IsPaneToggleButtonVisible="True"
+            BackRequested="AppTitleBar_BackRequested"
+            PaneToggleRequested="AppTitleBar_PaneToggleRequested">
+
+            <controls:TitleBar.IconSource>
+                <!--  Fenster-Icon (App-Icon)  -->
+                <FontIconSource Glyph="&#xE895;" />
+            </controls:TitleBar.IconSource>
+
+        </controls:TitleBar>
+
+        <!--  NavigationView  -->
+        <NavigationView
+            x:Name="NavView"
+            Grid.Row="1"
+            CompactPaneLength="56"
+            OpenPaneLength="260"
+            Background="Transparent"
+            PaneToggleButtonStyle="{StaticResource CustomPaneToggleButtonStyle}"
+            AutomationProperties.AutomationId="NavView"
+            IsBackButtonVisible="Collapsed"
+            IsPaneOpen="True"
+            IsPaneToggleButtonVisible="False"
+            IsSettingsVisible="False"
+            PaneDisplayMode="Left"
+            ItemInvoked="NavView_ItemInvoked">
+
+            <!--  Footer unten im Pane  -->
+            <NavigationView.PaneFooter>
+
+                <StackPanel Margin="12,0,12,12">
+
+                    <Border
+                        Height="1"
+                        Margin="0,0,0,8"
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <TextBlock
+                        x:Name="TxbVersion"
+                        FontSize="12"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        d:Text="v1.0.0" />
+
+                </StackPanel>
+
+            </NavigationView.PaneFooter>
+
+            <!--  Menüeinträge  -->
+            <NavigationView.MenuItems>
+
+                <NavigationViewItem x:Uid="GeneralOverviewNavigation" Tag="CommonOverview">
+                    <NavigationViewItem.Icon>
+                        <!--  Übersicht-Icon (Home)  -->
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE7F4;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem x:Uid="PropertiesNavigation" Tag="RestarterProperties">
+                    <NavigationViewItem.Icon>
+                        <!--  Eigenschaften-Icon (Sliders/Properties)  -->
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xECA5;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem x:Uid="OptionsNavigation" Tag="Options">
+                    <NavigationViewItem.Icon>
+                        <!--  Optionen-Icon (PageOptions)  -->
+                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF2C7;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem x:Uid="InfocenterNavigation" Tag="Infocenter">
+                    <NavigationViewItem.Icon>
+                        <!--  Infocenter-Icon (InfoSolid)  -->
+                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE946;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+            </NavigationView.MenuItems>
+
+            <!--  Inhalt rechts neben dem Navigations-Pane  -->
+            <Grid>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Frame x:Name="NavigationFrame" Grid.Row="0" />
+
+                <usercontrol:UC_RestartAgent Grid.Row="1" />
+
+            </Grid>
+
+        </NavigationView>
+
+    </Grid>
+
+</Window>

@@ -1,4 +1,4 @@
-using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.UIOptionDTO;
+using eBRestarter.Desktop.WinUI3.ObjectArchetypes.DTOs.Options;
 using System.Collections.ObjectModel;
 
 namespace eBRestarter.Desktop.WinUI3.ObjectArchetypes.Constants

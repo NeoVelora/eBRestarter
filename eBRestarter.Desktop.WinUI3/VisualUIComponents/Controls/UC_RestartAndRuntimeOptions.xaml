@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls.UC_RestartAndRuntimeOptions"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:VM="using:eBRestarter.Desktop.WinUI3.UIStateComponents.ViewModels.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=VM:ViewModelRestarterProperties}"
+    mc:Ignorable="d">
+
+    <Border
+        Padding="16"
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+
+        <!--  Haupt-StackPanel, das alle Sektionen mit sauberen Abständen (Spacing) trennt  -->
+        <StackPanel Spacing="20">
+
+            <!--  HEADER  -->
+            <StackPanel Orientation="Horizontal" Spacing="8">
+
+                <Image
+                    Width="24"
+                    Height="24"
+                    VerticalAlignment="Center"
+                    Source="{ThemeResource ClockRotateIcon}" />
+
+                <TextBlock
+                    x:Uid="Restart_And_Runtime_Options"
+                    VerticalAlignment="Center"
+                    d:Text="Neustart- und Laufzeitoptionen"
+                    FontSize="17"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+            </StackPanel>
+
+            <!--  BEREICH 1: WARTEZEIT  -->
+            <StackPanel Spacing="8">
+
+                <TextBlock
+                    x:Uid="Waiting_time_until_the_browser_restarts"
+                    d:Text="Wartezeit bis der Browser wieder startet"
+                    FontSize="15"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                <!--  Ein sauberes Grid ordnet Slider, TextBox und Einheit ("s") nebeneinander an  -->
+                <Grid ColumnDefinitions="*,120,Auto" ColumnSpacing="16">
+
+                    <Slider
+                        Grid.Column="0"
+                        Padding="2,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                        Minimum="{x:Bind ViewModelRestarterProperties.RuntimePauseSecondsMin, Mode=OneTime}"
+                        Maximum="{x:Bind ViewModelRestarterProperties.RuntimePauseSecondsMax, Mode=OneTime}"
+                        Value="{x:Bind ViewModelRestarterProperties.RuntimePauseSeconds, Mode=TwoWay}" />
+
+                    <NumberBox
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Minimum="20"
+                        Maximum="60"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModelRestarterProperties.RuntimePauseSeconds, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+
+                    <TextBlock
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                        Text="s" />
+
+                </Grid>
+
+            </StackPanel>
+
+            <!--  BEREICH 2: BROWSERLAUFZEIT  -->
+            <StackPanel Spacing="8">
+
+                <TextBlock
+                    x:Uid="Determine_your_browser_runtime_here"
+                    d:Text="Bestimme hier deine Browserlaufzeit"
+                    FontSize="15"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+                <Grid ColumnDefinitions="*,120,Auto" ColumnSpacing="16">
+
+                    <Slider
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                        Minimum="{x:Bind ViewModelRestarterProperties.BrowserRuntimeHoursMin, Mode=OneTime}"
+                        Maximum="{x:Bind ViewModelRestarterProperties.BrowserRuntimeHoursMax, Mode=OneTime}"
+                        Value="{x:Bind ViewModelRestarterProperties.RuntimeHours, Mode=TwoWay}" />
+
+                    <NumberBox
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Minimum="1"
+                        Maximum="12"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModelRestarterProperties.RuntimeHours, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
+
+                    <TextBlock
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                        Text="h" />
+
+                </Grid>
+
+            </StackPanel>
+
+        </StackPanel>
+
+    </Border>
+
+</UserControl>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="eBRestarter.Desktop.WinUI3.VisualUIComponents.Controls.UC_InformationCardUrls"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Border
+        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+        BorderThickness="1"
+        CornerRadius="8">
+
+        <StackPanel Margin="0,5">
+
+            <!--  Header  -->
+            <StackPanel
+                Height="40"
+                Background="Transparent"
+                Orientation="Horizontal">
+
+                <Image
+                    Width="25"
+                    Height="25"
+                    Margin="10,0,0,0"
+                    Source="{ThemeResource GlobeIcon3}" />
+
+                <TextBlock
+                    x:Uid="Browser_download_links"
+                    Height="25"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="16"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+
+            </StackPanel>
+
+            <!--  Links  -->
+            <HyperlinkButton
+                x:Uid="BrowserDownload_Brave"
+                Margin="15,7,0,0"
+                Padding="0"
+                HorizontalAlignment="Left"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                d:Content="Brave Download"
+                Command="{x:Bind ViewModelInfocenter.OpenSupportWebsiteCommand}"
+                CommandParameter="https://brave.com/de/download/" />
+
+            <HyperlinkButton
+                x:Uid="BrowserDownload_Chrome"
+                Margin="15,7,0,0"
+                Padding="0"
+                HorizontalAlignment="Left"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                d:Content="Chrome Download"
+                Command="{x:Bind ViewModelInfocenter.OpenSupportWebsiteCommand}"
+                CommandParameter="https://www.google.com/chrome/" />
+
+            <HyperlinkButton
+                x:Uid="BrowserDownload_Edge"
+                Margin="15,7,0,0"
+                Padding="0"
+                HorizontalAlignment="Left"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                d:Content="Edge Download"
+                Command="{x:Bind ViewModelInfocenter.OpenSupportWebsiteCommand}"
+                CommandParameter="https://www.microsoft.com/de-de/edge" />
+
+            <HyperlinkButton
+                x:Uid="BrowserDownload_Firefox"
+                Margin="15,7,0,0"
+                Padding="0"
+                HorizontalAlignment="Left"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                d:Content="Firefox Download"
+                Command="{x:Bind ViewModelInfocenter.OpenSupportWebsiteCommand}"
+                CommandParameter="https://www.mozilla.org/de/firefox/new/" />
+
+            <HyperlinkButton
+                x:Uid="BrowserDownload_Vivaldi"
+                Margin="15,7,0,0"
+                Padding="0"
+                HorizontalAlignment="Left"
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                d:Content="Vivaldi Download"
+                Command="{x:Bind ViewModelInfocenter.OpenSupportWebsiteCommand}"
+                CommandParameter="https://vivaldi.com/download/" />
+
+        </StackPanel>
+
+    </Border>
+
+</UserControl>
