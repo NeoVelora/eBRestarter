@@ -16,21 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Application\**" />
-    <Compile Remove="Unit_Test_Moq_Logic\**" />
-    <Content Remove="Application\**" />
-    <Content Remove="Unit_Test_Moq_Logic\**" />
-    <EmbeddedResource Remove="Application\**" />
-    <EmbeddedResource Remove="Unit_Test_Moq_Logic\**" />
-    <None Remove="Application\**" />
-    <None Remove="Unit_Test_Moq_Logic\**" />
-    <Page Remove="Application\**" />
-    <Page Remove="Unit_Test_Moq_Logic\**" />
-    <PRIResource Remove="Application\**" />
-    <PRIResource Remove="Unit_Test_Moq_Logic\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!--
       Testing-Guideline Kap. 2: xUnit v3. Loest xunit 2.9.3 ab. Das Paket heisst
       "xunit.v3" (nicht "xunit"); der eingebaute Runner macht das Testprojekt zu
